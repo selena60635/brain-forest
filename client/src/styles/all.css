@@ -1,0 +1,39 @@
+.canvas {
+  width: 5000px;
+  height: 5000px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: -200;
+}
+.rootnode {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px 20px 20px 20px;
+  height: 80px;
+  background: lightblue;
+  width: fit-content;
+  padding: 1rem;
+}
+
+.rootnode:focus {
+  border: 2px solid blue;
+}
+.input-box {
+  background: red;
+}
+.node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px 20px 20px 20px;
+  height: 80px;
+  background: lightblue;
+  width: fit-content;
+  padding: 1rem;
+}
