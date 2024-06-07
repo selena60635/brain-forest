@@ -22,6 +22,7 @@
 }
 
 .rootnode:focus {
+  outline: none;
   border: 2px solid blue;
 }
 .input-box {

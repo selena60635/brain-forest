@@ -22,6 +22,7 @@ const RootNode = (props) => {
           //加上這行才不會有Warning: A component is `contentEditable` and contains `children` managed by React....
           suppressContentEditableWarning="true"
           onBlur={props.unEditMode}
+          onKeyDown={props.unEditMode}
         >
           {props.rootNodeName}
         </div>
@@ -50,10 +51,14 @@ const MindMap = () => {
   const editMode = () => {
     setIsEditing(true);
   };
-  //關閉編輯模式
+  //關閉編輯模式git
   const unEditMode = (e) => {
-    const newValue = e.target.innerText;
-    setRootNodeName(newValue);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      setRootNodeName(e.target.innerText);
+    } else {
+      setRootNodeName(e.target.innerText);
+    }
     setIsEditing(false);
   };
 
