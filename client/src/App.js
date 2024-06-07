@@ -1,11 +1,11 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./Layout";
-import Home from "./Home";
-import Folder from "./Folder";
-import Login from "./Login";
-import WorkArea from "./WorkArea";
-import Page404 from "./Page404";
+import Home from "./pages/Home";
+import Folder from "./pages/Folder";
+import Login from "./pages/Login";
+import WorkArea from "./pages/WorkArea";
+import Page404 from "./pages/Page404";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/all.css";
 
