@@ -1,42 +1,57 @@
 .canvas {
-  width: 5000px;
-  height: 5000px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  width: 3000px;
+  height: 3000px;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: -200;
+  background: plum;
+  /* transform: scale(0.5); */
+}
+.canvas-wrap {
+  width: 100%;
+  height: calc(100vh - 62.52px);
+  overflow: scroll;
+}
+
+.mindmap {
+  position: relative;
+  z-index: 0;
+  border: 2px solid rgb(255, 230, 0);
 }
 .rootnode {
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 20px 20px 20px 20px;
-  height: 80px;
   background: lightblue;
-  width: fit-content;
   padding: 1rem;
   border: 2px solid transparent;
+  border-radius: 20px;
 }
-
 .rootnode:focus {
   outline: none;
   border: 2px solid blue;
 }
 .input-box {
+  position: absolute;
   background: red;
 }
 .node {
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 20px 20px 20px 20px;
-  height: 80px;
+  border-radius: 20px;
   border: 2px solid lightblue;
-  width: fit-content;
   padding: 1rem;
-  margin: 1rem 0rem;
+  margin: 1rem 10rem;
+}
+.node:focus {
+  outline: none;
+  border: 2px solid blue;
+}
+.svg {
+  position: absolute;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  border: 2px solid black;
 }

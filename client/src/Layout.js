@@ -18,6 +18,11 @@ const Layout = () => {
               </Link>
             </li>
             <li className="nav-item">
+              <Link to="" className="nav-link link-light">
+                匯出
+              </Link>
+            </li>
+            <li className="nav-item">
               <Link to="/workArea" className="nav-link link-light">
                 工作區
               </Link>

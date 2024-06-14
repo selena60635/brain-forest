@@ -3,8 +3,10 @@ import MindMap from "../MindMap";
 
 const WorkArea = () => {
   return (
-    <div className="canvas">
-      <MindMap />
+    <div className="canvas-wrap">
+      <div className="canvas">
+        <MindMap />
+      </div>
     </div>
   );
 };
