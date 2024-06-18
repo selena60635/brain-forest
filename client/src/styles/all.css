@@ -1,10 +1,9 @@
 .canvas {
-  width: 3000px;
-  height: 3000px;
+  width: 10000px;
+  height: 5000px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: plum;
   /* transform: scale(0.5); */
 }
 .canvas-wrap {

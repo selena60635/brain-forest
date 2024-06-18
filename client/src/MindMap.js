@@ -19,7 +19,7 @@ const RootNode = ({ addNode, rootRef, rootNode, setRootNode, rootNodeRef }) => {
   };
   //關閉編輯模式
   const unEditMode = (e) => {
-    setRootNode({ ...rootNode, name: e.target.innerText });
+    setRootNode((prev) => ({ ...prev, name: e.target.innerText }));
     setIsEditing(false);
     if (rootRef.current) {
       rootRef.current.focus(); // 關閉編輯模式後將焦點設置回根節點
@@ -71,20 +71,21 @@ const RootNode = ({ addNode, rootRef, rootNode, setRootNode, rootNodeRef }) => {
 };
 
 //節點元件(第二層)
-const Node = ({ node, nodeRef, setNodes, addNode, index }) => {
+const Node = ({ node, nodeRef, setNodes, addNode }) => {
   const [isEditing, setIsEditing] = useState(node.isNew);
   const inputRef = useRef(null);
 
   // 新增新節點自動聚焦該節點的inputbox
   useEffect(() => {
     if (isEditing && inputRef.current) {
-      setIsEditing(true);
       inputRef.current.focus();
       setNodes((prev) =>
-        prev.map((item, i) => (i === index ? { ...item, isNew: false } : item))
+        prev.map((item) =>
+          item.id === node.id ? { ...item, isNew: false } : item
+        )
       );
     }
-  }, [isEditing, index, setNodes]);
+  }, [isEditing, node.id, setNodes]);
 
   //開啟編輯模式
   const editMode = () => {
@@ -100,7 +101,7 @@ const Node = ({ node, nodeRef, setNodes, addNode, index }) => {
     );
     setIsEditing(false);
     if (nodeRef.current) {
-      nodeRef.current.focus(); // 關閉編輯模式後將焦點設置回根節點
+      nodeRef.current.focus(); // 關閉編輯模式後將焦點設置回節點
     }
   };
 
@@ -114,7 +115,7 @@ const Node = ({ node, nodeRef, setNodes, addNode, index }) => {
         if (e.key === "Enter") {
           e.preventDefault();
           e.stopPropagation();
-          addNode(index + 1);
+          addNode(node.id);
         }
       }}
     >
@@ -159,8 +160,8 @@ const MindMap = () => {
   const rootNodeRef = useRef(null); //用來存儲根節點Dom的引用
   const pathRef = useRef(null); // 用來存儲線段Dom的引用
 
-  // 新增節點及每個節點的唯一id
-  const addNode = (index = nodes.length) => {
+  // 新增節點及每個節點的唯一id，參數id預設為null用來處理根結點新增的部分
+  const addNode = (id = null) => {
     const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 65%)`;
     setNodes((prev) => {
       const newNodes = [...prev];
@@ -170,18 +171,17 @@ const MindMap = () => {
         color: randomColor,
         isNew: true,
       };
-      newNodes.splice(index, 0, newNode); // 在指定位置插入新節點
+      if (id === null) {
+        newNodes.push(newNode); // 如果 id 為 null，將新節點添加到數組末尾
+        nodeRefs.current.push(React.createRef()); // 為每個新節點添加一個引用
+      } else {
+        const index = newNodes.findIndex((node) => node.id === id);
+        newNodes.splice(index + 1, 0, newNode); // 在指定id的位置之後插入新節點
+        nodeRefs.current.splice(index + 1, 0, React.createRef()); // 為每個新節點添加一個引用
+      }
       return newNodes;
     });
-    nodeRefs.current.splice(index, 0, React.createRef()); // 為每個新節點添加一個引用
   };
-
-  // 處理Tab鍵
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-    }
-  });
 
   const getRootNodeLoc = () => {
     if (rootNodeRef.current && pathRef.current) {
@@ -201,7 +201,7 @@ const MindMap = () => {
       const nodeRect = nodeRef.current.getBoundingClientRect(); // 獲取節點的矩形對象
       const pathRect = pathRef.current.getBoundingClientRect(); // 獲取 path 的矩形對象
       return {
-        x: nodeRect.left - pathRect.left + nodeRect.width / 2, // 計算節點的中心點相對於g的X坐標，也就是將g當作視口去計算
+        x: nodeRect.left - pathRect.left, // 計算節點的中心點相對於g的X坐標，也就是將g當作視口去計算
         y: nodeRect.top - pathRect.top + nodeRect.height / 2, // 計算節點的中心點相對於g的Y坐標
       };
     }
@@ -226,6 +226,24 @@ const MindMap = () => {
 
   const rootNodeLoc = getRootNodeLoc();
 
+  // 在 useEffect 中初始滾動至畫布的中心點
+  useEffect(() => {
+    // 處理Tab鍵預設動作
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+      }
+    });
+    const canvas = document.querySelector(".canvas-wrap");
+    if (canvas) {
+      const { clientWidth, clientHeight, scrollWidth, scrollHeight } = canvas;
+      canvas.scrollTo({
+        left: (scrollWidth - clientWidth) / 2,
+        top: (scrollHeight - clientHeight) / 2,
+      });
+    }
+  }, []);
+
   return (
     <div className="mindmap d-flex align-items-center justify-content-center">
       <RootNode
@@ -244,7 +262,6 @@ const MindMap = () => {
             node={nodes[index]}
             setNodes={setNodes}
             addNode={addNode}
-            index={index}
           />
         ))}
       </div>
