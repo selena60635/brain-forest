@@ -1,25 +1,18 @@
-// import React from "react";
-// import MindMap from "../MindMap";
-
-// const WorkArea = () => {
-//   return (
-//     <div className="canvas-wrap">
-//       <div className="canvas">
-//         <MindMap />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default WorkArea;
-
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import MindMap from "../MindMap";
+import BtnsGroup from "../components/BtnsGroup";
+import { v4 as uuidv4 } from "uuid";
 
 const WorkArea = () => {
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
+
+  const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
+  const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
+  const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
+  const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
+  const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
 
   // 初始滾動至畫布的中心點
   useEffect(() => {
@@ -40,7 +33,9 @@ const WorkArea = () => {
   }, []);
 
   const handleMouseDown = (e) => {
-    if (e.button !== 0) return; // 只有點擊左鍵觸發
+    const btnsGroup = btnsRef.current;
+    if (e.button !== 0 || btnsGroup.contains(e.target)) return; //若滑鼠點擊的不是左鍵或點擊目標屬於按鈕群組後代，不執行後續動作
+
     const rect = canvasRef.current.getBoundingClientRect(); // 獲取畫布的矩形物件
     //設定鼠標起點位置
     selectStart.current = {
@@ -93,23 +88,97 @@ const WorkArea = () => {
     setSelectBox(null); // 放開滑鼠左鍵後隱藏選取框
   };
 
+  // 新增節點，參數id預設為null
+  const addNode = (id = null) => {
+    const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`; //生成一個隨機顏色，用於新節點線段
+    //更新節點陣列狀態，加入新的節點
+    setNodes((prev) => {
+      const newNodes = [...prev]; //創建一個新的數組，其中包含目前所有節點
+      //創建新節點物件，其中包含所需的屬性
+      const newNode = {
+        id: uuidv4(),
+        name: "節點",
+        color: randomColor,
+        isNew: true, //標記為新創建的節點
+      };
+      //如果id為 null代表目前選取的是根節點
+      if (id === null) {
+        newNodes.push(newNode); //將新節點添加到數組末尾
+        nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
+      } else {
+        const index = newNodes.findIndex((node) => node.id === id); //找出陣列中符合id節點之索引
+        newNodes.splice(index + 1, 0, newNode); // 在指定id的位置之後插入新節點
+        nodeRefs.current.splice(index + 1, 0, React.createRef()); // 為每個新節點添加一個引用
+      }
+      setSelectedNodes([newNode.id]); //將原先選擇的節點更新為新節點，轉換焦點
+      return newNodes;
+    });
+  };
+  // 刪除節點
+  const delNode = useCallback(
+    (idArr) => {
+      //更新節點
+      setNodes((prev) => {
+        //去除掉選中的節點；在nodes中篩選出id不包含在idArr中的節點，組成新的節點陣列，代表沒被選中的節點
+        const newNodes = prev.filter((node) => !idArr.includes(node.id));
+        //去除掉選中的節點Dom；在目前引用的節點Dom元素中，篩選出與nodes中對應索引的id不包含在idArr中的引用，組成新的引用陣列，代表沒被選中的節點Dom
+        const newRefs = nodeRefs.current.filter(
+          (item, index) => !idArr.includes(prev[index].id)
+        );
+        nodeRefs.current = newRefs; //更新引用的節點Dom
+        return newNodes;
+      });
+    },
+    [nodeRefs, setNodes]
+  );
+
   return (
-    <div className="canvas-wrap" onMouseDown={handleMouseDown} ref={canvasRef}>
-      {selectBox && (
+    <>
+      <div
+        className="canvas-wrap"
+        onMouseDown={handleMouseDown}
+        ref={canvasRef}
+      >
         <div
-          className="select-box"
-          style={{
-            left: selectBox.left,
-            top: selectBox.top,
-            width: selectBox.width,
-            height: selectBox.height,
-          }}
-        />
-      )}
-      <div className="canvas">
-        <MindMap selectBox={selectBox} canvasRef={canvasRef} />
+          ref={btnsRef}
+          className="btns-group z-20 flex shrink-0 grow-0 justify-around gap-4 border-t border-gray-200 bg-white/50 p-2.5 shadow-lg backdrop-blur-lg fixed top-2/4 -translate-y-2/4 left-6 min-h-[auto] min-w-[64px] flex-col rounded-lg border"
+        >
+          <BtnsGroup
+            addNode={addNode}
+            delNode={delNode}
+            selectedNodes={selectedNodes}
+            rootNode={rootNode}
+            setRootNode={setRootNode}
+          />
+        </div>
+        {selectBox && (
+          <div
+            className="select-box"
+            style={{
+              left: selectBox.left,
+              top: selectBox.top,
+              width: selectBox.width,
+              height: selectBox.height,
+            }}
+          />
+        )}
+        <div className="canvas">
+          <MindMap
+            selectBox={selectBox}
+            canvasRef={canvasRef}
+            addNode={addNode}
+            delNode={delNode}
+            setNodes={setNodes}
+            nodes={nodes}
+            nodeRefs={nodeRefs}
+            rootNode={rootNode}
+            setRootNode={setRootNode}
+            selectedNodes={selectedNodes}
+            setSelectedNodes={setSelectedNodes}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

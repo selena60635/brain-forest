@@ -1,40 +1,56 @@
 import React from "react";
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 
 const Layout = () => {
   return (
     <>
-      <header className="bg-dark">
-        <nav className="container navbar">
-          <div>
-            <Link to="/" className="navbar-brand">
+      <header className="bg-gray-800">
+        <nav className="flex justify-between items-center px-20">
+          <div className="flex space-x-3 items-center my-1">
+            <Link to="/">
               <img src="我.png" alt="" width="40"></img>
             </Link>
+            <Link className="text-gray-300 text-xl font-bold" to="/">
+              <h1>Brain Forest</h1>
+            </Link>
           </div>
-          <ul className="nav">
-            <li className="nav-item">
-              <Link to="/folder" className="nav-link link-light">
-                資料夾
+          <ul className="flex space-x-8">
+            <li className="">
+              <Link
+                to="/folder"
+                className="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                Folder
               </Link>
             </li>
-            <li className="nav-item">
-              <Link to="" className="nav-link link-light">
-                匯出
+            <li className="">
+              <Link
+                to=""
+                className="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                Export
               </Link>
             </li>
-            <li className="nav-item">
-              <Link to="/workArea" className="nav-link link-light">
-                工作區
+            <li className="">
+              <Link
+                to="/workArea"
+                className="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                Workarea
               </Link>
             </li>
-            <li className="nav-item">
-              <Link to="/login" className="nav-link link-light">
-                登入
+            <li className="">
+              <Link
+                to="/login"
+                className="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                Sign in
               </Link>
             </li>
           </ul>
         </nav>
       </header>
+
       <Outlet />
     </>
   );

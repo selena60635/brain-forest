@@ -5,7 +5,6 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 //聚焦到inputbox並自動選取文本
 const selectText = (inputElement) => {
@@ -122,96 +121,65 @@ const Node = ({ node, nodeRef, setNodes, isSelected }) => {
   };
 
   return (
-    <div
-      className={`node ${isSelected ? "selected" : ""}`}
-      tabIndex="0"
-      ref={nodeRef}
-      onDoubleClick={editMode}
-    >
-      {isEditing ? (
-        <>
-          <div
-            ref={inputRef}
-            className="input-box"
-            style={{
-              minWidth: nodeRef.current
-                ? nodeRef.current.getBoundingClientRect().width
-                : "68px",
-              maxWidth: "500px",
-            }}
-            contentEditable="true"
-            suppressContentEditableWarning="true"
-            onBlur={unEditMode}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === "Tab") {
-                e.preventDefault();
-                e.stopPropagation();
-                unEditMode(e);
-              }
-            }}
-          >
-            {node.name}
-          </div>
+    <div>
+      <div
+        className={`node ${isSelected ? "selected" : ""}`}
+        tabIndex="0"
+        ref={nodeRef}
+        onDoubleClick={editMode}
+      >
+        {isEditing ? (
+          <>
+            <div
+              ref={inputRef}
+              className="input-box"
+              style={{
+                minWidth: nodeRef.current
+                  ? nodeRef.current.getBoundingClientRect().width
+                  : "68px",
+                maxWidth: "500px",
+              }}
+              contentEditable="true"
+              suppressContentEditableWarning="true"
+              onBlur={unEditMode}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "Tab") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  unEditMode(e);
+                }
+              }}
+            >
+              {node.name}
+            </div>
+            <span>{node.name}</span>
+          </>
+        ) : (
           <span>{node.name}</span>
-        </>
-      ) : (
-        <span>{node.name}</span>
-      )}
+        )}
+      </div>
     </div>
   );
 };
 
 // 心智圖組件
-const MindMap = ({ selectBox, canvasRef }) => {
-  const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
+const MindMap = ({
+  selectBox,
+  canvasRef,
+  addNode,
+  setNodes,
+  nodes,
+  rootNode,
+  setRootNode,
+  setSelectedNodes,
+  selectedNodes,
+  nodeRefs,
+  delNode,
+}) => {
+  // const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
-  const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
-  const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
-  const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
   const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
   const pathRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的線段Dom元素
-
-  // 新增節點，參數id預設為null
-  const addNode = (id = null) => {
-    const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`; //生成一個隨機顏色，用於新節點線段
-    //更新節點陣列狀態，加入新的節點
-    setNodes((prev) => {
-      const newNodes = [...prev]; //創建一個新的數組，其中包含目前所有節點
-      //創建新節點物件，其中包含所需的屬性
-      const newNode = {
-        id: uuidv4(),
-        name: "節點",
-        color: randomColor,
-        isNew: true, //標記為新創建的節點
-      };
-      //如果id為 null代表目前選取的是根節點
-      if (id === null) {
-        newNodes.push(newNode); //將新節點添加到數組末尾
-        nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
-      } else {
-        const index = newNodes.findIndex((node) => node.id === id); //找出陣列中符合id節點之索引
-        newNodes.splice(index + 1, 0, newNode); // 在指定id的位置之後插入新節點
-        nodeRefs.current.splice(index + 1, 0, React.createRef()); // 為每個新節點添加一個引用
-      }
-      setSelectedNodes([newNode.id]); //將原先選擇的節點更新為新節點，轉換焦點
-      return newNodes;
-    });
-  };
-
-  // 刪除節點
-  const delNode = useCallback((idArr) => {
-    //更新節點
-    setNodes((prev) => {
-      //去除掉選中的節點；在nodes中篩選出id不包含在idArr中的節點，組成新的節點陣列，代表沒被選中的節點
-      const newNodes = prev.filter((node) => !idArr.includes(node.id));
-      //去除掉選中的節點Dom；在目前引用的節點Dom元素中，篩選出與nodes中對應索引的id不包含在idArr中的引用，組成新的引用陣列，代表沒被選中的節點Dom
-      const newRefs = nodeRefs.current.filter(
-        (item, index) => !idArr.includes(prev[index].id)
-      );
-      nodeRefs.current = newRefs; //更新引用的節點Dom
-      return newNodes;
-    });
-  }, []);
 
   // 取得根結點svg位置
   const getRootSvgLoc = () => {
@@ -299,7 +267,7 @@ const MindMap = ({ selectBox, canvasRef }) => {
       setRootNode((prev) => ({ ...prev, position: rootSvgLoc }));
     };
     updateLocs(); // 更新位置
-  }, [nodes.length, rootNode.name]); // 當 nodes 的長度發生變化時，重新計算位置
+  }, [nodes.length, rootNode.name, nodeRefs, setNodes, setRootNode]); // 當 nodes 的長度發生變化時，重新計算位置
 
   //更新選擇名單
   useLayoutEffect(() => {
@@ -317,7 +285,15 @@ const MindMap = ({ selectBox, canvasRef }) => {
       });
       setSelectedNodes(selected);
     }
-  }, [selectBox, nodes, isNodeSelected, rootNode.id, canvasRef]);
+  }, [
+    selectBox,
+    nodes,
+    isNodeSelected,
+    rootNode.id,
+    canvasRef,
+    nodeRefs,
+    setSelectedNodes,
+  ]);
 
   //處理新增、刪除節點事件監聽
   useEffect(() => {
@@ -341,10 +317,10 @@ const MindMap = ({ selectBox, canvasRef }) => {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown); //要移除事件，否則會導致無限循環造成錯誤
-  }, [selectedNodes, isEditRoot, rootNode.id, delNode]);
+  }, [selectedNodes, isEditRoot, rootNode.id, delNode, addNode]);
 
   return (
-    <div className="mindmap d-flex align-items-center justify-content-center">
+    <div className="mindmap">
       <RootNode
         isEditRoot={isEditRoot}
         setIsEditRoot={setIsEditRoot}
@@ -356,7 +332,7 @@ const MindMap = ({ selectBox, canvasRef }) => {
         setSelectedNodes={setSelectedNodes}
       />
 
-      <div className="nodes d-flex justify-content-center flex-column align-items-start">
+      <div className="nodes flex flex-col items-start">
         {nodes.map((node, index) => (
           <Node
             key={node.id}
@@ -369,7 +345,7 @@ const MindMap = ({ selectBox, canvasRef }) => {
           />
         ))}
       </div>
-      <div className=""></div>
+      <div className="child-nodes"></div>
       <svg
         className="svg"
         overflow="visible"

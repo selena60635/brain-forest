@@ -6,7 +6,6 @@ import Folder from "./pages/Folder";
 import Login from "./pages/Login";
 import WorkArea from "./pages/WorkArea";
 import Page404 from "./pages/Page404";
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/all.css";
 
 function App() {

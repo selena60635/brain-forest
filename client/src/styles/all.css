@@ -1,3 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  img {
+    max-width: 100%;
+    vertical-align: middle;
+  }
+}
+@layer components {
+  .mindmap {
+    @apply relative z-0 flex items-center justify-center;
+  }
+}
+
 .canvas {
   width: 10000px;
   height: 5000px;
@@ -8,17 +24,12 @@
 }
 .canvas-wrap {
   width: 100%;
-  height: calc(100vh - 62.52px);
+  height: calc(100vh - 54.52px);
   overflow: scroll;
   user-select: none;
   position: relative;
 }
 
-.mindmap {
-  position: relative;
-  z-index: 0;
-  /* border: 2px solid rgb(255, 230, 0); */
-}
 .rootnode {
   display: flex;
   justify-content: center;
@@ -47,9 +58,9 @@
   justify-content: center;
   align-items: center;
   border-radius: 15px;
-  background: #f6a04d;
+  background: #ffac5e;
   padding: 1rem;
-  margin: 1rem 10rem;
+  margin: 1rem 0rem 1rem 10rem;
   outline: none;
   font-size: 1.2rem;
 }
@@ -65,7 +76,7 @@
   border: 2px dashed #5bbdff;
   background-color: rgba(0, 153, 255, 0.2);
   pointer-events: none;
-  z-index: 1000;
+  z-index: 10;
 }
 
 .selected {
@@ -81,4 +92,14 @@
   left: -6px;
   border-radius: 10px;
   border: 2px solid #0099ff;
+}
+.child-node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 15px;
+  background: #53dfc3;
+  padding: 0.5rem;
+  margin: 1rem 0rem 1rem 10rem;
+  outline: none;
 }
