@@ -89,47 +89,55 @@ const WorkArea = () => {
   };
 
   // 新增節點，參數id預設為null
-  const addNode = (id = null) => {
+  const addNode = () => {
     const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`; //生成一個隨機顏色，用於新節點線段
+    const newNode = {
+      id: uuidv4(),
+      name: "節點",
+      color: randomColor,
+      isNew: true, //標記為新創建的節點
+    };
     //更新節點陣列狀態，加入新的節點
     setNodes((prev) => {
-      const newNodes = [...prev]; //創建一個新的數組，其中包含目前所有節點
-      //創建新節點物件，其中包含所需的屬性
-      const newNode = {
-        id: uuidv4(),
-        name: "節點",
-        color: randomColor,
-        isNew: true, //標記為新創建的節點
-      };
-      //如果id為 null代表目前選取的是根節點
-      if (id === null) {
-        newNodes.push(newNode); //將新節點添加到數組末尾
-        nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
-      } else {
-        const index = newNodes.findIndex((node) => node.id === id); //找出陣列中符合id節點之索引
-        newNodes.splice(index + 1, 0, newNode); // 在指定id的位置之後插入新節點
-        nodeRefs.current.splice(index + 1, 0, React.createRef()); // 為每個新節點添加一個引用
-      }
+      const newNodes = [...prev, newNode]; //創建一個新的數組，將新節點添加到數組末尾
+      nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
       setSelectedNodes([newNode.id]); //將原先選擇的節點更新為新節點，轉換焦點
       return newNodes;
     });
   };
+
   // 刪除節點
   const delNode = useCallback(
     (idArr) => {
-      //更新節點
+      //遞迴處理刪除節點及子節點，返回排除刪除選中節點後的新nodes陣列
+      const deleteNodes = (nodes, idsToDelete) => {
+        return nodes.filter((node) => {
+          if (idsToDelete.includes(node.id)) {
+            //若當前節點的id在要刪除的id陣列中，則刪除此節點
+            return false;
+          }
+          if (node.children) {
+            //若當前節點有子節點，傳入children繼續遞迴遍歷處理下一層
+            node.children = deleteNodes(node.children, idsToDelete);
+          }
+          //保留沒有選中的節點，也就是不需要刪除的節點
+          return true;
+        });
+      };
+      //更新狀態為刪除選中節點後的新nodes
       setNodes((prev) => {
-        //去除掉選中的節點；在nodes中篩選出id不包含在idArr中的節點，組成新的節點陣列，代表沒被選中的節點
-        const newNodes = prev.filter((node) => !idArr.includes(node.id));
-        //去除掉選中的節點Dom；在目前引用的節點Dom元素中，篩選出與nodes中對應索引的id不包含在idArr中的引用，組成新的引用陣列，代表沒被選中的節點Dom
-        const newRefs = nodeRefs.current.filter(
-          (item, index) => !idArr.includes(prev[index].id)
+        //遞迴處理所有節點，會得到需要留下的節點陣列
+        const newNodes = deleteNodes(prev, idArr);
+        //過濾掉需刪除的節點引用的nodeRefs，更新引用
+        nodeRefs.current = nodeRefs.current.filter(
+          (item, index) => !idArr.includes(prev[index]?.id)
         );
-        nodeRefs.current = newRefs; //更新引用的節點Dom
         return newNodes;
       });
+
+      setSelectedNodes([]);
     },
-    [nodeRefs, setNodes]
+    [nodeRefs, setNodes, setSelectedNodes]
   );
 
   return (

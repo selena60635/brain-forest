@@ -36,11 +36,11 @@
   align-items: center;
   background: #000229;
   color: white;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border: 2px solid transparent;
   border-radius: 15px;
   outline: none;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .input-box {
@@ -59,12 +59,12 @@
   align-items: center;
   border-radius: 15px;
   background: #ffac5e;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   margin: 1rem 0rem 1rem 10rem;
   outline: none;
-  font-size: 1.2rem;
 }
-.svg {
+.lines,
+.subLines {
   position: absolute;
   z-index: -1;
   width: 100%;
@@ -100,6 +100,7 @@
   border-radius: 15px;
   background: #53dfc3;
   padding: 0.5rem;
-  margin: 1rem 0rem 1rem 10rem;
+  margin: 0.5rem 0rem 0.5rem 6rem;
   outline: none;
+  font-size: 0.8rem;
 }

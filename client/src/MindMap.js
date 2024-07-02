@@ -5,162 +5,9 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
-
-//聚焦到inputbox並自動選取文本
-const selectText = (inputElement) => {
-  if (inputElement) {
-    inputElement.focus(); //將焦點設置到inputRef目前引用的Dom元素上
-    //選取整個文本
-    const range = document.createRange(); //創建一個新的Range物件，用來表示文本
-    range.selectNodeContents(inputElement); //加入inputRef目前引用的Dom元素的所有內容(包含textnode的文本)
-    const selection = window.getSelection(); //取得目前選擇的文本範圍(Selection物件)
-    selection.removeAllRanges(); //清除目前選擇的文本範圍
-    selection.addRange(range); //將包含目前選取文本內容的Range物件加入到目前selection中
-  }
-};
-
-// 根節點元件
-const RootNode = ({
-  isEditRoot,
-  setIsEditRoot,
-  rootRef,
-  rootNode,
-  setRootNode,
-  rootNodeRef,
-  isSelected,
-}) => {
-  const inputRef = useRef(null);
-
-  //進入編輯模式後切換焦點
-  useEffect(() => {
-    if (isEditRoot && inputRef.current) {
-      selectText(inputRef.current);
-    }
-  }, [isEditRoot]);
-
-  // 開啟編輯模式
-  const editMode = () => {
-    setIsEditRoot(true);
-  };
-
-  // 關閉編輯模式
-  const unEditMode = (e) => {
-    setRootNode((prev) => ({ ...prev, name: e.target.innerText })); //將inputbox輸入的新名稱更新到rootNode狀態中
-    setIsEditRoot(false);
-  };
-
-  return (
-    <div
-      className={`rootnode ${isSelected ? "selected" : ""}`}
-      tabIndex="0"
-      ref={rootRef}
-      onDoubleClick={editMode}
-    >
-      {isEditRoot ? (
-        <>
-          <div
-            ref={inputRef}
-            className="input-box"
-            style={{
-              minWidth: rootNodeRef.current.getBoundingClientRect().width, //至少要與根節點同寬
-              maxWidth: "500px", //最大不能超過500
-            }}
-            contentEditable="true"
-            // 加上這行才不會有Warning: A component is `contentEditable` and contains `children` managed by React....
-            suppressContentEditableWarning="true"
-            onBlur={unEditMode}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === "Tab") {
-                e.preventDefault();
-                e.stopPropagation();
-                unEditMode(e);
-              }
-            }}
-          >
-            {rootNode.name}
-          </div>
-          <span>{rootNode.name}</span>
-        </>
-      ) : (
-        <span>{rootNode.name}</span>
-      )}
-    </div>
-  );
-};
-
-// 節點元件(第二層)
-const Node = ({ node, nodeRef, setNodes, isSelected }) => {
-  const [isEditing, setIsEditing] = useState(node.isNew);
-  const inputRef = useRef(null);
-
-  // 新增新節點時自動聚焦該節點的inputbox
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      setNodes((prev) =>
-        prev.map((item) =>
-          item.id === node.id ? { ...item, isNew: false } : item
-        )
-      );
-      selectText(inputRef.current);
-    }
-  }, [isEditing, node.id, setNodes]);
-
-  // 開啟編輯模式
-  const editMode = () => {
-    setIsEditing(true);
-  };
-
-  // 關閉編輯模式
-  const unEditMode = (e) => {
-    setNodes((prev) =>
-      prev.map((item) =>
-        item.id === node.id ? { ...item, name: e.target.innerText } : item
-      )
-    ); //找出nodes中符合當前節點ID的元件，並將inputbox輸入的新名稱更新到該節點上
-    setIsEditing(false);
-  };
-
-  return (
-    <div>
-      <div
-        className={`node ${isSelected ? "selected" : ""}`}
-        tabIndex="0"
-        ref={nodeRef}
-        onDoubleClick={editMode}
-      >
-        {isEditing ? (
-          <>
-            <div
-              ref={inputRef}
-              className="input-box"
-              style={{
-                minWidth: nodeRef.current
-                  ? nodeRef.current.getBoundingClientRect().width
-                  : "68px",
-                maxWidth: "500px",
-              }}
-              contentEditable="true"
-              suppressContentEditableWarning="true"
-              onBlur={unEditMode}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === "Tab") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  unEditMode(e);
-                }
-              }}
-            >
-              {node.name}
-            </div>
-            <span>{node.name}</span>
-          </>
-        ) : (
-          <span>{node.name}</span>
-        )}
-      </div>
-    </div>
-  );
-};
+import Node from "./components/Node";
+import RootNode from "./components/RootNode";
+import { v4 as uuidv4 } from "uuid";
 
 // 心智圖組件
 const MindMap = ({
@@ -176,114 +23,147 @@ const MindMap = ({
   nodeRefs,
   delNode,
 }) => {
-  // const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
   const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
-  const pathRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的線段Dom元素
+  const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
 
-  // 取得根結點svg位置
+  //取得根結點svg位置
   const getRootSvgLoc = () => {
-    if (rootNodeRef.current && pathRef.current) {
+    if (rootNodeRef.current && svgRef.current) {
       const rootRect = rootNodeRef.current.getBoundingClientRect(); // 獲取根節點的矩形物件
-      const pathRect = pathRef.current.getBoundingClientRect(); // 獲取 SVG 的矩形物件
-
+      const svgRect = svgRef.current.getBoundingClientRect(); // 獲取 SVG 的矩形物件
       return {
-        x: rootRect.left - pathRect.left + rootRect.width, // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
-        y: rootRect.top - pathRect.top + rootRect.height / 2, // 計算根節點的中心點相對於g的Y坐標
+        x: rootRect.left - svgRect.left + rootRect.width, // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
+        y: rootRect.top - svgRect.top + rootRect.height / 2, // 計算根節點的中心點相對於g的Y坐標
       };
     }
     return { x: 0, y: 0 };
   };
 
-  // 取得節點svg位置
-  const getNodeSvgLoc = (nodeRef) => {
-    if (nodeRef.current && pathRef.current) {
-      const nodeRect = nodeRef.current.getBoundingClientRect(); // 獲取節點的矩形物件
-      const pathRect = pathRef.current.getBoundingClientRect(); // 獲取 path 的矩形物件
-      return {
-        x: nodeRect.left - pathRect.left, // 計算節點的中心點相對於g的X坐標，也就是將g當作視口去計算
-        y: nodeRect.top - pathRect.top + nodeRect.height / 2, // 計算節點的中心點相對於g的Y坐標
-      };
-    }
-    return { x: 0, y: 0 };
-  };
+  //取得節點svg位置
+  const getNodeSvgLoc = useCallback(
+    (nodeRef) => {
+      if (nodeRef && nodeRef.current && svgRef.current) {
+        const nodeRect = nodeRef.current.getBoundingClientRect();
+        const svgRect = svgRef.current.getBoundingClientRect();
+        return {
+          x: nodeRect.left - svgRect.left,
+          y: nodeRect.top - svgRect.top + nodeRect.height / 2,
+        };
+      }
+      return { x: 0, y: 0 };
+    },
+    [svgRef]
+  );
+  //取得節點canvas位置
+  const getNodeCanvasLoc = useCallback(
+    (nodeRef) => {
+      if (nodeRef && nodeRef.current && canvasRef.current) {
+        const nodeRect = nodeRef.current.getBoundingClientRect();
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        return {
+          left: nodeRect.left - canvasRect.left + canvasRef.current.scrollLeft,
+          top: nodeRect.top - canvasRect.top + canvasRef.current.scrollTop,
+          right:
+            nodeRect.right - canvasRect.left + canvasRef.current.scrollLeft,
+          bottom:
+            nodeRect.bottom - canvasRect.top + canvasRef.current.scrollTop,
+        };
+      }
+      return { left: 0, top: 0, right: 0, bottom: 0 };
+    },
+    [canvasRef]
+  );
+  //更新節點與根節點的連接線
+  const updateLocs = useCallback(() => {
+    setNodes((prev) => [...prev]);
+    setRootNode((prev) => ({ ...prev }));
+  }, [setNodes, setRootNode]);
 
-  // 取得節點canvas位置
-  const getNodeCanvasLoc = (nodeRef, canvasRef) => {
-    if (nodeRef.current && canvasRef.current) {
-      const nodeRect = nodeRef.current.getBoundingClientRect();
-      const canvasRect = canvasRef.current.getBoundingClientRect();
-      return {
-        left: nodeRect.left - canvasRect.left + canvasRef.current.scrollLeft,
-        top: nodeRect.top - canvasRect.top + canvasRef.current.scrollTop,
-        right: nodeRect.right - canvasRect.left + canvasRef.current.scrollLeft,
-        bottom: nodeRect.bottom - canvasRect.top + canvasRef.current.scrollTop,
-      };
-    }
-    return { left: 0, top: 0, right: 0, bottom: 0 };
-  };
+  const nodesString = JSON.stringify(nodes); // 將 nodes 轉換為字符串
 
-  const rootSvgLoc = getRootSvgLoc();
+  useLayoutEffect(() => {
+    updateLocs();
+  }, [
+    nodesString,
+    rootNode.name,
+    nodeRefs,
+    setNodes,
+    setRootNode,
+    getNodeSvgLoc,
+    updateLocs,
+  ]);
 
-  //判斷節點是否被選中
+  //判定是否被選取
   const isNodeSelected = useCallback(
     (nodeRect) => {
-      if (!selectBox) return false;
+      if (!selectBox) return false; // 如果沒有生成選擇框，返回false
+      // 計算選擇框的四個邊位置
       const selBox = {
         left: selectBox.left,
         right: selectBox.left + selectBox.width,
         top: selectBox.top,
         bottom: selectBox.top + selectBox.height,
       };
-
+      // 計算節點的四個邊位置
       const nodeBox = {
         left: nodeRect.left,
         right: nodeRect.right,
         top: nodeRect.top,
         bottom: nodeRect.bottom,
       };
-
-      return !(
-        selBox.right < nodeBox.left ||
-        selBox.left > nodeBox.right ||
-        selBox.bottom < nodeBox.top ||
-        selBox.top > nodeBox.bottom
+      //滿足以下的條件就表示選擇框有接觸到節點
+      return (
+        selBox.right > nodeBox.left &&
+        selBox.left < nodeBox.right &&
+        selBox.bottom > nodeBox.top &&
+        selBox.top < nodeBox.bottom
       );
     },
-    [selectBox]
+    [selectBox] //當selectBox 發生變化時，重新執行函式
   );
-  //處理節點與根節點的連接線
-  useLayoutEffect(() => {
-    const updateLocs = () => {
-      const rootSvgLoc = getRootSvgLoc();
-      const nodeLocs = nodeRefs.current.map((ref) => getNodeSvgLoc(ref)); // 獲取每個節點的位置
-      setNodes((prev) =>
-        prev.map((node, index) => ({
-          ...node,
-          position: nodeLocs[index] || node.position,
-        }))
-      );
 
-      setRootNode((prev) => ({ ...prev, position: rootSvgLoc }));
-    };
-    updateLocs(); // 更新位置
-  }, [nodes.length, rootNode.name, nodeRefs, setNodes, setRootNode]); // 當 nodes 的長度發生變化時，重新計算位置
-
-  //更新選擇名單
   useLayoutEffect(() => {
     if (selectBox) {
-      const selected = [];
-      const rootNodeRect = getNodeCanvasLoc(rootNodeRef, canvasRef);
-      if (isNodeSelected(rootNodeRect)) {
+      const selected = []; //存放被選中的節點ID
+      const rootRect = getNodeCanvasLoc(rootNodeRef); //取得根節點在canvas上的位置
+      //如果根節點被選中，將根節點ID加入到selected中
+      if (isNodeSelected(rootRect)) {
         selected.push(rootNode.id);
       }
-      nodes.forEach((node, index) => {
-        const nodeRect = getNodeCanvasLoc(nodeRefs.current[index], canvasRef);
-        if (isNodeSelected(nodeRect)) {
-          selected.push(node.id);
-        }
-      });
-      setSelectedNodes(selected);
+
+      //一層層遞迴遍歷nodes中所有的節點，判斷每一個節點是否有被選中
+      const traverseNodes = (nodes, refs, parentRefs) => {
+        nodes.forEach((node, index) => {
+          //取得當前節點的引用
+          const nodeRef = parentRefs
+            ? parentRefs.current[index]
+            : refs.current[index];
+
+          if (nodeRef) {
+            const nodeRect = getNodeCanvasLoc(nodeRef); // 取得當前節點在canvas上的位置
+            if (isNodeSelected(nodeRect)) {
+              //若當前節點在選擇範圍內，將節點ID加入到selected中
+              selected.push(node.id);
+            }
+            if (node.children) {
+              //若當前節點不在選擇範圍內，檢查是否有children，如果有則繼續檢查
+
+              if (!nodeRefs.current[node.id]) {
+                //若引用中沒有包含當前節點，代表...，在引用中新增當前節點的..
+                nodeRefs.current[node.id] = [];
+              }
+              //將當前節點的children、children中子節點的引用、子節點的父節點引用傳入，遞迴一層層遍歷子節點
+              traverseNodes(node.children, nodeRefs, {
+                current: nodeRefs.current[node.id],
+              });
+            }
+          }
+        });
+      };
+
+      traverseNodes(nodes, nodeRefs); //開始遞迴遍歷所有節點
+      setSelectedNodes(selected); //更新選擇名單
     }
   }, [
     selectBox,
@@ -293,31 +173,217 @@ const MindMap = ({
     canvasRef,
     nodeRefs,
     setSelectedNodes,
+    getNodeCanvasLoc,
   ]);
 
-  //處理新增、刪除節點事件監聽
+  //新增子節點
+  const addChildNode = useCallback(
+    (parentId) => {
+      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+      const newChildNode = {
+        id: uuidv4(),
+        name: "子節點",
+        color: randomColor,
+        isNew: true,
+        parentId,
+        children: [],
+      };
+      //遞迴一層層遍歷nodes找到相應的父節點，並新增子節點
+      const addChildToParent = (nodes) =>
+        nodes.map((node) => {
+          if (node.id === parentId) {
+            //若當前節點是父節點，將新的子節點加入到當前節點的children中
+            return {
+              ...node,
+              children: [...(node.children || []), newChildNode],
+            };
+          } else if (node.children && node.children.length > 0) {
+            //若當前節點有子節點
+            return {
+              ...node,
+              children: addChildToParent(node.children), //遞迴處理其children，繼續查找下一層子節點是否包含父節點
+            };
+          }
+          return node;
+        });
+      //更新nodes狀態為遞迴處理過的新nodes
+      setNodes((prev) => addChildToParent(prev));
+      //更新選擇名單為新子節點
+      setSelectedNodes([newChildNode.id]);
+    },
+    [setNodes, setSelectedNodes]
+  );
+
+  //查找當前選取節點的父節點id，以及父節點的children
+  const findParentNode = useCallback(
+    (nodes) => {
+      let parentNodeId = null;
+      let parentNodeChildren = null;
+      //遞迴查找父節點
+      const findNode = (nodes) => {
+        for (let node of nodes) {
+          if (node.children) {
+            //若當前節點有子節點，檢查子節點中是否有匹配選中的節點ID
+            if (node.children.some((child) => child.id === selectedNodes[0])) {
+              //若有匹配到，代表當前選中節點是在這一層，設定其父節點id與同層的子節點們
+              parentNodeId = node.id;
+              parentNodeChildren = node.children;
+              return; //找到當前選中節點並完成設定就結束遞迴
+            }
+            //若沒匹配到，接續遞迴處理下一層
+            findNode(node.children);
+          }
+        }
+      };
+
+      findNode(nodes); //遞迴一層層遍歷nodes
+      return { parentNodeId, parentNodeChildren };
+    },
+    [selectedNodes]
+  );
+
+  //新增相鄰子節點
+  const addSiblingChildNode = useCallback(
+    (parentNodeId, parentNodeChildren) => {
+      //查找當前選中節點在父節點的children中的索引
+      const selectedNodeIndex = parentNodeChildren.findIndex(
+        (child) => child.id === selectedNodes[0]
+      );
+
+      const newSiblingNode = {
+        id: uuidv4(),
+        name: "子節點",
+        color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+        isNew: true,
+        children: [],
+      };
+      //遞迴查找相應的父節點，並在父節點children中新增相鄰子節點
+      const addSibling = (nodes) => {
+        return nodes.map((node) => {
+          if (node.id === parentNodeId) {
+            //若當前節點的ID與父節點ID匹配，在相應位置新增相鄰子節點
+            return {
+              ...node,
+              children: [
+                ...node.children.slice(0, selectedNodeIndex + 1),
+                newSiblingNode,
+                ...node.children.slice(selectedNodeIndex + 1),
+              ],
+            };
+          } else if (node.children && node.children.length > 0) {
+            //若當前節點有children，則繼續遞迴處理其children
+            return {
+              ...node,
+              children: addSibling(node.children), //若當前節點既不是父節點，也沒有子節點，則不做任何改變
+            };
+          }
+          return node;
+        });
+      };
+      setNodes((prev) => addSibling(prev)); //更新節點狀態為遞迴處理過的新nodes
+      setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新相鄰子節點
+
+      //確保在引用中有當前父節點，若沒有則新增
+      if (!nodeRefs.current[parentNodeId]) {
+        nodeRefs.current[parentNodeId] = [];
+      }
+      // 在引用中相應位置插入新的相鄰子節點引用
+      nodeRefs.current[parentNodeId].splice(
+        selectedNodeIndex + 1,
+        0,
+        React.createRef()
+      );
+    },
+    [selectedNodes, setNodes, setSelectedNodes, nodeRefs]
+  );
+
+  //新增相鄰節點
+  const addSiblingNode = useCallback(() => {
+    //查找當前選中節點在nodes中的索引
+    const selectedNodeIndex = nodes.findIndex(
+      (node) => node.id === selectedNodes[0]
+    );
+    const newSiblingNode = {
+      id: uuidv4(),
+      name: "節點",
+      color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+      isNew: true,
+      children: [],
+    };
+    //更新nodes狀態，將新的相鄰節點插入到相應位置
+    setNodes((prevNodes) => {
+      const newNodes = [
+        ...prevNodes.slice(0, selectedNodeIndex + 1),
+        newSiblingNode,
+        ...prevNodes.slice(selectedNodeIndex + 1),
+      ];
+      return newNodes;
+    });
+    setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新的相鄰節點
+    nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
+  }, [nodes, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
-        (e.key === "Enter" && selectedNodes.length === 1) ||
-        (e.key === "Tab" && selectedNodes[0] === rootNode.id)
+        ["Enter", "Delete", "Tab"].includes(e.key) &&
+        selectedNodes.length === 1
       ) {
         e.preventDefault();
         e.stopPropagation();
-        const selectedNodeId = selectedNodes[0];
-        addNode(selectedNodeId === rootNode.id ? null : selectedNodeId);
+      }
+      if (e.key === "Enter" && selectedNodes.length === 1) {
+        if (selectedNodes[0] === rootNode.id) {
+          addNode();
+          return;
+        }
+
+        const { parentNodeId, parentNodeChildren } = findParentNode([
+          rootNode,
+          ...nodes,
+        ]);
+
+        if (parentNodeId && parentNodeChildren) {
+          addSiblingChildNode(parentNodeId, parentNodeChildren);
+        } else {
+          addSiblingNode();
+        }
       }
 
       if (e.key === "Delete" && selectedNodes.length > 0) {
-        e.preventDefault();
-        e.stopPropagation();
         delNode(selectedNodes);
+      }
+
+      if (e.key === "Tab" && selectedNodes.length === 1) {
+        if (selectedNodes[0] === rootNode.id) {
+          addNode();
+        } else {
+          addChildNode(selectedNodes[0]);
+        }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown); //要移除事件，否則會導致無限循環造成錯誤
-  }, [selectedNodes, isEditRoot, rootNode.id, delNode, addNode]);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [
+    selectedNodes,
+    isEditRoot,
+    rootNode.id,
+    delNode,
+    addNode,
+    addChildNode,
+    nodeRefs,
+    nodes,
+    rootNode,
+    setNodes,
+    setSelectedNodes,
+    updateLocs,
+    addSiblingNode,
+    addSiblingChildNode,
+    findParentNode,
+  ]);
+
+  const rootSvgLoc = getRootSvgLoc();
 
   return (
     <div className="mindmap">
@@ -341,23 +407,24 @@ const MindMap = ({
             setNodes={setNodes}
             delNode={delNode}
             isSelected={selectedNodes.includes(node.id)}
+            selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
+            nodeRefs={nodeRefs}
           />
         ))}
       </div>
-      <div className="child-nodes"></div>
       <svg
-        className="svg"
+        className="lines"
         overflow="visible"
         xmlns="http://www.w3.org/2000/svg"
-        ref={pathRef}
+        ref={svgRef}
       >
         {nodes.map((node, index) => {
-          const nodeLoc = getNodeSvgLoc(nodeRefs.current[index]); // 獲取每個節點的位置
+          const nodeLoc = getNodeSvgLoc(nodeRefs.current[index]);
           return (
             <React.Fragment key={node.id}>
               <path
-                d={`M ${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
+                d={`M${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
                 stroke={node.color}
                 fill="none"
                 strokeWidth="3"
