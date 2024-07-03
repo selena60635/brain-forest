@@ -72,10 +72,10 @@ const RootNode = ({
           >
             {rootNode.name}
           </div>
-          <span>{rootNode.name}</span>
+          <span className="text-white">{rootNode.name}</span>
         </>
       ) : (
-        <span>{rootNode.name}</span>
+        <span className="text-white">{rootNode.name}</span>
       )}
     </div>
   );

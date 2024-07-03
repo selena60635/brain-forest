@@ -7,7 +7,6 @@ const WorkArea = () => {
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
-
   const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
@@ -105,7 +104,149 @@ const WorkArea = () => {
       return newNodes;
     });
   };
+  //新增子節點
+  const addChildNode = useCallback(
+    (parentId) => {
+      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+      const newChildNode = {
+        id: uuidv4(),
+        name: "子節點",
+        color: randomColor,
+        isNew: true,
+        parentId,
+        children: [],
+      };
+      //遞迴一層層遍歷nodes找到相應的父節點，並新增子節點
+      const addChildToParent = (nodes) =>
+        nodes.map((node) => {
+          if (node.id === parentId) {
+            //若當前節點是父節點，將新的子節點加入到當前節點的children中
+            return {
+              ...node,
+              children: [...(node.children || []), newChildNode],
+            };
+          } else if (node.children && node.children.length > 0) {
+            //若當前節點有子節點
+            return {
+              ...node,
+              children: addChildToParent(node.children), //遞迴處理其children，繼續查找下一層子節點是否包含父節點
+            };
+          }
+          return node;
+        });
+      //更新nodes狀態為遞迴處理過的新nodes
+      setNodes((prev) => addChildToParent(prev));
+      //更新選擇名單為新子節點
+      setSelectedNodes([newChildNode.id]);
+    },
+    [setNodes, setSelectedNodes]
+  );
+  //查找當前選取節點的父節點id，以及父節點的children
+  const findParentNode = useCallback(
+    (nodes) => {
+      let parentNode = null;
+      //遞迴查找父節點
+      const findNode = (nodes) => {
+        for (let node of nodes) {
+          if (node.children && node.children.length > 0) {
+            //若當前節點有children且不為空，檢查子節點中是否有匹配選中的節點ID
+            if (node.children.some((child) => child.id === selectedNodes[0])) {
+              //若有匹配到，代表當前選中節點是在這一層，設定其父節點
+              parentNode = node;
+              return;
+            }
+            //若沒匹配到，接續遞迴處理下一層
+            findNode(node.children);
+          }
+        }
+      };
 
+      findNode(nodes); //遞迴一層層遍歷nodes
+      return parentNode;
+    },
+    [selectedNodes]
+  );
+
+  //新增相鄰子節點
+  const addSiblingChildNode = useCallback(
+    (parentNode) => {
+      //查找當前選中節點在父節點的children中的索引
+      const selectedNodeIndex = parentNode.children.findIndex(
+        (child) => child.id === selectedNodes[0]
+      );
+
+      const newSiblingNode = {
+        id: uuidv4(),
+        name: "子節點",
+        color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+        isNew: true,
+        children: [],
+      };
+      //遞迴查找相應的父節點，並在父節點children中新增相鄰子節點
+      const addSibling = (nodes) => {
+        return nodes.map((node) => {
+          if (node.id === parentNode.id) {
+            //若當前節點的ID與父節點ID匹配，在相應位置新增相鄰子節點
+            return {
+              ...node,
+              children: [
+                ...node.children.slice(0, selectedNodeIndex + 1),
+                newSiblingNode,
+                ...node.children.slice(selectedNodeIndex + 1),
+              ],
+            };
+          } else if (node.children && node.children.length > 0) {
+            //若當前節點有children，則繼續遞迴處理其children
+            return {
+              ...node,
+              children: addSibling(node.children),
+            };
+          }
+          return node; //若當前節點既不是父節點，也沒有子節點，則不做任何改變
+        });
+      };
+
+      setNodes((prev) => addSibling(prev)); //更新節點狀態為遞迴處理過的新nodes
+      setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新相鄰子節點
+      //確保在引用中有當前父節點，若沒有則新增
+      if (!nodeRefs.current[parentNode.id]) {
+        nodeRefs.current[parentNode.id] = [];
+      }
+      // 在引用中相應位置插入新的相鄰子節點引用
+      nodeRefs.current[parentNode.id].splice(
+        selectedNodeIndex + 1,
+        0,
+        React.createRef()
+      );
+    },
+    [selectedNodes, setNodes, setSelectedNodes, nodeRefs]
+  );
+
+  //新增相鄰節點
+  const addSiblingNode = useCallback(() => {
+    //查找當前選中節點在nodes中的索引
+    const selectedNodeIndex = nodes.findIndex(
+      (node) => node.id === selectedNodes[0]
+    );
+    const newSiblingNode = {
+      id: uuidv4(),
+      name: "節點",
+      color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+      isNew: true,
+      children: [],
+    };
+    //更新nodes狀態，將新的相鄰節點插入到相應位置
+    setNodes((prevNodes) => {
+      const newNodes = [
+        ...prevNodes.slice(0, selectedNodeIndex + 1),
+        newSiblingNode,
+        ...prevNodes.slice(selectedNodeIndex + 1),
+      ];
+      return newNodes;
+    });
+    setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新的相鄰節點
+    nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
+  }, [nodes, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
   // 刪除節點
   const delNode = useCallback(
     (idArr) => {
@@ -141,24 +282,27 @@ const WorkArea = () => {
   );
 
   return (
-    <>
+    <div className="flex">
       <div
         className="canvas-wrap"
         onMouseDown={handleMouseDown}
         ref={canvasRef}
       >
-        <div
-          ref={btnsRef}
-          className="btns-group z-20 flex shrink-0 grow-0 justify-around gap-4 border-t border-gray-200 bg-white/50 p-2.5 shadow-lg backdrop-blur-lg fixed top-2/4 -translate-y-2/4 left-6 min-h-[auto] min-w-[64px] flex-col rounded-lg border"
-        >
+        <div ref={btnsRef} className="top-20 left-5 fixed z-20">
           <BtnsGroup
-            addNode={addNode}
-            delNode={delNode}
             selectedNodes={selectedNodes}
             rootNode={rootNode}
+            nodes={nodes}
             setRootNode={setRootNode}
+            addNode={addNode}
+            delNode={delNode}
+            addChildNode={addChildNode}
+            findParentNode={findParentNode}
+            addSiblingNode={addSiblingNode}
+            addSiblingChildNode={addSiblingChildNode}
           />
         </div>
+
         {selectBox && (
           <div
             className="select-box"
@@ -174,8 +318,6 @@ const WorkArea = () => {
           <MindMap
             selectBox={selectBox}
             canvasRef={canvasRef}
-            addNode={addNode}
-            delNode={delNode}
             setNodes={setNodes}
             nodes={nodes}
             nodeRefs={nodeRefs}
@@ -183,10 +325,16 @@ const WorkArea = () => {
             setRootNode={setRootNode}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
+            addNode={addNode}
+            delNode={delNode}
+            addChildNode={addChildNode}
+            findParentNode={findParentNode}
+            addSiblingNode={addSiblingNode}
+            addSiblingChildNode={addSiblingChildNode}
           />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

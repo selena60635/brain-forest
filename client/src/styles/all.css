@@ -7,13 +7,32 @@
     max-width: 100%;
     vertical-align: middle;
   }
+  body,
+  a,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  p,
+  span {
+    @apply text-secondary;
+  }
+  *:focus {
+    @apply outline-none;
+  }
 }
 @layer components {
   .mindmap {
     @apply relative z-0 flex items-center justify-center;
   }
+  .btn {
+    @apply flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800;
+  }
+  .btns-group {
+    @apply flex justify-around border-t border-gray-200 bg-white/50 p-2 shadow-lg backdrop-blur-lg  flex-col rounded-lg border;
+  }
 }
-
 .canvas {
   width: 10000px;
   height: 5000px;
@@ -24,7 +43,7 @@
 }
 .canvas-wrap {
   width: 100%;
-  height: calc(100vh - 54.52px);
+  height: calc(100vh - 63.52px);
   overflow: scroll;
   user-select: none;
   position: relative;

@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import Node from "./components/Node";
 import RootNode from "./components/RootNode";
-import { v4 as uuidv4 } from "uuid";
 
 // 心智圖組件
 const MindMap = ({
@@ -22,6 +21,10 @@ const MindMap = ({
   selectedNodes,
   nodeRefs,
   delNode,
+  findParentNode,
+  addSiblingNode,
+  addSiblingChildNode,
+  addChildNode,
 }) => {
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
   const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
@@ -176,152 +179,150 @@ const MindMap = ({
     getNodeCanvasLoc,
   ]);
 
-  //新增子節點
-  const addChildNode = useCallback(
-    (parentId) => {
-      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
-      const newChildNode = {
-        id: uuidv4(),
-        name: "子節點",
-        color: randomColor,
-        isNew: true,
-        parentId,
-        children: [],
-      };
-      //遞迴一層層遍歷nodes找到相應的父節點，並新增子節點
-      const addChildToParent = (nodes) =>
-        nodes.map((node) => {
-          if (node.id === parentId) {
-            //若當前節點是父節點，將新的子節點加入到當前節點的children中
-            return {
-              ...node,
-              children: [...(node.children || []), newChildNode],
-            };
-          } else if (node.children && node.children.length > 0) {
-            //若當前節點有子節點
-            return {
-              ...node,
-              children: addChildToParent(node.children), //遞迴處理其children，繼續查找下一層子節點是否包含父節點
-            };
-          }
-          return node;
-        });
-      //更新nodes狀態為遞迴處理過的新nodes
-      setNodes((prev) => addChildToParent(prev));
-      //更新選擇名單為新子節點
-      setSelectedNodes([newChildNode.id]);
-    },
-    [setNodes, setSelectedNodes]
-  );
+  // //新增子節點
+  // const addChildNode = useCallback(
+  //   (parentId) => {
+  //     const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+  //     const newChildNode = {
+  //       id: uuidv4(),
+  //       name: "子節點",
+  //       color: randomColor,
+  //       isNew: true,
+  //       parentId,
+  //       children: [],
+  //     };
+  //     //遞迴一層層遍歷nodes找到相應的父節點，並新增子節點
+  //     const addChildToParent = (nodes) =>
+  //       nodes.map((node) => {
+  //         if (node.id === parentId) {
+  //           //若當前節點是父節點，將新的子節點加入到當前節點的children中
+  //           return {
+  //             ...node,
+  //             children: [...(node.children || []), newChildNode],
+  //           };
+  //         } else if (node.children && node.children.length > 0) {
+  //           //若當前節點有子節點
+  //           return {
+  //             ...node,
+  //             children: addChildToParent(node.children), //遞迴處理其children，繼續查找下一層子節點是否包含父節點
+  //           };
+  //         }
+  //         return node;
+  //       });
+  //     //更新nodes狀態為遞迴處理過的新nodes
+  //     setNodes((prev) => addChildToParent(prev));
+  //     //更新選擇名單為新子節點
+  //     setSelectedNodes([newChildNode.id]);
+  //   },
+  //   [setNodes, setSelectedNodes]
+  // );
 
-  //查找當前選取節點的父節點id，以及父節點的children
-  const findParentNode = useCallback(
-    (nodes) => {
-      let parentNodeId = null;
-      let parentNodeChildren = null;
-      //遞迴查找父節點
-      const findNode = (nodes) => {
-        for (let node of nodes) {
-          if (node.children) {
-            //若當前節點有子節點，檢查子節點中是否有匹配選中的節點ID
-            if (node.children.some((child) => child.id === selectedNodes[0])) {
-              //若有匹配到，代表當前選中節點是在這一層，設定其父節點id與同層的子節點們
-              parentNodeId = node.id;
-              parentNodeChildren = node.children;
-              return; //找到當前選中節點並完成設定就結束遞迴
-            }
-            //若沒匹配到，接續遞迴處理下一層
-            findNode(node.children);
-          }
-        }
-      };
+  // //查找當前選取節點的父節點id，以及父節點的children
+  // const findParentNode = useCallback(
+  //   (nodes) => {
+  //     let parentNode = null;
+  //     //遞迴查找父節點
+  //     const findNode = (nodes) => {
+  //       for (let node of nodes) {
+  //         if (node.children && node.children.length > 0) {
+  //           //若當前節點有children且不為空，檢查子節點中是否有匹配選中的節點ID
+  //           if (node.children.some((child) => child.id === selectedNodes[0])) {
+  //             //若有匹配到，代表當前選中節點是在這一層，設定其父節點
+  //             parentNode = node;
+  //             return;
+  //           }
+  //           //若沒匹配到，接續遞迴處理下一層
+  //           findNode(node.children);
+  //         }
+  //       }
+  //     };
 
-      findNode(nodes); //遞迴一層層遍歷nodes
-      return { parentNodeId, parentNodeChildren };
-    },
-    [selectedNodes]
-  );
+  //     findNode(nodes); //遞迴一層層遍歷nodes
+  //     return parentNode;
+  //   },
+  //   [selectedNodes]
+  // );
 
-  //新增相鄰子節點
-  const addSiblingChildNode = useCallback(
-    (parentNodeId, parentNodeChildren) => {
-      //查找當前選中節點在父節點的children中的索引
-      const selectedNodeIndex = parentNodeChildren.findIndex(
-        (child) => child.id === selectedNodes[0]
-      );
+  // //新增相鄰子節點
+  // const addSiblingChildNode = useCallback(
+  //   (parentNode) => {
+  //     //查找當前選中節點在父節點的children中的索引
+  //     const selectedNodeIndex = parentNode.children.findIndex(
+  //       (child) => child.id === selectedNodes[0]
+  //     );
 
-      const newSiblingNode = {
-        id: uuidv4(),
-        name: "子節點",
-        color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
-        isNew: true,
-        children: [],
-      };
-      //遞迴查找相應的父節點，並在父節點children中新增相鄰子節點
-      const addSibling = (nodes) => {
-        return nodes.map((node) => {
-          if (node.id === parentNodeId) {
-            //若當前節點的ID與父節點ID匹配，在相應位置新增相鄰子節點
-            return {
-              ...node,
-              children: [
-                ...node.children.slice(0, selectedNodeIndex + 1),
-                newSiblingNode,
-                ...node.children.slice(selectedNodeIndex + 1),
-              ],
-            };
-          } else if (node.children && node.children.length > 0) {
-            //若當前節點有children，則繼續遞迴處理其children
-            return {
-              ...node,
-              children: addSibling(node.children), //若當前節點既不是父節點，也沒有子節點，則不做任何改變
-            };
-          }
-          return node;
-        });
-      };
-      setNodes((prev) => addSibling(prev)); //更新節點狀態為遞迴處理過的新nodes
-      setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新相鄰子節點
+  //     const newSiblingNode = {
+  //       id: uuidv4(),
+  //       name: "子節點",
+  //       color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+  //       isNew: true,
+  //       children: [],
+  //     };
+  //     //遞迴查找相應的父節點，並在父節點children中新增相鄰子節點
+  //     const addSibling = (nodes) => {
+  //       return nodes.map((node) => {
+  //         if (node.id === parentNode.id) {
+  //           //若當前節點的ID與父節點ID匹配，在相應位置新增相鄰子節點
+  //           return {
+  //             ...node,
+  //             children: [
+  //               ...node.children.slice(0, selectedNodeIndex + 1),
+  //               newSiblingNode,
+  //               ...node.children.slice(selectedNodeIndex + 1),
+  //             ],
+  //           };
+  //         } else if (node.children && node.children.length > 0) {
+  //           //若當前節點有children，則繼續遞迴處理其children
+  //           return {
+  //             ...node,
+  //             children: addSibling(node.children),
+  //           };
+  //         }
+  //         return node; //若當前節點既不是父節點，也沒有子節點，則不做任何改變
+  //       });
+  //     };
 
-      //確保在引用中有當前父節點，若沒有則新增
-      if (!nodeRefs.current[parentNodeId]) {
-        nodeRefs.current[parentNodeId] = [];
-      }
-      // 在引用中相應位置插入新的相鄰子節點引用
-      nodeRefs.current[parentNodeId].splice(
-        selectedNodeIndex + 1,
-        0,
-        React.createRef()
-      );
-    },
-    [selectedNodes, setNodes, setSelectedNodes, nodeRefs]
-  );
+  //     setNodes((prev) => addSibling(prev)); //更新節點狀態為遞迴處理過的新nodes
+  //     setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新相鄰子節點
+  //     //確保在引用中有當前父節點，若沒有則新增
+  //     if (!nodeRefs.current[parentNode.id]) {
+  //       nodeRefs.current[parentNode.id] = [];
+  //     }
+  //     // 在引用中相應位置插入新的相鄰子節點引用
+  //     nodeRefs.current[parentNode.id].splice(
+  //       selectedNodeIndex + 1,
+  //       0,
+  //       React.createRef()
+  //     );
+  //   },
+  //   [selectedNodes, setNodes, setSelectedNodes, nodeRefs]
+  // );
 
-  //新增相鄰節點
-  const addSiblingNode = useCallback(() => {
-    //查找當前選中節點在nodes中的索引
-    const selectedNodeIndex = nodes.findIndex(
-      (node) => node.id === selectedNodes[0]
-    );
-    const newSiblingNode = {
-      id: uuidv4(),
-      name: "節點",
-      color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
-      isNew: true,
-      children: [],
-    };
-    //更新nodes狀態，將新的相鄰節點插入到相應位置
-    setNodes((prevNodes) => {
-      const newNodes = [
-        ...prevNodes.slice(0, selectedNodeIndex + 1),
-        newSiblingNode,
-        ...prevNodes.slice(selectedNodeIndex + 1),
-      ];
-      return newNodes;
-    });
-    setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新的相鄰節點
-    nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
-  }, [nodes, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
+  // //新增相鄰節點
+  // const addSiblingNode = useCallback(() => {
+  //   //查找當前選中節點在nodes中的索引
+  //   const selectedNodeIndex = nodes.findIndex(
+  //     (node) => node.id === selectedNodes[0]
+  //   );
+  //   const newSiblingNode = {
+  //     id: uuidv4(),
+  //     name: "節點",
+  //     color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+  //     isNew: true,
+  //     children: [],
+  //   };
+  //   //更新nodes狀態，將新的相鄰節點插入到相應位置
+  //   setNodes((prevNodes) => {
+  //     const newNodes = [
+  //       ...prevNodes.slice(0, selectedNodeIndex + 1),
+  //       newSiblingNode,
+  //       ...prevNodes.slice(selectedNodeIndex + 1),
+  //     ];
+  //     return newNodes;
+  //   });
+  //   setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新的相鄰節點
+  //   nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
+  // }, [nodes, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -338,13 +339,10 @@ const MindMap = ({
           return;
         }
 
-        const { parentNodeId, parentNodeChildren } = findParentNode([
-          rootNode,
-          ...nodes,
-        ]);
+        const parentNode = findParentNode([rootNode, ...nodes]);
 
-        if (parentNodeId && parentNodeChildren) {
-          addSiblingChildNode(parentNodeId, parentNodeChildren);
+        if (parentNode && parentNode.children.length > 0) {
+          addSiblingChildNode(parentNode);
         } else {
           addSiblingNode();
         }
