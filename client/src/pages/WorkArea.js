@@ -8,7 +8,10 @@ const WorkArea = () => {
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
 
-  const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
+  const [rootNode, setRootNode] = useState({
+    id: uuidv4(),
+    name: "根節點",
+  }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
@@ -100,6 +103,7 @@ const WorkArea = () => {
         name: "節點",
         color: randomColor,
         isNew: true, //標記為新創建的節點
+        children: [],
       };
       //如果id為 null代表目前選取的是根節點
       if (id === null) {
@@ -114,22 +118,35 @@ const WorkArea = () => {
       return newNodes;
     });
   };
+
   // 刪除節點
   const delNode = useCallback(
     (idArr) => {
-      //更新節點
+      //递归删除节点及其子节点
+      const deleteNodes = (nodes, idsToDelete) => {
+        return nodes.filter((node) => {
+          if (idsToDelete.includes(node.id)) {
+            return false;
+          }
+          if (node.children) {
+            node.children = deleteNodes(node.children, idsToDelete);
+          }
+          return true;
+        });
+      };
+
       setNodes((prev) => {
-        //去除掉選中的節點；在nodes中篩選出id不包含在idArr中的節點，組成新的節點陣列，代表沒被選中的節點
-        const newNodes = prev.filter((node) => !idArr.includes(node.id));
-        //去除掉選中的節點Dom；在目前引用的節點Dom元素中，篩選出與nodes中對應索引的id不包含在idArr中的引用，組成新的引用陣列，代表沒被選中的節點Dom
+        const newNodes = deleteNodes(prev, idArr);
         const newRefs = nodeRefs.current.filter(
-          (item, index) => !idArr.includes(prev[index].id)
+          (item, index) => !idArr.includes(prev[index]?.id)
         );
-        nodeRefs.current = newRefs; //更新引用的節點Dom
+        nodeRefs.current = newRefs;
         return newNodes;
       });
+
+      setSelectedNodes([]);
     },
-    [nodeRefs, setNodes]
+    [nodeRefs, setNodes, setSelectedNodes]
   );
 
   return (

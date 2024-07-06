@@ -36,11 +36,11 @@
   align-items: center;
   background: #000229;
   color: white;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border: 2px solid transparent;
   border-radius: 15px;
   outline: none;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .input-box {
@@ -59,12 +59,18 @@
   align-items: center;
   border-radius: 15px;
   background: #ffac5e;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   margin: 1rem 0rem 1rem 10rem;
   outline: none;
-  font-size: 1.2rem;
 }
-.svg {
+.lines {
+  position: absolute;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  /* border: 2px solid black; */
+}
+.subLines {
   position: absolute;
   z-index: -1;
   width: 100%;
@@ -103,3 +109,6 @@
   margin: 1rem 0rem 1rem 10rem;
   outline: none;
 }
+/* .children {
+  border: 2px solid red;
+} */
