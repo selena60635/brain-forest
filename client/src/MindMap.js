@@ -423,7 +423,7 @@ const MindMap = ({
             <React.Fragment key={node.id}>
               <path
                 d={`M${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
-                stroke={node.color}
+                stroke={node.pathColor}
                 fill="none"
                 strokeWidth="3"
               />

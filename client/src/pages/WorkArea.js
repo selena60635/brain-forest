@@ -1,13 +1,21 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import MindMap from "../MindMap";
 import BtnsGroup from "../components/BtnsGroup";
+import Shortcuts from "../components/Shortcuts";
+import ToolBox from "../components/ToolBox";
 import { v4 as uuidv4 } from "uuid";
 
 const WorkArea = () => {
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
-  const [rootNode, setRootNode] = useState({ id: uuidv4(), name: "根節點" }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
+
+  const [rootNode, setRootNode] = useState({
+    id: uuidv4(),
+    name: "根節點",
+    bkColor: "#1A227E",
+    outline: { color: "#000229", width: "2px", style: "none" },
+  }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
@@ -93,8 +101,10 @@ const WorkArea = () => {
     const newNode = {
       id: uuidv4(),
       name: "節點",
-      color: randomColor,
       isNew: true, //標記為新創建的節點
+      bkColor: randomColor,
+      pathColor: randomColor,
+      outline: { color: "#000229", width: "2px", style: "none" },
     };
     //更新節點陣列狀態，加入新的節點
     setNodes((prev) => {
@@ -111,8 +121,10 @@ const WorkArea = () => {
       const newChildNode = {
         id: uuidv4(),
         name: "子節點",
-        color: randomColor,
+        bkColor: randomColor,
+        pathColor: randomColor,
         isNew: true,
+        outline: { color: "#000229", width: "2px", style: "none" },
         parentId,
         children: [],
       };
@@ -170,6 +182,7 @@ const WorkArea = () => {
   //新增相鄰子節點
   const addSiblingChildNode = useCallback(
     (parentNode) => {
+      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
       //查找當前選中節點在父節點的children中的索引
       const selectedNodeIndex = parentNode.children.findIndex(
         (child) => child.id === selectedNodes[0]
@@ -178,7 +191,9 @@ const WorkArea = () => {
       const newSiblingNode = {
         id: uuidv4(),
         name: "子節點",
-        color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+        bkColor: randomColor,
+        pathColor: randomColor,
+        outline: { color: "#000229", width: "2px", style: "none" },
         isNew: true,
         children: [],
       };
@@ -224,6 +239,7 @@ const WorkArea = () => {
 
   //新增相鄰節點
   const addSiblingNode = useCallback(() => {
+    const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
     //查找當前選中節點在nodes中的索引
     const selectedNodeIndex = nodes.findIndex(
       (node) => node.id === selectedNodes[0]
@@ -231,7 +247,9 @@ const WorkArea = () => {
     const newSiblingNode = {
       id: uuidv4(),
       name: "節點",
-      color: `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`,
+      bkColor: randomColor,
+      pathColor: randomColor,
+      outline: { color: "#000229", width: "2px", style: "none" },
       isNew: true,
       children: [],
     };
@@ -302,7 +320,7 @@ const WorkArea = () => {
             addSiblingChildNode={addSiblingChildNode}
           />
         </div>
-
+        <Shortcuts />
         {selectBox && (
           <div
             className="select-box"
@@ -334,6 +352,13 @@ const WorkArea = () => {
           />
         </div>
       </div>
+      <ToolBox
+        rootNode={rootNode}
+        setRootNode={setRootNode}
+        nodes={nodes}
+        setNodes={setNodes}
+        selectedNodes={selectedNodes}
+      />
     </div>
   );
 };

@@ -49,6 +49,10 @@ const RootNode = ({
       tabIndex="0"
       ref={rootRef}
       onDoubleClick={editMode}
+      style={{
+        backgroundColor: rootNode.bkColor,
+        outline: `${rootNode.outline.width} ${rootNode.outline.style} ${rootNode.outline.color}`,
+      }}
     >
       {isEditRoot ? (
         <>

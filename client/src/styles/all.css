@@ -19,15 +19,24 @@
     @apply text-secondary;
   }
   *:focus {
-    @apply outline-none;
+    @apply outline-0;
   }
 }
 @layer components {
   .mindmap {
     @apply relative z-0 flex items-center justify-center;
   }
+  .rootnode {
+    @apply flex items-center justify-center py-2 px-4 rounded-2xl text-xl;
+  }
+  .node {
+    @apply flex items-center justify-center py-2 px-4 my-4 ml-40 rounded-2xl;
+  }
+  .child-node {
+    @apply flex items-center justify-center p-2 my-2 ml-24 text-sm rounded-2xl;
+  }
   .btn {
-    @apply flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800;
+    @apply flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100;
   }
   .btns-group {
     @apply flex justify-around border-t border-gray-200 bg-white/50 p-2 shadow-lg backdrop-blur-lg  flex-col rounded-lg border;
@@ -49,19 +58,6 @@
   position: relative;
 }
 
-.rootnode {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #000229;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: 2px solid transparent;
-  border-radius: 15px;
-  outline: none;
-  font-size: 1.2rem;
-}
-
 .input-box {
   position: absolute;
   background: white;
@@ -72,23 +68,13 @@
   user-select: text;
   z-index: 2;
 }
-.node {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 15px;
-  background: #ffac5e;
-  padding: 0.5rem 1rem;
-  margin: 1rem 0rem 1rem 10rem;
-  outline: none;
-}
+
 .lines,
 .subLines {
   position: absolute;
   z-index: -1;
   width: 100%;
   height: 100%;
-  /* border: 2px solid black; */
 }
 .select-box {
   position: absolute;
@@ -111,15 +97,4 @@
   left: -6px;
   border-radius: 10px;
   border: 2px solid #0099ff;
-}
-.child-node {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 15px;
-  background: #53dfc3;
-  padding: 0.5rem;
-  margin: 0.5rem 0rem 0.5rem 6rem;
-  outline: none;
-  font-size: 0.8rem;
 }

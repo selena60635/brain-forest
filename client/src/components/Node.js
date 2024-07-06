@@ -103,6 +103,10 @@ const ChildNode = ({
     <div className="flex items-center">
       <div
         className={`child-node ${isSelected ? "selected" : ""}`}
+        style={{
+          backgroundColor: childnode.bkColor,
+          outline: `${childnode.outline.width} ${childnode.outline.style} ${childnode.outline.color}`,
+        }}
         tabIndex="0"
         onDoubleClick={editMode}
         ref={childRef}
@@ -125,10 +129,10 @@ const ChildNode = ({
             >
               {childnode.name}
             </div>
-            <span>{childnode.name}</span>
+            <span className="text-white">{childnode.name}</span>
           </>
         ) : (
-          <span>{childnode.name}</span>
+          <span className="text-white">{childnode.name}</span>
         )}
       </div>
       <div className="children">
@@ -162,7 +166,7 @@ const ChildNode = ({
       <svg className="subLines" overflow="visible" ref={svgRef}>
         <path
           d={`M ${childLoc.x} ${childLoc.y} Q ${childLoc.x} ${childLoc.childY}, ${childLoc.childX} ${childLoc.childY}`}
-          stroke={childnode.color}
+          stroke={childnode.pathColor}
           fill="none"
           strokeWidth="3"
         />
@@ -220,6 +224,10 @@ const Node = ({
     <div className="nodes-wrap flex items-center">
       <div
         className={`node ${isSelected ? "selected" : ""}`}
+        style={{
+          backgroundColor: node.bkColor,
+          outline: `${node.outline.width} ${node.outline.style} ${node.outline.color}`,
+        }}
         tabIndex="0"
         ref={nodeRef}
         onDoubleClick={editMode}
@@ -248,13 +256,13 @@ const Node = ({
             >
               {node.name}
             </div>
-            <span>{node.name}</span>
+            <span className="text-white">{node.name}</span>
           </>
         ) : (
-          <span>{node.name}</span>
+          <span className="text-white">{node.name}</span>
         )}
       </div>
-      {/* 若該節點有children，且長度>0，且 */}
+
       {node.children && node.children.length > 0 && (
         <div className="children flex flex-col items-start">
           {node.children.map((childnode, childIndex) => {
