@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Button } from "@headlessui/react";
 import MindMap from "../MindMap";
-import BtnsGroup from "../components/BtnsGroup";
+import BtnsGroupCol from "../components/BtnsGroupCol";
+import BtnsGroupRow from "../components/BtnsGroupRow";
+import Shortcuts from "../components/Shortcuts";
+import ToolBox from "../components/ToolBox";
 import { v4 as uuidv4 } from "uuid";
 
 const WorkArea = () => {
@@ -11,11 +15,23 @@ const WorkArea = () => {
   const [rootNode, setRootNode] = useState({
     id: uuidv4(),
     name: "根節點",
+    bkColor: "#1A227E",
+    outline: { color: "#000229", width: "2px", style: "none" },
+    font: {
+      family: "Noto Sans TC",
+      size: "24px",
+      weight: "400",
+      color: "white",
+      // isBold: false,
+      // isItalic: false,
+      // isStrikethrough: false
+    },
   }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
   const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
+  const [isToolBoxOpen, setIsToolBoxOpen] = useState(false);
 
   // 初始滾動至畫布的中心點
   useEffect(() => {
@@ -36,8 +52,8 @@ const WorkArea = () => {
   }, []);
 
   const handleMouseDown = (e) => {
-    const btnsGroup = btnsRef.current;
-    if (e.button !== 0 || btnsGroup.contains(e.target)) return; //若滑鼠點擊的不是左鍵或點擊目標屬於按鈕群組後代，不執行後續動作
+    // const btnsGroup = btnsRef.current;
+    if (e.button !== 0 || btnsRef.current.contains(e.target)) return; //若滑鼠點擊的不是左鍵或點擊目標屬於按鈕群組後代，不執行後續動作
 
     const rect = canvasRef.current.getBoundingClientRect(); // 獲取畫布的矩形物件
     //設定鼠標起點位置
@@ -92,55 +108,229 @@ const WorkArea = () => {
   };
 
   // 新增節點，參數id預設為null
-  const addNode = (id = null) => {
+  const addNode = () => {
     const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`; //生成一個隨機顏色，用於新節點線段
+    const newNode = {
+      id: uuidv4(),
+      name: "節點",
+      isNew: true, //標記為新創建的節點
+      bkColor: randomColor,
+      pathColor: randomColor,
+      outline: { color: "#000229", width: "2px", style: "none" },
+      font: {
+        family: "Noto Sans TC",
+        size: "20px",
+        weight: "400",
+        color: "white",
+        // isItalic: false,
+      },
+    };
     //更新節點陣列狀態，加入新的節點
     setNodes((prev) => {
-      const newNodes = [...prev]; //創建一個新的數組，其中包含目前所有節點
-      //創建新節點物件，其中包含所需的屬性
-      const newNode = {
-        id: uuidv4(),
-        name: "節點",
-        color: randomColor,
-        isNew: true, //標記為新創建的節點
-        children: [],
-      };
-      //如果id為 null代表目前選取的是根節點
-      if (id === null) {
-        newNodes.push(newNode); //將新節點添加到數組末尾
-        nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
-      } else {
-        const index = newNodes.findIndex((node) => node.id === id); //找出陣列中符合id節點之索引
-        newNodes.splice(index + 1, 0, newNode); // 在指定id的位置之後插入新節點
-        nodeRefs.current.splice(index + 1, 0, React.createRef()); // 為每個新節點添加一個引用
-      }
+      const newNodes = [...prev, newNode]; //創建一個新的數組，將新節點添加到數組末尾
+      nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
       setSelectedNodes([newNode.id]); //將原先選擇的節點更新為新節點，轉換焦點
       return newNodes;
     });
   };
+  //新增子節點
+  const addChildNode = useCallback(
+    (parentId) => {
+      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+      const newChildNode = {
+        id: uuidv4(),
+        name: "子節點",
+        isNew: true,
+        parentId,
+        children: [],
+        bkColor: randomColor,
+        pathColor: randomColor,
+        outline: { color: "#000229", width: "2px", style: "none" },
+        font: {
+          family: "Noto Sans TC",
+          size: "16px",
+          weight: "400",
+          color: "white",
+          // isItalic: false,
+        },
+      };
+      //遞迴一層層遍歷nodes找到相應的父節點，並新增子節點
+      const addChildToParent = (nodes) =>
+        nodes.map((node) => {
+          if (node.id === parentId) {
+            //若當前節點是父節點，將新的子節點加入到當前節點的children中
+            return {
+              ...node,
+              children: [...(node.children || []), newChildNode],
+            };
+          } else if (node.children && node.children.length > 0) {
+            //若當前節點有子節點
+            return {
+              ...node,
+              children: addChildToParent(node.children), //遞迴處理其children，繼續查找下一層子節點是否包含父節點
+            };
+          }
+          return node;
+        });
+      //更新nodes狀態為遞迴處理過的新nodes
+      setNodes((prev) => addChildToParent(prev));
+      //更新選擇名單為新子節點
+      setSelectedNodes([newChildNode.id]);
+    },
+    [setNodes, setSelectedNodes]
+  );
+  //查找當前選取節點的父節點id，以及父節點的children
+  const findParentNode = useCallback(
+    (nodes) => {
+      let parentNode = null;
+      //遞迴查找父節點
+      const findNode = (nodes) => {
+        for (let node of nodes) {
+          if (node.children && node.children.length > 0) {
+            //若當前節點有children且不為空，檢查子節點中是否有匹配選中的節點ID
+            if (node.children.some((child) => child.id === selectedNodes[0])) {
+              //若有匹配到，代表當前選中節點是在這一層，設定其父節點
+              parentNode = node;
+              return;
+            }
+            //若沒匹配到，接續遞迴處理下一層
+            findNode(node.children);
+          }
+        }
+      };
 
-  // 刪除節點
-  const delNode = useCallback(
-    (idArr) => {
-      //递归删除节点及其子节点
-      const deleteNodes = (nodes, idsToDelete) => {
-        return nodes.filter((node) => {
-          if (idsToDelete.includes(node.id)) {
-            return false;
+      findNode(nodes); //遞迴一層層遍歷nodes
+      return parentNode;
+    },
+    [selectedNodes]
+  );
+
+  //新增相鄰子節點
+  const addSiblingChildNode = useCallback(
+    (parentNode) => {
+      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+      //查找當前選中節點在父節點的children中的索引
+      const selectedNodeIndex = parentNode.children.findIndex(
+        (child) => child.id === selectedNodes[0]
+      );
+
+      const newSiblingNode = {
+        id: uuidv4(),
+        name: "子節點",
+        isNew: true,
+        children: [],
+        bkColor: randomColor,
+        pathColor: randomColor,
+        outline: { color: "#000229", width: "2px", style: "none" },
+        font: {
+          family: "Noto Sans TC",
+          size: "16px",
+          weight: "400",
+          color: "white",
+          // isItalic: false,
+        },
+      };
+      //遞迴查找相應的父節點，並在父節點children中新增相鄰子節點
+      const addSibling = (nodes) => {
+        return nodes.map((node) => {
+          if (node.id === parentNode.id) {
+            //若當前節點的ID與父節點ID匹配，在相應位置新增相鄰子節點
+            return {
+              ...node,
+              children: [
+                ...node.children.slice(0, selectedNodeIndex + 1),
+                newSiblingNode,
+                ...node.children.slice(selectedNodeIndex + 1),
+              ],
+            };
+          } else if (node.children && node.children.length > 0) {
+            //若當前節點有children，則繼續遞迴處理其children
+            return {
+              ...node,
+              children: addSibling(node.children),
+            };
           }
-          if (node.children) {
-            node.children = deleteNodes(node.children, idsToDelete);
-          }
-          return true;
+          return node; //若當前節點既不是父節點，也沒有子節點，則不做任何改變
         });
       };
 
+      setNodes((prev) => addSibling(prev)); //更新節點狀態為遞迴處理過的新nodes
+      setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新相鄰子節點
+      //確保在引用中有當前父節點，若沒有則新增
+      if (!nodeRefs.current[parentNode.id]) {
+        nodeRefs.current[parentNode.id] = [];
+      }
+      // 在引用中相應位置插入新的相鄰子節點引用
+      nodeRefs.current[parentNode.id].splice(
+        selectedNodeIndex + 1,
+        0,
+        React.createRef()
+      );
+    },
+    [selectedNodes, setNodes, setSelectedNodes, nodeRefs]
+  );
+
+  //新增相鄰節點
+  const addSiblingNode = useCallback(() => {
+    const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+    //查找當前選中節點在nodes中的索引
+    const selectedNodeIndex = nodes.findIndex(
+      (node) => node.id === selectedNodes[0]
+    );
+    const newSiblingNode = {
+      id: uuidv4(),
+      name: "節點",
+      isNew: true,
+      children: [],
+      bkColor: randomColor,
+      pathColor: randomColor,
+      outline: { color: "#000229", width: "2px", style: "none" },
+      font: {
+        family: "Noto Sans TC",
+        size: "20px",
+        weight: "400",
+        color: "white",
+        // isItalic: false,
+      },
+    };
+    //更新nodes狀態，將新的相鄰節點插入到相應位置
+    setNodes((prevNodes) => {
+      const newNodes = [
+        ...prevNodes.slice(0, selectedNodeIndex + 1),
+        newSiblingNode,
+        ...prevNodes.slice(selectedNodeIndex + 1),
+      ];
+      return newNodes;
+    });
+    setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新的相鄰節點
+    nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
+  }, [nodes, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
+  // 刪除節點
+  const delNode = useCallback(
+    (idArr) => {
+      //遞迴處理刪除節點及子節點，返回排除刪除選中節點後的新nodes陣列
+      const deleteNodes = (nodes, idsToDelete) => {
+        return nodes.filter((node) => {
+          if (idsToDelete.includes(node.id)) {
+            //若當前節點的id在要刪除的id陣列中，則刪除此節點
+            return false;
+          }
+          if (node.children) {
+            //若當前節點有子節點，傳入children繼續遞迴遍歷處理下一層
+            node.children = deleteNodes(node.children, idsToDelete);
+          }
+          //保留沒有選中的節點，也就是不需要刪除的節點
+          return true;
+        });
+      };
+      //更新狀態為刪除選中節點後的新nodes
       setNodes((prev) => {
+        //遞迴處理所有節點，會得到需要留下的節點陣列
         const newNodes = deleteNodes(prev, idArr);
-        const newRefs = nodeRefs.current.filter(
+        //過濾掉需刪除的節點引用的nodeRefs，更新引用
+        nodeRefs.current = nodeRefs.current.filter(
           (item, index) => !idArr.includes(prev[index]?.id)
         );
-        nodeRefs.current = newRefs;
         return newNodes;
       });
 
@@ -150,24 +340,35 @@ const WorkArea = () => {
   );
 
   return (
-    <>
+    <div className="flex ">
       <div
-        className="canvas-wrap"
+        className={`canvas-wrap transition-all duration-300 ${
+          isToolBoxOpen ? "w-6/12 sm:w-10/12" : "w-screen"
+        }`}
         onMouseDown={handleMouseDown}
         ref={canvasRef}
       >
-        <div
-          ref={btnsRef}
-          className="btns-group z-20 flex shrink-0 grow-0 justify-around gap-4 border-t border-gray-200 bg-white/50 p-2.5 shadow-lg backdrop-blur-lg fixed top-2/4 -translate-y-2/4 left-6 min-h-[auto] min-w-[64px] flex-col rounded-lg border"
-        >
-          <BtnsGroup
-            addNode={addNode}
-            delNode={delNode}
-            selectedNodes={selectedNodes}
-            rootNode={rootNode}
-            setRootNode={setRootNode}
-          />
+        <div ref={btnsRef}>
+          <div className="top-20 left-5 fixed z-20">
+            <BtnsGroupCol
+              selectedNodes={selectedNodes}
+              rootNode={rootNode}
+              nodes={nodes}
+              setRootNode={setRootNode}
+              addNode={addNode}
+              delNode={delNode}
+              addChildNode={addChildNode}
+              findParentNode={findParentNode}
+              addSiblingNode={addSiblingNode}
+              addSiblingChildNode={addSiblingChildNode}
+            />
+          </div>
+
+          <div className="btns-group bottom-10 left-5 fixed z-20 h-12">
+            <Shortcuts />
+          </div>
         </div>
+
         {selectBox && (
           <div
             className="select-box"
@@ -183,8 +384,6 @@ const WorkArea = () => {
           <MindMap
             selectBox={selectBox}
             canvasRef={canvasRef}
-            addNode={addNode}
-            delNode={delNode}
             setNodes={setNodes}
             nodes={nodes}
             nodeRefs={nodeRefs}
@@ -192,10 +391,57 @@ const WorkArea = () => {
             setRootNode={setRootNode}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
+            addNode={addNode}
+            delNode={delNode}
+            addChildNode={addChildNode}
+            findParentNode={findParentNode}
+            addSiblingNode={addSiblingNode}
+            addSiblingChildNode={addSiblingChildNode}
           />
         </div>
       </div>
-    </>
+      <div
+        className={`absolute right-0 h-screen w-6/12 sm:w-2/12 transition-transform duration-300 ${
+          isToolBoxOpen ? "translate-x-0" : "translate-x-full "
+        }`}
+      >
+        <ToolBox
+          rootNode={rootNode}
+          setRootNode={setRootNode}
+          nodes={nodes}
+          setNodes={setNodes}
+          selectedNodes={selectedNodes}
+        />
+        <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
+          <Button
+            className="btn aspect-square"
+            onClick={() => setIsToolBoxOpen(!isToolBoxOpen)}
+          >
+            <span
+              className={`material-symbols-rounded ${
+                isToolBoxOpen ? "text-primary" : ""
+              }`}
+            >
+              service_toolbox
+            </span>
+          </Button>
+        </div>
+        <div className="bottom-28 -left-[260px] absolute z-20">
+          <BtnsGroupRow
+            selectedNodes={selectedNodes}
+            rootNode={rootNode}
+            nodes={nodes}
+            setRootNode={setRootNode}
+            addNode={addNode}
+            delNode={delNode}
+            addChildNode={addChildNode}
+            findParentNode={findParentNode}
+            addSiblingNode={addSiblingNode}
+            addSiblingChildNode={addSiblingChildNode}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 

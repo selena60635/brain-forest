@@ -34,9 +34,10 @@ const RootNode = ({
   const editMode = () => {
     setIsEditRoot(true);
   };
+
   // 關閉編輯模式
   const unEditMode = (e) => {
-    setRootNode((prev) => ({ ...prev, name: e.target.innerText }));
+    setRootNode((prev) => ({ ...prev, name: e.target.textContent }));
     setIsEditRoot(false);
   };
 
@@ -46,6 +47,18 @@ const RootNode = ({
       tabIndex="0"
       ref={rootRef}
       onDoubleClick={editMode}
+      style={{
+        backgroundColor: rootNode.bkColor,
+        outline: `${rootNode.outline.width} ${rootNode.outline.style} ${rootNode.outline.color}`,
+        fontSize: `${rootNode.font.size}`,
+        fontFamily: `${rootNode.font.family}`,
+        fontWeight: `${rootNode.font.weight}`,
+        color: `${rootNode.font.color}`,
+        fontStyle: `${rootNode.font.isItalic ? "italic" : "normal"}`,
+        textDecorationLine: `${
+          rootNode.font.isStrikethrough ? "line-through" : "none"
+        }`,
+      }}
     >
       {isEditRoot ? (
         <>
