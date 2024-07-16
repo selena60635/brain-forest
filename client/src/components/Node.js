@@ -14,6 +14,7 @@ const selectText = (inputElement) => {
 
 // 子節點組件
 const ChildNode = ({
+  rootNode,
   childnode,
   setNodes,
   parentId,
@@ -88,7 +89,7 @@ const ChildNode = ({
       const parentRect = parentRef.current.getBoundingClientRect();
       const svgRect = svgRef.current.getBoundingClientRect();
       return {
-        x: parentRect.left - svgRect.left + parentRect.width,
+        x: parentRect.left - svgRect.left + parentRect.width - 2,
         y: parentRect.top - svgRect.top + parentRect.height / 2,
         childX: childRect.left - svgRect.left,
         childY: childRect.top - svgRect.top + childRect.height / 2,
@@ -160,6 +161,7 @@ const ChildNode = ({
             return (
               <ChildNode
                 key={subChildNode.id}
+                rootNode={rootNode}
                 childnode={subChildNode}
                 setNodes={setNodes}
                 parentId={childnode.id} //父節點id為上一層子節點id
@@ -182,7 +184,8 @@ const ChildNode = ({
           d={`M ${childLoc.x} ${childLoc.y} Q ${childLoc.x} ${childLoc.childY}, ${childLoc.childX} ${childLoc.childY}`}
           stroke={childnode.pathColor}
           fill="none"
-          strokeWidth="3"
+          strokeWidth={childnode.path.width}
+          strokeDasharray={childnode.path.style}
         />
       </svg>
     </div>
@@ -191,6 +194,7 @@ const ChildNode = ({
 
 // 節點組件（第二層）
 const Node = ({
+  rootNode,
   node,
   nodeRef,
   setNodes,
@@ -297,6 +301,7 @@ const Node = ({
             return (
               <ChildNode
                 key={childnode.id}
+                rootNode={rootNode}
                 childnode={childnode}
                 setNodes={setNodes}
                 parentId={node.id}

@@ -16,9 +16,24 @@ import {
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { SketchPicker } from "react-color";
 import clsx from "clsx";
-import TextTool from "../components/TextTool ";
+import TextTool from "../components/TextTool";
+import PathTool from "../components/PathTool";
 
-const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
+const ToolBox = ({
+  rootNode,
+  setRootNode,
+  nodes,
+  setNodes,
+  selectedNodes,
+  currentColorStyle,
+  setCurrentColorStyle,
+  colorStyles,
+  findNode,
+  colorIndex,
+  setColorIndex,
+  nodesColor,
+  setNodesColor,
+}) => {
   const [bgColor, setBgColor] = useState("#1A227E");
   const [borderColor, setBorderColor] = useState("#1A227E");
   const [borderStyle, setBorderStyle] = useState("none");
@@ -30,15 +45,46 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
   const bgBtnRef = useRef(null);
   const borderPickerRef = useRef(null);
   const borderBtnRef = useRef(null);
-  const [currentStyleColors] = useState([
-    "#000229",
-    "#F9423A",
-    "#F6A04D",
-    "#F3D321",
-    "#00BC7B",
-    "#486AFF",
-    "#4D49BE",
-  ]);
+
+  const [colorStyleEnabled, setColorStyleEnabled] = useState(true);
+  const colorStyleopts = [
+    {
+      label: "風格2",
+      colors: [
+        "#F9423A",
+        "#F6A04D",
+        "#F3D321",
+        "#00BC7B",
+        "#486AFF",
+        "#4D49BE",
+        "#000229",
+      ],
+    },
+    {
+      label: "風格3",
+      colors: [
+        "#FA8155",
+        "#FFAD36",
+        "#B7C82B",
+        "#0098B9",
+        "#7574BC",
+        "#A165A8",
+        "#000229",
+      ],
+    },
+    {
+      label: "風格4",
+      colors: [
+        "#9DCFCE",
+        "#F1CD91",
+        "#EC936B",
+        "#DDB3A4",
+        "#C6CA97",
+        "#F1C2CA",
+        "#92C1B7",
+      ],
+    },
+  ];
 
   const updateNodes = (nodes, selectedNodes, updateFn) => {
     return nodes.map((node) => {
@@ -246,11 +292,11 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
   return (
     <>
       <TabGroup selectedIndex={selectedTabIndex} onChange={setSelectedTabIndex}>
-        <TabList className="flex justify-between divide-x">
+        <TabList className="flex justify-between divide-x text-gray-700">
           <Tab
             className={clsx(
-              "grow",
-              selectedNodes.length === 0 && "pointer-events-none opacity-50",
+              "grow p-1",
+              selectedNodes.length === 0 && "pointer-events-none opacity-40",
               "data-[selected]:bg-secondary data-[selected]:text-white data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white"
             )}
           >
@@ -263,7 +309,7 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
             匯出
           </Tab>
         </TabList>
-        <TabPanels className="">
+        <TabPanels className="text-gray-700 text-sm">
           <TabPanel>
             <Disclosure
               as="div"
@@ -272,11 +318,9 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
             >
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="text-sm/6 text-gray-700 font-medium">
-                  形狀
-                </span>
+                <span className="font-medium">形狀</span>
               </DisclosureButton>
-              <DisclosurePanel className="mt-2 text-sm/5 text-gray/50 space-y-2">
+              <DisclosurePanel className="mt-2 space-y-2">
                 <div className="flex justify-between items-center relative">
                   <span>底色</span>
                   <div
@@ -287,15 +331,35 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
                   />
                   {showBgPicker && (
                     <div
-                      className="absolute z-10  top-0 right-10"
+                      className="absolute z-10 top-0 right-10 react-color-sketch"
                       ref={bgPickerRef}
                     >
                       <SketchPicker
                         color={bgColor}
                         onChangeComplete={bgColorChange}
-                        presetColors={currentStyleColors}
+                        presetColors={[]}
+                        className="!shadow-none"
                         disableAlpha={true}
                       />
+                      {colorStyleEnabled && (
+                        <div className="bg-white w-full rounded-b border-t text-xs p-2.5">
+                          目前風格
+                          <div className="flex justify-between mt-2">
+                            {colorStyleopts[currentColorStyle - 1]?.colors.map(
+                              (styleColor, index) => (
+                                <div
+                                  key={index}
+                                  className="w-5 h-5 cursor-pointer"
+                                  style={{ backgroundColor: styleColor }}
+                                  onClick={() =>
+                                    bgColorChange({ hex: styleColor })
+                                  }
+                                ></div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -315,7 +379,7 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
                       <MenuItems
                         transition
                         anchor="bottom end"
-                        className="w-20 origin-top-right rounded-xl border shadow-lg bg-white p-1 text-sm/6 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+                        className="w-20 origin-top-right rounded-xl border shadow-lg bg-white p-1 text-sm transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
                       >
                         {borderStyleOpts.map((opt) => (
                           <MenuItem key={opt.value}>
@@ -329,7 +393,6 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
                         ))}
                       </MenuItems>
                     </Menu>
-
                     <div
                       ref={borderBtnRef}
                       className="w-12 h-6 ml-2 rounded-md border border-gray-300"
@@ -338,15 +401,35 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
                     />
                     {showBorderPicker && (
                       <div
-                        className="absolute z-10  top-0 right-10"
+                        className="absolute z-10 top-0 right-10 react-color-sketch"
                         ref={borderPickerRef}
                       >
                         <SketchPicker
                           color={borderColor}
                           onChangeComplete={borderColorChange}
-                          presetColors={currentStyleColors}
+                          presetColors={[]}
+                          className="!shadow-none"
                           disableAlpha={true}
                         />
+                        {colorStyleEnabled && (
+                          <div className="bg-white w-full rounded-b border-t text-xs p-2.5">
+                            目前風格
+                            <div className="flex justify-between mt-2">
+                              {colorStyleopts[
+                                currentColorStyle - 1
+                              ]?.colors.map((styleColor, index) => (
+                                <div
+                                  key={index}
+                                  className="w-5 h-5 cursor-pointer"
+                                  style={{ backgroundColor: styleColor }}
+                                  onClick={() =>
+                                    borderColorChange({ hex: styleColor })
+                                  }
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -385,17 +468,16 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
             >
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="text-sm/6 text-gray-700 font-medium">
-                  文字
-                </span>
+                <span className="font-medium">文字</span>
               </DisclosureButton>
-              <DisclosurePanel className="mt-3 text-sm/5 text-gray/50 space-y-4">
+              <DisclosurePanel className="mt-3">
                 <TextTool
                   rootNode={rootNode}
                   setRootNode={setRootNode}
                   nodes={nodes}
                   setNodes={setNodes}
                   selectedNodes={selectedNodes}
+                  findNode={findNode}
                 />
               </DisclosurePanel>
             </Disclosure>
@@ -406,35 +488,52 @@ const ToolBox = ({ rootNode, setRootNode, nodes, setNodes, selectedNodes }) => {
             >
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="text-sm/6 text-gray-700 font-medium">
-                  線段
-                </span>
+                <span className=" font-medium">分支</span>
               </DisclosureButton>
-              <DisclosurePanel className="mt-3 text-sm/5 text-gray/50 space-y-4"></DisclosurePanel>
-            </Disclosure>
-          </TabPanel>
-          <TabPanel>
-            <Disclosure as="div" className="p-2 border" defaultOpen={true}>
-              <DisclosureButton className="group flex w-full items-center">
-                <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="text-sm/6 text-gray-700 font-medium">
-                  主圖架構
-                </span>
-              </DisclosureButton>
-              <DisclosurePanel className="mt-2 text-sm/5 text-gray/50">
-                If you're unhappy with your purchase, we'll refund you in full.
+              <DisclosurePanel className="mt-3">
+                <PathTool
+                  rootNode={rootNode}
+                  setRootNode={setRootNode}
+                  nodes={nodes}
+                  setNodes={setNodes}
+                  selectedNodes={selectedNodes}
+                  currentColorStyle={currentColorStyle}
+                  setCurrentColorStyle={setCurrentColorStyle}
+                  colorStyles={colorStyles}
+                  colorIndex={colorIndex}
+                  setColorIndex={setColorIndex}
+                  nodesColor={nodesColor}
+                  setNodesColor={setNodesColor}
+                  findNode={findNode}
+                  colorStyleEnabled={colorStyleEnabled}
+                  setColorStyleEnabled={setColorStyleEnabled}
+                  colorStyleopts={colorStyleopts}
+                />
               </DisclosurePanel>
             </Disclosure>
           </TabPanel>
           <TabPanel>
+            <div className="border p-2">
+              風格配色
+              <div>背景顏色</div>
+            </div>
+            {/* <Disclosure as="div" className="p-2 border" defaultOpen={true}>
+              <DisclosureButton className="group flex w-full items-center">
+                <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
+                <span className="font-medium">主圖架構</span>
+              </DisclosureButton>
+              <DisclosurePanel className="mt-3">
+                If you're unhappy with your purchase, we'll refund you in full.
+              </DisclosurePanel>
+            </Disclosure> */}
+          </TabPanel>
+          <TabPanel>
             <Disclosure as="div" className="p-2 border" defaultOpen={true}>
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="text-sm/6 text-gray-700 font-medium">
-                  匯出
-                </span>
+                <span className="font-medium">匯出</span>
               </DisclosureButton>
-              <DisclosurePanel className="mt-2 text-sm/5 text-gray/50">
+              <DisclosurePanel className="mt-3">
                 If you're unhappy with your purchase, we'll refund you in full.
               </DisclosurePanel>
             </Disclosure>

@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { Button } from "@headlessui/react";
 import MindMap from "../MindMap";
 import BtnsGroupCol from "../components/BtnsGroupCol";
@@ -12,21 +18,110 @@ const WorkArea = () => {
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
 
+  const [currentColorStyle, setCurrentColorStyle] = useState(2);
+  const [colorIndex, setColorIndex] = useState(0);
+  const [nodesColor, setNodesColor] = useState("#17493b");
+  const colorStyles = useMemo(
+    () => [
+      // {
+      //   root: "#05120e",
+      //   text: "#FFFFFF",
+      //   nodes: ["#17493b"],
+      //   child: ["#2e9277"],
+      // },
+      {
+        root: nodesColor,
+        text: "#FFFFFF",
+        nodes: [nodesColor],
+        child: [nodesColor],
+      },
+      {
+        root: "#000229",
+        text: "#FFFFFF",
+        nodes: [
+          "#F9423A",
+          "#F6A04D",
+          "#F3D321",
+          "#00BC7B",
+          "#486AFF",
+          "#4D49BE",
+        ],
+        child: [
+          "#FED9D8",
+          "#fdecdb",
+          "#FAEB9E",
+          "#CCF2E5",
+          "#DAE1FF",
+          "#DBDBF2",
+        ],
+      },
+      {
+        root: "#000229",
+        text: "#FFFFFF",
+        nodes: [
+          "#FA8155",
+          "#FFAD36",
+          "#B7C82B",
+          "#0098B9",
+          "#7574BC",
+          "#A165A8",
+        ],
+        child: [
+          "#FED9D8",
+          "#fdecdb",
+          "#FDF6D3",
+          "#CCF2E5",
+          "#DAE1FF",
+          "#DBDBF2",
+        ],
+      },
+      {
+        root: "#92C1B7",
+        text: "#000000",
+        nodes: [
+          "#9DCFCE",
+          "#F1CD91",
+          "#EC936B",
+          "#DDB3A4",
+          "#C6CA97",
+          "#F1C2CA",
+        ],
+        child: [
+          "#FED9D8",
+          "#fdecdb",
+          "#FDF6D3",
+          "#CCF2E5",
+          "#DAE1FF",
+          "#DBDBF2",
+        ],
+      },
+    ],
+    [nodesColor]
+  );
+  const rootColor = colorStyles[currentColorStyle].root;
+  const textColor = colorStyles[currentColorStyle].text;
+
+  //定義根節點狀態
   const [rootNode, setRootNode] = useState({
     id: uuidv4(),
     name: "根節點",
-    bkColor: "#1A227E",
-    outline: { color: "#000229", width: "2px", style: "none" },
+    bkColor: rootColor,
+    pathColor: rootColor,
+    outline: { color: rootColor, width: "2px", style: "none" },
     font: {
       family: "Noto Sans TC",
       size: "24px",
       weight: "400",
-      color: "white",
+      color: textColor,
       // isBold: false,
       // isItalic: false,
       // isStrikethrough: false
     },
-  }); //定義根節點狀態，並設定如何生成id，初始根節點名稱
+    path: {
+      width: "3",
+      style: "0",
+    },
+  });
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
@@ -50,9 +145,8 @@ const WorkArea = () => {
       });
     }
   }, []);
-
+  //繪製生成選取框
   const handleMouseDown = (e) => {
-    // const btnsGroup = btnsRef.current;
     if (e.button !== 0 || btnsRef.current.contains(e.target)) return; //若滑鼠點擊的不是左鍵或點擊目標屬於按鈕群組後代，不執行後續動作
 
     const rect = canvasRef.current.getBoundingClientRect(); // 獲取畫布的矩形物件
@@ -107,53 +201,170 @@ const WorkArea = () => {
     setSelectBox(null); // 放開滑鼠左鍵後隱藏選取框
   };
 
-  // 新增節點，參數id預設為null
-  const addNode = () => {
-    const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`; //生成一個隨機顏色，用於新節點線段
-    const newNode = {
+  //查找當前選取節點的父節點
+  const findParentNode = useCallback(
+    (nodes) => {
+      let parentNode = null;
+      //遞迴查找父節點
+      const find = (nodes) => {
+        for (let node of nodes) {
+          if (node.children && node.children.length > 0) {
+            //若當前節點有children且不為空，檢查子節點中是否有匹配選中的節點ID
+            if (node.children.some((child) => child.id === selectedNodes[0])) {
+              //若有匹配到，代表當前選中節點是在這一層，設定其父節點
+              parentNode = node;
+              return;
+            }
+            //若沒匹配到，接續遞迴處理下一層
+            find(node.children);
+          }
+        }
+      };
+
+      find(nodes); //遞迴一層層遍歷nodes
+      return parentNode;
+    },
+    [selectedNodes]
+  );
+  //取得目前選取的節點
+  // const findNode = (nodes, id) => {
+  //   for (let node of nodes) {
+  //     if (node.id === id) {
+  //       return node;
+  //     }
+  //     if (node.children && node.children.length > 0) {
+  //       const foundNode = findNode(node.children, id);
+  //       if (foundNode) {
+  //         return foundNode;
+  //       }
+  //     }
+  //   }
+  //   return null;
+  // };
+  const findNode = useCallback((nodes, id) => {
+    const stack = [...nodes];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (node.id === id) {
+        return node;
+      }
+      if (node.children && node.children.length > 0) {
+        stack.push(...node.children);
+      }
+    }
+    return null;
+  }, []);
+  //取得當前顏色風格相應的顏色
+  const colors = colorStyles[currentColorStyle].nodes;
+  const color = colors[colorIndex % colors.length];
+
+  const newNode = useMemo(
+    () => ({
       id: uuidv4(),
       name: "節點",
       isNew: true, //標記為新創建的節點
-      bkColor: randomColor,
-      pathColor: randomColor,
-      outline: { color: "#000229", width: "2px", style: "none" },
+      children: [],
+      bkColor: color,
+      pathColor: color,
+      outline: { color: color, width: "2px", style: "none" },
       font: {
         family: "Noto Sans TC",
         size: "20px",
         weight: "400",
-        color: "white",
+        color: textColor,
         // isItalic: false,
       },
+      path: {
+        width: rootNode.path.width,
+        style: rootNode.path.style,
+      },
+    }),
+    [color, textColor, rootNode.path.style, rootNode.path.width]
+  );
+
+  const newChildNode = useMemo(
+    () => ({
+      id: uuidv4(),
+      name: "子節點",
+      isNew: true,
+      children: [],
+      outline: { width: "2px", style: "none" },
+      font: {
+        family: "Noto Sans TC",
+        size: "16px",
+        weight: "400",
+        // isItalic: false,
+      },
+      path: {
+        width: rootNode.path.width,
+        style: rootNode.path.style,
+      },
+    }),
+    [rootNode.path.style, rootNode.path.width]
+  );
+
+  // 新增節點
+  const addNode = () => {
+    setColorIndex((prev) => prev + 1);
+    const newNodeInstance = {
+      ...newNode,
+      id: uuidv4(), // 確保每個節點都有唯一的ID
     };
     //更新節點陣列狀態，加入新的節點
     setNodes((prev) => {
-      const newNodes = [...prev, newNode]; //創建一個新的數組，將新節點添加到數組末尾
+      const newNodes = [...prev, newNodeInstance]; //創建一個新的數組，將新節點添加到數組末尾
       nodeRefs.current.push(React.createRef()); //為每個新節點添加一個引用
-      setSelectedNodes([newNode.id]); //將原先選擇的節點更新為新節點，轉換焦點
+      setSelectedNodes([newNodeInstance.id]); //將原先選擇的節點更新為新節點，轉換焦點
       return newNodes;
     });
   };
+  //新增相鄰節點
+  const addSiblingNode = useCallback(() => {
+    setColorIndex((prev) => prev + 1);
+    const newNodeInstance = {
+      ...newNode,
+      id: uuidv4(), // 確保每個節點都有唯一的ID
+    };
+    //查找當前選中節點在nodes中的索引
+    const selectedNodeIndex = nodes.findIndex(
+      (node) => node.id === selectedNodes[0]
+    );
+    //更新nodes狀態，將新的相鄰節點插入到相應位置
+    setNodes((prevNodes) => {
+      const newNodes = [
+        ...prevNodes.slice(0, selectedNodeIndex + 1),
+        newNodeInstance,
+        ...prevNodes.slice(selectedNodeIndex + 1),
+      ];
+      return newNodes;
+    });
+    setSelectedNodes([newNodeInstance.id]); //更新選擇名單為新的相鄰節點
+    nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
+  }, [nodes, newNode, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
+
   //新增子節點
   const addChildNode = useCallback(
     (parentId) => {
-      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
-      const newChildNode = {
+      const parentNode = findNode(nodes, parentId);
+      let parentColorIndex = colorStyles[currentColorStyle].nodes.indexOf(
+        parentNode.bkColor
+      );
+      if (parentColorIndex === -1) {
+        parentColorIndex = colorStyles[currentColorStyle].child.indexOf(
+          parentNode.bkColor
+        );
+      }
+      const childColor = colorStyles[currentColorStyle].child[parentColorIndex];
+      const newChildInstance = {
+        ...newChildNode,
+        // parentId: parentId,
         id: uuidv4(),
-        name: "子節點",
-        isNew: true,
-        parentId,
-        children: [],
-        bkColor: randomColor,
-        pathColor: randomColor,
-        outline: { color: "#000229", width: "2px", style: "none" },
-        font: {
-          family: "Noto Sans TC",
-          size: "16px",
-          weight: "400",
-          color: "white",
-          // isItalic: false,
-        },
+        bkColor: childColor,
+        pathColor: childColor,
+        outline: { ...newChildNode.outline, color: childColor },
+        font: { ...newChildNode.font, color: textColor },
       };
+
       //遞迴一層層遍歷nodes找到相應的父節點，並新增子節點
       const addChildToParent = (nodes) =>
         nodes.map((node) => {
@@ -161,7 +372,7 @@ const WorkArea = () => {
             //若當前節點是父節點，將新的子節點加入到當前節點的children中
             return {
               ...node,
-              children: [...(node.children || []), newChildNode],
+              children: [...(node.children || []), newChildInstance],
             };
           } else if (node.children && node.children.length > 0) {
             //若當前節點有子節點
@@ -175,60 +386,45 @@ const WorkArea = () => {
       //更新nodes狀態為遞迴處理過的新nodes
       setNodes((prev) => addChildToParent(prev));
       //更新選擇名單為新子節點
-      setSelectedNodes([newChildNode.id]);
+      setSelectedNodes([newChildInstance.id]);
     },
-    [setNodes, setSelectedNodes]
-  );
-  //查找當前選取節點的父節點id，以及父節點的children
-  const findParentNode = useCallback(
-    (nodes) => {
-      let parentNode = null;
-      //遞迴查找父節點
-      const findNode = (nodes) => {
-        for (let node of nodes) {
-          if (node.children && node.children.length > 0) {
-            //若當前節點有children且不為空，檢查子節點中是否有匹配選中的節點ID
-            if (node.children.some((child) => child.id === selectedNodes[0])) {
-              //若有匹配到，代表當前選中節點是在這一層，設定其父節點
-              parentNode = node;
-              return;
-            }
-            //若沒匹配到，接續遞迴處理下一層
-            findNode(node.children);
-          }
-        }
-      };
-
-      findNode(nodes); //遞迴一層層遍歷nodes
-      return parentNode;
-    },
-    [selectedNodes]
+    [
+      setNodes,
+      setSelectedNodes,
+      nodes,
+      textColor,
+      colorStyles,
+      currentColorStyle,
+      findNode,
+      newChildNode,
+    ]
   );
 
   //新增相鄰子節點
   const addSiblingChildNode = useCallback(
     (parentNode) => {
-      const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
+      let parentColorIndex = colorStyles[currentColorStyle].nodes.indexOf(
+        parentNode.bkColor
+      );
+      if (parentColorIndex === -1) {
+        parentColorIndex = colorStyles[currentColorStyle].child.indexOf(
+          parentNode.bkColor
+        );
+      }
+      const childColor = colorStyles[currentColorStyle].child[parentColorIndex];
+
       //查找當前選中節點在父節點的children中的索引
       const selectedNodeIndex = parentNode.children.findIndex(
         (child) => child.id === selectedNodes[0]
       );
-
-      const newSiblingNode = {
+      const newChildInstance = {
+        ...newChildNode,
+        // parentId: parentNode.id,
         id: uuidv4(),
-        name: "子節點",
-        isNew: true,
-        children: [],
-        bkColor: randomColor,
-        pathColor: randomColor,
-        outline: { color: "#000229", width: "2px", style: "none" },
-        font: {
-          family: "Noto Sans TC",
-          size: "16px",
-          weight: "400",
-          color: "white",
-          // isItalic: false,
-        },
+        bkColor: childColor,
+        pathColor: childColor,
+        outline: { ...newChildNode.outline, color: childColor },
+        font: { ...newChildNode.font, color: textColor },
       };
       //遞迴查找相應的父節點，並在父節點children中新增相鄰子節點
       const addSibling = (nodes) => {
@@ -239,7 +435,7 @@ const WorkArea = () => {
               ...node,
               children: [
                 ...node.children.slice(0, selectedNodeIndex + 1),
-                newSiblingNode,
+                newChildInstance,
                 ...node.children.slice(selectedNodeIndex + 1),
               ],
             };
@@ -255,7 +451,7 @@ const WorkArea = () => {
       };
 
       setNodes((prev) => addSibling(prev)); //更新節點狀態為遞迴處理過的新nodes
-      setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新相鄰子節點
+      setSelectedNodes([newChildInstance.id]); //更新選擇名單為新相鄰子節點
       //確保在引用中有當前父節點，若沒有則新增
       if (!nodeRefs.current[parentNode.id]) {
         nodeRefs.current[parentNode.id] = [];
@@ -267,44 +463,18 @@ const WorkArea = () => {
         React.createRef()
       );
     },
-    [selectedNodes, setNodes, setSelectedNodes, nodeRefs]
+    [
+      selectedNodes,
+      setNodes,
+      setSelectedNodes,
+      nodeRefs,
+      textColor,
+      colorStyles,
+      currentColorStyle,
+      newChildNode,
+    ]
   );
 
-  //新增相鄰節點
-  const addSiblingNode = useCallback(() => {
-    const randomColor = `hsl(${Math.floor(Math.random() * 360)}, 90%, 50%)`;
-    //查找當前選中節點在nodes中的索引
-    const selectedNodeIndex = nodes.findIndex(
-      (node) => node.id === selectedNodes[0]
-    );
-    const newSiblingNode = {
-      id: uuidv4(),
-      name: "節點",
-      isNew: true,
-      children: [],
-      bkColor: randomColor,
-      pathColor: randomColor,
-      outline: { color: "#000229", width: "2px", style: "none" },
-      font: {
-        family: "Noto Sans TC",
-        size: "20px",
-        weight: "400",
-        color: "white",
-        // isItalic: false,
-      },
-    };
-    //更新nodes狀態，將新的相鄰節點插入到相應位置
-    setNodes((prevNodes) => {
-      const newNodes = [
-        ...prevNodes.slice(0, selectedNodeIndex + 1),
-        newSiblingNode,
-        ...prevNodes.slice(selectedNodeIndex + 1),
-      ];
-      return newNodes;
-    });
-    setSelectedNodes([newSiblingNode.id]); //更新選擇名單為新的相鄰節點
-    nodeRefs.current.splice(selectedNodeIndex + 1, 0, React.createRef()); //在引用中相應位置插入新的相鄰節點引用
-  }, [nodes, selectedNodes, setNodes, setSelectedNodes, nodeRefs]);
   // 刪除節點
   const delNode = useCallback(
     (idArr) => {
@@ -411,6 +581,14 @@ const WorkArea = () => {
           nodes={nodes}
           setNodes={setNodes}
           selectedNodes={selectedNodes}
+          currentColorStyle={currentColorStyle}
+          setCurrentColorStyle={setCurrentColorStyle}
+          colorStyles={colorStyles}
+          findNode={findNode}
+          colorIndex={colorIndex}
+          setColorIndex={setColorIndex}
+          nodesColor={nodesColor}
+          setNodesColor={setNodesColor}
         />
         <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
           <Button

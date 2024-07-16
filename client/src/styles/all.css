@@ -10,7 +10,7 @@
   }
 
   body {
-    @apply text-secondary font-sans overflow-hidden;
+    @apply font-sans overflow-hidden;
   }
   *:focus {
     @apply outline-0;
@@ -36,9 +36,7 @@
     @apply flex bg-white/50 shadow-lg backdrop-blur-lg p-1 rounded-lg border;
   }
 }
-/* * {
-  outline: 1px solid red;
-} */
+
 .canvas {
   width: 10000px;
   height: 5000px;
@@ -102,3 +100,8 @@
 /* .icon-fill {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20;
 } */
+.react-color-sketch {
+  border-radius: 4px;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.15) 0px 8px 16px;
+}

@@ -36,7 +36,7 @@ const MindMap = ({
       const rootRect = rootNodeRef.current.getBoundingClientRect(); // 獲取根節點的矩形物件
       const svgRect = svgRef.current.getBoundingClientRect(); // 獲取 SVG 的矩形物件
       return {
-        x: rootRect.left - svgRect.left + rootRect.width, // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
+        x: rootRect.left - svgRect.left + rootRect.width - 2, // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
         y: rootRect.top - svgRect.top + rootRect.height / 2, // 計算根節點的中心點相對於g的Y坐標
       };
     }
@@ -264,6 +264,7 @@ const MindMap = ({
         {nodes.map((node, index) => (
           <Node
             key={node.id}
+            rootNode={rootNode}
             nodeRef={nodeRefs.current[index]}
             node={nodes[index]}
             setNodes={setNodes}
@@ -289,7 +290,8 @@ const MindMap = ({
                 d={`M${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
                 stroke={node.pathColor}
                 fill="none"
-                strokeWidth="3"
+                strokeWidth={node.path.width}
+                strokeDasharray={node.path.style}
               />
               {/* <circle cx={nodeLoc.x} cy={nodeLoc.y} r="5" fill="blue" /> */}
             </React.Fragment>

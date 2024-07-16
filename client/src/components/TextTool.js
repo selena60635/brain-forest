@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Combobox,
   ComboboxButton,
@@ -33,6 +33,7 @@ const TextTool = ({
   nodes,
   setNodes,
   selectedNodes,
+  findNode,
 }) => {
   const [query, setQuery] = useState("");
   const [sizeQuery, setSizeQuery] = useState("");
@@ -306,41 +307,10 @@ const TextTool = ({
     }
   };
 
-  //取得目前選取的節點
-  //   const findSelectedNode = (nodes) => {
-  //     for (let node of nodes) {
-  //       if (node.id === selectedNodes[0]) {
-  //         return node;
-  //       }
-  //       if (node.children && node.children.length > 0) {
-  //         const foundNode = findSelectedNode(node.children);
-  //         if (foundNode) {
-  //           return foundNode;
-  //         }
-  //       }
-  //     }
-  //     return null;
-  //   };
-  const findSelectedNode = useCallback(
-    (nodes) => {
-      const stack = [...nodes];
-      while (stack.length > 0) {
-        const node = stack.pop();
-        if (node.id === selectedNodes[0]) {
-          return node;
-        }
-        if (node.children && node.children.length > 0) {
-          stack.push(...node.children);
-        }
-      }
-      return null;
-    },
-    [selectedNodes]
-  );
   //根據選取的節點樣式屬性動態更新文字工具
   useEffect(() => {
-    if (selectedNodes.length === 1) {
-      const selectedNode = findSelectedNode([rootNode, ...nodes]);
+    if (selectedNodes.length > 0) {
+      const selectedNode = findNode([rootNode, ...nodes], selectedNodes[0]);
 
       if (selectedNode) {
         setFontFamily(selectedNode.font.family || "Noto Sans TC");
@@ -355,12 +325,12 @@ const TextTool = ({
         setIsStrikethrough(selectedNode.font.isStrikethrough || false);
       }
     }
-  }, [selectedNodes, rootNode, nodes, findSelectedNode]);
+  }, [selectedNodes, rootNode, nodes, findNode]);
 
-  let selectedNode = findSelectedNode([rootNode, ...nodes]);
+  let selectedNode = findNode([rootNode, ...nodes], selectedNodes[0]);
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="flex justify-between space-x-4">
         <div className="flex flex-col space-y-4">
           <Combobox
@@ -476,6 +446,7 @@ const TextTool = ({
                 color={textColor}
                 onChangeComplete={textColorChange}
                 disableAlpha={true}
+                presetColors={["#000000", "#FFFFFF"]}
               />
             </div>
           )}
@@ -513,7 +484,7 @@ const TextTool = ({
           <span className="material-symbols-rounded">format_strikethrough</span>
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 

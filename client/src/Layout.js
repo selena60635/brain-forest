@@ -4,8 +4,8 @@ import { Outlet, Link } from "react-router-dom";
 const Layout = () => {
   return (
     <>
-      <header className="bg-light border-b border-secondary">
-        <nav className="flex justify-between items-center  container mx-auto">
+      <header className="bg-light border-b border-secondary text-secondary">
+        <nav className="flex justify-between items-center container mx-auto">
           <div className="flex space-x-3 items-center my-2">
             <Link to="/">
               <img src="我.png" alt="" width="40"></img>
