@@ -1,7 +1,29 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Outlet, Link } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+import { Context } from "./context/AuthContext";
+// import Loading from "./pages/loading";
 
 const Layout = () => {
+  const { user } = useContext(Context);
+  async function handleSignOut() {
+    try {
+      // setLoading(true);
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      await signOut(auth);
+    } catch (err) {
+      console.log(err);
+    }
+    // finally {
+    //   setLoading(false);
+    // }
+  }
+
+  // if (loading) {
+  //   return <Loading />;
+  // }
+
   return (
     <>
       <header className="bg-light border-b border-secondary text-secondary">
@@ -14,7 +36,7 @@ const Layout = () => {
               <h1>Brain Forest</h1>
             </Link>
           </div>
-          <ul className="flex space-x-8">
+          <ul className="flex items-center space-x-8">
             <li className="">
               <Link
                 to="/folder"
@@ -32,12 +54,21 @@ const Layout = () => {
               </Link>
             </li>
             <li className="">
-              <Link
-                to="/login"
-                className="rounded-md px-3 py-2 font-medium text-white bg-secondary hover:bg-primary"
-              >
-                Sign In
-              </Link>
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="rounded-md px-3 py-2 font-medium text-white bg-secondary hover:bg-primary"
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="rounded-md px-3 py-2 font-medium text-white bg-secondary hover:bg-primary"
+                >
+                  Sign In
+                </Link>
+              )}
             </li>
           </ul>
         </nav>
