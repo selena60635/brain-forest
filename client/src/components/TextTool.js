@@ -88,7 +88,7 @@ const TextTool = ({
       if (selectedNodes.includes(rootNode.id)) {
         setRootNode((prev) => ({
           ...prev,
-          font: { ...prev, family: font },
+          font: { ...prev.font, family: font },
         }));
       }
       setNodes((prev) =>

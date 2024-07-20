@@ -12,8 +12,12 @@ import BtnsGroupRow from "../components/BtnsGroupRow";
 import Shortcuts from "../components/Shortcuts";
 import ToolBox from "../components/ToolBox";
 import { v4 as uuidv4 } from "uuid";
+import { useParams } from "react-router-dom";
+import { doc, getDoc, setDoc, collection, Timestamp } from "firebase/firestore";
+import { db, auth } from "../firebaseConfig";
 
 const WorkArea = () => {
+  const { id } = useParams();
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
@@ -127,6 +131,86 @@ const WorkArea = () => {
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
   const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
   const [isToolBoxOpen, setIsToolBoxOpen] = useState(false);
+
+  const saveMindMap = async () => {
+    try {
+      const mindMapData = {
+        colorStyle: currentColorStyle,
+        rootNode,
+        nodes,
+        lastSavedAt: Timestamp.now(),
+      };
+      const userId = auth.currentUser.uid;
+      const docRef = id
+        ? doc(db, "users", userId, "mindMaps", id)
+        : doc(collection(db, "users", userId, "mindMaps"));
+      await setDoc(docRef, mindMapData);
+      alert("儲存成功！");
+    } catch (error) {
+      console.error("儲存時發生錯誤: ", error);
+      alert("儲存時發生錯誤");
+    }
+  };
+
+  const resetMindMap = useCallback(() => {
+    const defaultRootColor = "#000229";
+    const defaultTextColor = "#FFFFFF";
+
+    setCurrentColorStyle(2);
+    setColorIndex(0);
+    setNodesColor("#17493b");
+
+    setRootNode({
+      id: uuidv4(),
+      name: "根節點",
+      bkColor: defaultRootColor,
+      pathColor: defaultRootColor,
+      outline: { color: defaultRootColor, width: "2px", style: "none" },
+      font: {
+        family: "Noto Sans TC",
+        size: "24px",
+        weight: "400",
+        color: defaultTextColor,
+      },
+      path: {
+        width: "3",
+        style: "0",
+      },
+    });
+    setNodes([]);
+    setSelectedNodes([]);
+    nodeRefs.current = [];
+  }, []);
+
+  const fetchMindMap = useCallback(async (mindMapId) => {
+    try {
+      const userId = auth.currentUser.uid;
+      const docRef = doc(db, "users", userId, "mindMaps", mindMapId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const mindMapData = docSnap.data();
+        setRootNode(mindMapData.rootNode);
+        setNodes(mindMapData.nodes);
+        setCurrentColorStyle(mindMapData.colorStyle);
+        nodeRefs.current = new Array(mindMapData.nodes.length)
+          .fill(null)
+          .map(() => React.createRef());
+      } else {
+        console.log("No such document!");
+      }
+    } catch (error) {
+      console.error("Error fetching mind map: ", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      fetchMindMap(id);
+    } else {
+      resetMindMap();
+    }
+  }, [id, fetchMindMap, resetMindMap]);
 
   // 初始滾動至畫布的中心點
   useEffect(() => {
@@ -531,6 +615,7 @@ const WorkArea = () => {
               findParentNode={findParentNode}
               addSiblingNode={addSiblingNode}
               addSiblingChildNode={addSiblingChildNode}
+              saveMindMap={saveMindMap}
             />
           </div>
 

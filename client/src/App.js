@@ -9,6 +9,7 @@ import Page404 from "./pages/Page404";
 import "./styles/all.css";
 import { AuthContext } from "./context/AuthContext";
 import { PrivateRoute } from "./pages/PrivateRoute";
+import { MindMapProvider } from "./context/MindMapContext";
 
 function App() {
   const router = createBrowserRouter([
@@ -34,13 +35,25 @@ function App() {
             </PrivateRoute>
           ),
         },
+
+        {
+          path: "workArea/:id",
+          element: (
+            <PrivateRoute>
+              <WorkArea />
+            </PrivateRoute>
+          ),
+        },
+
         { path: "login", element: <Login /> },
       ],
     },
   ]);
   return (
     <AuthContext>
-      <RouterProvider router={router} />
+      <MindMapProvider>
+        <RouterProvider router={router} />
+      </MindMapProvider>
     </AuthContext>
   );
 }
