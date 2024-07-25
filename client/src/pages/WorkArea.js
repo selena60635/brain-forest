@@ -12,19 +12,33 @@ import BtnsGroupRow from "../components/BtnsGroupRow";
 import Shortcuts from "../components/Shortcuts";
 import ToolBox from "../components/ToolBox";
 import { v4 as uuidv4 } from "uuid";
-import { useParams } from "react-router-dom";
-import { doc, getDoc, setDoc, collection, Timestamp } from "firebase/firestore";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  Timestamp,
+  addDoc,
+} from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
+import Loading from "./loading";
+
+export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const WorkArea = () => {
-  const { id } = useParams();
+  const { id } = useParams(); //取得當前頁面id
+  const navigate = useNavigate();
+  // const [loaderTime, setLoaderTime] = useState(true);
+  const [loading, setLoading] = useState(true); //是否開啟loading page
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
 
-  const [currentColorStyle, setCurrentColorStyle] = useState(2);
-  const [colorIndex, setColorIndex] = useState(0);
-  const [nodesColor, setNodesColor] = useState("#17493b");
+  const [currentColorStyle, setCurrentColorStyle] = useState(2); //目前顏色風格索引
+  const [colorIndex, setColorIndex] = useState(0); //目前節點顏色索引
+  const [nodesColor, setNodesColor] = useState("#17493b"); //純色模式目前顏色
+  //所有顏色風格
   const colorStyles = useMemo(
     () => [
       // {
@@ -102,8 +116,11 @@ const WorkArea = () => {
     ],
     [nodesColor]
   );
-  const rootColor = colorStyles[currentColorStyle].root;
-  const textColor = colorStyles[currentColorStyle].text;
+  const rootColor = colorStyles[currentColorStyle].root; //取得當前顏色風格的根節點顏色
+  const textColor = colorStyles[currentColorStyle].text; //取得當前顏色風格的文字顏色
+  //取得當前顏色風格相應的節點顏色，並按照順序提取使用
+  const colors = colorStyles[currentColorStyle].nodes;
+  const color = colors[colorIndex % colors.length];
 
   //定義根節點狀態
   const [rootNode, setRootNode] = useState({
@@ -127,12 +144,58 @@ const WorkArea = () => {
     },
   });
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
+
+  const newNode = useMemo(
+    () => ({
+      id: uuidv4(),
+      name: "節點",
+      isNew: true, //標記為新創建的節點
+      children: [],
+      bkColor: color,
+      pathColor: color,
+      outline: { color: color, width: "2px", style: "none" },
+      font: {
+        family: "Noto Sans TC",
+        size: "20px",
+        weight: "400",
+        color: textColor,
+        // isItalic: false,
+      },
+      path: {
+        width: rootNode.path.width,
+        style: rootNode.path.style,
+      },
+    }),
+    [color, textColor, rootNode.path.style, rootNode.path.width]
+  );
+
+  const newChildNode = useMemo(
+    () => ({
+      id: uuidv4(),
+      name: "子節點",
+      isNew: true,
+      children: [],
+      outline: { width: "2px", style: "none" },
+      font: {
+        family: "Noto Sans TC",
+        size: "16px",
+        weight: "400",
+        // isItalic: false,
+      },
+      path: {
+        width: rootNode.path.width,
+        style: rootNode.path.style,
+      },
+    }),
+    [rootNode.path.style, rootNode.path.width]
+  );
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
   const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
   const [isToolBoxOpen, setIsToolBoxOpen] = useState(false);
 
-  const saveMindMap = async () => {
+  //儲存目前心智圖組件並重導向
+  const saveMindMap = async (id = null) => {
     try {
       const mindMapData = {
         colorStyle: currentColorStyle,
@@ -141,36 +204,40 @@ const WorkArea = () => {
         lastSavedAt: Timestamp.now(),
       };
       const userId = auth.currentUser.uid;
-      const docRef = id
-        ? doc(db, "users", userId, "mindMaps", id)
-        : doc(collection(db, "users", userId, "mindMaps"));
-      await setDoc(docRef, mindMapData);
-      alert("儲存成功！");
+      let docRef;
+      if (id) {
+        docRef = doc(db, "users", userId, "mindMaps", id);
+        await setDoc(docRef, mindMapData);
+        alert("儲存成功！");
+      } else {
+        docRef = await addDoc(
+          collection(db, "users", userId, "mindMaps"),
+          mindMapData
+        );
+        alert("新檔案已儲存成功！");
+        navigate(`/workArea/${docRef.id}`);
+      }
     } catch (error) {
       console.error("儲存時發生錯誤: ", error);
       alert("儲存時發生錯誤");
     }
   };
-
-  const resetMindMap = useCallback(() => {
-    const defaultRootColor = "#000229";
-    const defaultTextColor = "#FFFFFF";
-
+  //重置心智圖組件為初始狀態
+  const resetMindMap = useCallback(async () => {
     setCurrentColorStyle(2);
     setColorIndex(0);
     setNodesColor("#17493b");
-
     setRootNode({
       id: uuidv4(),
       name: "根節點",
-      bkColor: defaultRootColor,
-      pathColor: defaultRootColor,
-      outline: { color: defaultRootColor, width: "2px", style: "none" },
+      bkColor: "#000229",
+      pathColor: "#000229",
+      outline: { color: "#000229", width: "2px", style: "none" },
       font: {
         family: "Noto Sans TC",
         size: "24px",
         weight: "400",
-        color: defaultTextColor,
+        color: "#FFFFFF",
       },
       path: {
         width: "3",
@@ -180,37 +247,63 @@ const WorkArea = () => {
     setNodes([]);
     setSelectedNodes([]);
     nodeRefs.current = [];
-  }, []);
+    await delay(1000); // loading頁面至少顯示1秒
+    setLoading(false);
+    // setLoaderTime(false);
+  }, [
+    setCurrentColorStyle,
+    setNodesColor,
+    setRootNode,
+    setNodes,
+    setColorIndex,
+    nodeRefs,
+    setSelectedNodes,
+  ]);
+  //獲取並設定心智圖組件狀態
+  const fetchMindMap = useCallback(
+    async (mindMapId) => {
+      try {
+        const userId = auth.currentUser.uid;
+        const docRef = doc(db, "users", userId, "mindMaps", mindMapId);
+        const docSnap = await getDoc(docRef);
 
-  const fetchMindMap = useCallback(async (mindMapId) => {
-    try {
-      const userId = auth.currentUser.uid;
-      const docRef = doc(db, "users", userId, "mindMaps", mindMapId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const mindMapData = docSnap.data();
-        setRootNode(mindMapData.rootNode);
-        setNodes(mindMapData.nodes);
-        setCurrentColorStyle(mindMapData.colorStyle);
-        nodeRefs.current = new Array(mindMapData.nodes.length)
-          .fill(null)
-          .map(() => React.createRef());
-      } else {
-        console.log("No such document!");
+        if (docSnap.exists()) {
+          const mindMapData = docSnap.data();
+          setRootNode(mindMapData.rootNode);
+          setNodes(mindMapData.nodes);
+          setCurrentColorStyle(mindMapData.colorStyle);
+          nodeRefs.current = new Array(mindMapData.nodes.length)
+            .fill(null)
+            .map(() => React.createRef());
+        }
+      } catch (err) {
+        console.error("載入失敗: ", err);
+      } finally {
+        // setLoaderTime(false);
+        await delay(1000); // loading頁面至少顯示1秒
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching mind map: ", error);
-    }
-  }, []);
-
+    },
+    [setCurrentColorStyle, setRootNode, setNodes]
+  );
+  //若id改變，重新載入相應的心智圖檔案
   useEffect(() => {
+    setLoading(true);
     if (id) {
+      //載入與id相應的心智圖組件
       fetchMindMap(id);
     } else {
+      //載入初始心智圖組件
       resetMindMap();
     }
   }, [id, fetchMindMap, resetMindMap]);
+
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setLoading(false);
+  //   }, 1000);
+  //   return () => clearTimeout(timer);
+  // }, [loaderTime]);
 
   // 初始滾動至畫布的中心點
   useEffect(() => {
@@ -338,54 +431,6 @@ const WorkArea = () => {
     }
     return null;
   }, []);
-  //取得當前顏色風格相應的顏色
-  const colors = colorStyles[currentColorStyle].nodes;
-  const color = colors[colorIndex % colors.length];
-
-  const newNode = useMemo(
-    () => ({
-      id: uuidv4(),
-      name: "節點",
-      isNew: true, //標記為新創建的節點
-      children: [],
-      bkColor: color,
-      pathColor: color,
-      outline: { color: color, width: "2px", style: "none" },
-      font: {
-        family: "Noto Sans TC",
-        size: "20px",
-        weight: "400",
-        color: textColor,
-        // isItalic: false,
-      },
-      path: {
-        width: rootNode.path.width,
-        style: rootNode.path.style,
-      },
-    }),
-    [color, textColor, rootNode.path.style, rootNode.path.width]
-  );
-
-  const newChildNode = useMemo(
-    () => ({
-      id: uuidv4(),
-      name: "子節點",
-      isNew: true,
-      children: [],
-      outline: { width: "2px", style: "none" },
-      font: {
-        family: "Noto Sans TC",
-        size: "16px",
-        weight: "400",
-        // isItalic: false,
-      },
-      path: {
-        width: rootNode.path.width,
-        style: rootNode.path.style,
-      },
-    }),
-    [rootNode.path.style, rootNode.path.width]
-  );
 
   // 新增節點
   const addNode = () => {
@@ -594,17 +639,106 @@ const WorkArea = () => {
   );
 
   return (
-    <div className="flex ">
-      <div
-        className={`canvas-wrap transition-all duration-300 ${
-          isToolBoxOpen ? "w-6/12 sm:w-10/12" : "w-screen"
-        }`}
-        onMouseDown={handleMouseDown}
-        ref={canvasRef}
-      >
-        <div ref={btnsRef}>
-          <div className="top-20 left-5 fixed z-20">
-            <BtnsGroupCol
+    <>
+      {loading && <Loading />}
+      <div className="flex ">
+        <div
+          className={`canvas-wrap transition-all duration-300 ${
+            isToolBoxOpen ? "w-6/12 sm:w-10/12" : "w-screen"
+          }`}
+          onMouseDown={handleMouseDown}
+          ref={canvasRef}
+        >
+          <div ref={btnsRef}>
+            <div className="top-20 left-5 fixed z-20">
+              <BtnsGroupCol
+                selectedNodes={selectedNodes}
+                rootNode={rootNode}
+                nodes={nodes}
+                setRootNode={setRootNode}
+                addNode={addNode}
+                delNode={delNode}
+                addChildNode={addChildNode}
+                findParentNode={findParentNode}
+                addSiblingNode={addSiblingNode}
+                addSiblingChildNode={addSiblingChildNode}
+                saveMindMap={saveMindMap}
+                id={id}
+              />
+            </div>
+
+            <div className="btns-group bottom-10 left-5 fixed z-20 h-12">
+              <Shortcuts />
+            </div>
+          </div>
+
+          {selectBox && (
+            <div
+              className="select-box"
+              style={{
+                left: selectBox.left,
+                top: selectBox.top,
+                width: selectBox.width,
+                height: selectBox.height,
+              }}
+            />
+          )}
+          <div className="canvas">
+            <MindMap
+              selectBox={selectBox}
+              canvasRef={canvasRef}
+              setNodes={setNodes}
+              nodes={nodes}
+              nodeRefs={nodeRefs}
+              rootNode={rootNode}
+              setRootNode={setRootNode}
+              selectedNodes={selectedNodes}
+              setSelectedNodes={setSelectedNodes}
+              addNode={addNode}
+              delNode={delNode}
+              addChildNode={addChildNode}
+              findParentNode={findParentNode}
+              addSiblingNode={addSiblingNode}
+              addSiblingChildNode={addSiblingChildNode}
+            />
+          </div>
+        </div>
+        <div
+          className={`absolute right-0 h-screen w-6/12 sm:w-2/12 transition-transform duration-300 ${
+            isToolBoxOpen ? "translate-x-0" : "translate-x-full "
+          }`}
+        >
+          <ToolBox
+            rootNode={rootNode}
+            setRootNode={setRootNode}
+            nodes={nodes}
+            setNodes={setNodes}
+            selectedNodes={selectedNodes}
+            currentColorStyle={currentColorStyle}
+            setCurrentColorStyle={setCurrentColorStyle}
+            colorStyles={colorStyles}
+            findNode={findNode}
+            colorIndex={colorIndex}
+            setColorIndex={setColorIndex}
+            nodesColor={nodesColor}
+            setNodesColor={setNodesColor}
+          />
+          <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
+            <Button
+              className="btn aspect-square"
+              onClick={() => setIsToolBoxOpen(!isToolBoxOpen)}
+            >
+              <span
+                className={`material-symbols-rounded ${
+                  isToolBoxOpen ? "text-primary" : ""
+                }`}
+              >
+                service_toolbox
+              </span>
+            </Button>
+          </div>
+          <div className="bottom-28 -left-[260px] absolute z-20">
+            <BtnsGroupRow
               selectedNodes={selectedNodes}
               rootNode={rootNode}
               nodes={nodes}
@@ -615,96 +749,11 @@ const WorkArea = () => {
               findParentNode={findParentNode}
               addSiblingNode={addSiblingNode}
               addSiblingChildNode={addSiblingChildNode}
-              saveMindMap={saveMindMap}
             />
           </div>
-
-          <div className="btns-group bottom-10 left-5 fixed z-20 h-12">
-            <Shortcuts />
-          </div>
-        </div>
-
-        {selectBox && (
-          <div
-            className="select-box"
-            style={{
-              left: selectBox.left,
-              top: selectBox.top,
-              width: selectBox.width,
-              height: selectBox.height,
-            }}
-          />
-        )}
-        <div className="canvas">
-          <MindMap
-            selectBox={selectBox}
-            canvasRef={canvasRef}
-            setNodes={setNodes}
-            nodes={nodes}
-            nodeRefs={nodeRefs}
-            rootNode={rootNode}
-            setRootNode={setRootNode}
-            selectedNodes={selectedNodes}
-            setSelectedNodes={setSelectedNodes}
-            addNode={addNode}
-            delNode={delNode}
-            addChildNode={addChildNode}
-            findParentNode={findParentNode}
-            addSiblingNode={addSiblingNode}
-            addSiblingChildNode={addSiblingChildNode}
-          />
         </div>
       </div>
-      <div
-        className={`absolute right-0 h-screen w-6/12 sm:w-2/12 transition-transform duration-300 ${
-          isToolBoxOpen ? "translate-x-0" : "translate-x-full "
-        }`}
-      >
-        <ToolBox
-          rootNode={rootNode}
-          setRootNode={setRootNode}
-          nodes={nodes}
-          setNodes={setNodes}
-          selectedNodes={selectedNodes}
-          currentColorStyle={currentColorStyle}
-          setCurrentColorStyle={setCurrentColorStyle}
-          colorStyles={colorStyles}
-          findNode={findNode}
-          colorIndex={colorIndex}
-          setColorIndex={setColorIndex}
-          nodesColor={nodesColor}
-          setNodesColor={setNodesColor}
-        />
-        <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
-          <Button
-            className="btn aspect-square"
-            onClick={() => setIsToolBoxOpen(!isToolBoxOpen)}
-          >
-            <span
-              className={`material-symbols-rounded ${
-                isToolBoxOpen ? "text-primary" : ""
-              }`}
-            >
-              service_toolbox
-            </span>
-          </Button>
-        </div>
-        <div className="bottom-28 -left-[260px] absolute z-20">
-          <BtnsGroupRow
-            selectedNodes={selectedNodes}
-            rootNode={rootNode}
-            nodes={nodes}
-            setRootNode={setRootNode}
-            addNode={addNode}
-            delNode={delNode}
-            addChildNode={addChildNode}
-            findParentNode={findParentNode}
-            addSiblingNode={addSiblingNode}
-            addSiblingChildNode={addSiblingChildNode}
-          />
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 

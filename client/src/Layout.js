@@ -3,26 +3,21 @@ import { Outlet, Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { Context } from "./context/AuthContext";
-// import Loading from "./pages/loading";
+import { delay } from "./pages/WorkArea";
 
 const Layout = () => {
-  const { user } = useContext(Context);
+  const { user, setLoading } = useContext(Context);
   async function handleSignOut() {
     try {
-      // setLoading(true);
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      setLoading(true);
+      await delay(1000);
       await signOut(auth);
     } catch (err) {
-      console.log(err);
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    // finally {
-    //   setLoading(false);
-    // }
   }
-
-  // if (loading) {
-  //   return <Loading />;
-  // }
 
   return (
     <>
