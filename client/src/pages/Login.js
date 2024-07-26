@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Loading from "../pages/loading";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -8,38 +7,67 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { auth } from "../firebaseConfig";
-import { delay } from "../pages/WorkArea";
+import SweetAlert from "../components/SweetAlert";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("demo@gmail.com");
-  const [password, setPassword] = useState("000000");
+  const [email, setEmail] = useState(isLogin ? "demo@gmail.com" : "");
+  const [password, setPassword] = useState(isLogin ? "000000" : "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false); //是否正在提交表單
   const navigate = useNavigate();
 
+  const matchErrMes = (err) => {
+    if (err.message === "Firebase: Error (auth/invalid-credential).") {
+      return "Your email or password might be incorrect.";
+    } else if (err.message === "Firebase: Error (auth/email-already-in-use).") {
+      return "This email is already in use.";
+    } else {
+      return err.message
+        .replace("Firebase: ", "")
+        .replace(/ *\([^)]*\) */g, "");
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setIsSubmitting(true); //利用是否正在提交表單狀態避免重複提交表單，並且判斷是否載入loading頁面
+    setIsSubmitting(true); //利用是否正在提交表單狀態避免重複提交表單
 
     try {
       if (isLogin) {
         //若目前表單是登入表單，執行一般登入
         await signInWithEmailAndPassword(auth, email, password);
-        // alert("登入成功！");
-        await delay(1000);
+        SweetAlert({
+          type: "toast",
+          title: "Signed in successfully!",
+          icon: "success",
+        });
         navigate("/folder");
       } else {
         //若不是登入表單，執行註冊
         await createUserWithEmailAndPassword(auth, email, password);
-        // alert("註冊成功！");
+        SweetAlert({
+          type: "toast",
+          title: "Signed up successfully!",
+          icon: "success",
+        });
         navigate("/folder");
       }
     } catch (err) {
+      const errMessage = matchErrMes(err);
       setError(
-        isLogin ? `登入失敗：${err.message}` : `註冊失敗：${err.message}`
+        isLogin
+          ? `Signed in failed：${errMessage}`
+          : `Signed up failed：${errMessage}`
       );
+      SweetAlert({
+        type: "alert",
+        title: isLogin ? "Signed in failed!" : "Signed up failed!",
+        icon: "error",
+        text: errMessage,
+        confirmButtonText: "OK",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -52,39 +80,53 @@ const Login = () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // alert("登入成功！");
-      await delay(1000);
+      SweetAlert({
+        type: "toast",
+        title: "Signed in with Google successfully!",
+        icon: "success",
+      });
       navigate("/folder");
     } catch (err) {
-      setError(`Google 登入失敗：${err.message}`);
+      const errMessage = matchErrMes(err);
+      setError(`Signed in with Google failed：${errMessage}`);
+      SweetAlert({
+        type: "alert",
+        title: "Signed in with Google failed!",
+        icon: "error",
+        text: errMessage,
+        confirmButtonText: "OK",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const toggleForm = () => {
-    setIsLogin(!isLogin);
+    setIsLogin((prev) => {
+      setEmail(!prev ? "demo@gmail.com" : "");
+      setPassword(!prev ? "000000" : "");
+      return !prev;
+    });
     setError("");
   };
 
   return (
     <>
-      {isSubmitting && <Loading />}
-      <section className="bg-light/50">
-        <div
-          className="flex items-center max-w-screen-xl justify-between mx-auto space-x-12 w-full h-screen"
-          style={{
-            backgroundImage: "url(/tree.png)",
-          }}
-        >
-          <div className="bg-white rounded-lg p-8 shadow-2xl text-center w-4/6">
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+      <section
+        className="bg-light/50 h-screen flex items-center justify-center px-8 pb-40"
+        style={{
+          background: "url(/BG-01.jpg) center no-repeat",
+        }}
+      >
+        <div className="flex justify-between items-center gap-8 max-w-6xl mx-auto w-full bg-white/80 shadow-xl rounded-xl px-10 py-20">
+          <div className="bg-white rounded-lg p-8 pb-6 shadow-2xl text-center w-3/4">
+            <form onSubmit={handleFormSubmit} className="space-y-5">
               <input
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded-md"
                 required
               />
               <input
@@ -92,51 +134,29 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 border border-gray-300 rounded-md"
                 required
               />
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               <button
                 type="submit"
-                className="w-full bg-secondary text-white p-2 mt-4 flex justify-center rounded-md font-medium text-white hover:bg-primary"
+                className="w-full bg-secondary text-white p-2 flex justify-center rounded-md text-white hover:bg-primary "
                 disabled={isSubmitting}
               >
-                {isLogin ? "登入" : "註冊"}
+                {isLogin ? "Sign In" : "Sign Up"}
               </button>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-              <p className="text-sm mt-4">
-                {isLogin ? (
-                  <>
-                    還沒有帳號嗎?{" "}
-                    <span
-                      onClick={toggleForm}
-                      className="text-warning cursor-pointer"
-                    >
-                      註冊
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    已經有帳號了?{" "}
-                    <span
-                      onClick={toggleForm}
-                      className="text-warning cursor-pointer"
-                    >
-                      登入
-                    </span>
-                  </>
-                )}
-              </p>
+
               <button
                 onClick={handleGoogleLogin}
-                className="w-full bg-secondary text-white p-2 mt-4 flex justify-center items-center rounded-md font-medium text-white hover:bg-primary"
+                className="w-full bg-secondary text-white p-2 flex justify-center items-center rounded-md text-white hover:bg-primary"
                 disabled={isSubmitting}
               >
-                {/* <span>Sign in with </span> */}
                 <svg
                   version="1.1"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 48 48"
                   width="24"
+                  className="mr-2"
                 >
                   <path
                     fill="#EA4335"
@@ -155,11 +175,49 @@ const Login = () => {
                     d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
                   ></path>
                 </svg>
+                Sign in with
               </button>
+              <div className="text-sm ">
+                {isLogin ? (
+                  <>
+                    <span className="mr-2">Need an account?</span>
+                    <span
+                      onClick={toggleForm}
+                      className="text-warning cursor-pointer"
+                    >
+                      Sign Up
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">Already have an account?</span>
+                    <span
+                      onClick={toggleForm}
+                      className="text-warning cursor-pointer"
+                    >
+                      Sign In
+                    </span>
+                  </>
+                )}
+              </div>
             </form>
           </div>
-          <div className="border h-full w-full text-2xl font-bold  text-secondary">
-            登入以查看更多
+          <div className="w-full text-secondary font-bold flex flex-col">
+            <p className="text-5xl">Join us!</p>
+            <p className="text-2xl mt-4">
+              Start planting your{" "}
+              <span className="text-2xl underline decoration-2">
+                Brain Forest.
+              </span>
+            </p>
+            <div className="flex items-end mt-16 font-semibold">
+              <p className="text-xl">
+                Still considering? Click here to try it.
+              </p>
+              <button className="rounded-md px-3 py-2 font-bold text-white text-3xl bg-secondary hover:bg-primary ml-4">
+                Go
+              </button>
+            </div>
           </div>
         </div>
       </section>

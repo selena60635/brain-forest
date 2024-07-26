@@ -4,18 +4,29 @@ import { signOut } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { Context } from "./context/AuthContext";
 import { delay } from "./pages/WorkArea";
+import SweetAlert from "./components/SweetAlert";
 
 const Layout = () => {
   const { user, setLoading } = useContext(Context);
   async function handleSignOut() {
-    try {
-      setLoading(true);
-      await delay(1000);
-      await signOut(auth);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    const result = await SweetAlert({
+      type: "alert",
+      title: "Confirm sign out?",
+      icon: "warning",
+      confirmButtonText: "Yes, sign out",
+      showCancelButton: true,
+      cancelButtonText: "No, cancel",
+    });
+    if (result.isConfirmed) {
+      try {
+        setLoading(true);
+        await delay(1000);
+        await signOut(auth);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
   }
 
@@ -25,7 +36,7 @@ const Layout = () => {
         <nav className="flex justify-between items-center container mx-auto">
           <div className="flex space-x-3 items-center my-2">
             <Link to="/">
-              <img src="我.png" alt="" width="40"></img>
+              <img src="brain-forest1.png" alt="" width="60"></img>
             </Link>
             <Link className="text-2xl font-bold " to="/">
               <h1>Brain Forest</h1>
