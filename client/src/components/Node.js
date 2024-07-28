@@ -130,6 +130,9 @@ const ChildNode = ({
                   ? childRef.current.getBoundingClientRect().width
                   : "58px",
                 maxWidth: "500px",
+                textDecorationLine: `${
+                  childnode.font.isStrikethrough ? "line-through" : "none"
+                }`,
               }}
               contentEditable="true"
               suppressContentEditableWarning="true"
@@ -268,6 +271,9 @@ const Node = ({
                   ? nodeRef.current.getBoundingClientRect().width
                   : "64px",
                 maxWidth: "500px",
+                textDecorationLine: `${
+                  node.font.isStrikethrough ? "line-through" : "none"
+                }`,
               }}
               contentEditable="true"
               suppressContentEditableWarning="true"

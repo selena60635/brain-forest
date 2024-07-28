@@ -68,6 +68,9 @@ const RootNode = ({
             style={{
               minWidth: rootNodeRef.current.getBoundingClientRect().width,
               maxWidth: "500px",
+              textDecorationLine: `${
+                rootNode.font.isStrikethrough ? "line-through" : "none"
+              }`,
             }}
             contentEditable="true"
             suppressContentEditableWarning="true"
