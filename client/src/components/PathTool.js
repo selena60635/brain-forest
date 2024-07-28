@@ -19,6 +19,7 @@ const PathTool = ({
   colorStyleEnabled,
   setColorStyleEnabled,
   colorStyleopts,
+  setBgColor,
 }) => {
   const [pathWidth, setPathWidth] = useState("3");
   const [pathStyle, setPathStyle] = useState("solid");
@@ -270,6 +271,7 @@ const PathTool = ({
   };
   const nodeColorChange = (newColor) => {
     setColor(newColor.hex);
+    setBgColor(newColor.hex);
     if (selectedNodes.length > 0) {
       if (selectedNodes.includes(rootNode.id)) {
         setNodesColor(newColor.hex);
@@ -284,7 +286,6 @@ const PathTool = ({
         updateSelectedNodes(prev, selectedNodes, (node) => ({
           bkColor: newColor.hex,
           pathColor: newColor.hex,
-          outline: { ...prev.outline, color: newColor.hex },
         }))
       );
     }

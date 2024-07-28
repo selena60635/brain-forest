@@ -85,6 +85,58 @@ const ToolBox = ({
       ],
     },
   ];
+  const borderStyleOpts = [
+    {
+      value: "solid",
+      icon: (
+        <div className="w-8 h-4 border-2 border-secondary rounded-md"></div>
+      ),
+    },
+    {
+      value: "dashed",
+      icon: (
+        <div className="w-8 h-4 border-dashed border-2 border-secondary rounded-md"></div>
+      ),
+    },
+    {
+      value: "dotted",
+      icon: (
+        <div className="w-8 h-4 border-dotted border-2 border-secondary rounded-md"></div>
+      ),
+    },
+    {
+      value: "double",
+      icon: (
+        <div className="w-8 h-4 border-double border-4 border-secondary rounded-md"></div>
+      ),
+    },
+    {
+      value: "none",
+      icon: "無邊框",
+    },
+  ];
+  const borderWidthOpts = [
+    {
+      value: "1",
+      icon: "極細",
+    },
+    {
+      value: "2",
+      icon: "細",
+    },
+    {
+      value: "3",
+      icon: "適中",
+    },
+    {
+      value: "4",
+      icon: "粗",
+    },
+    {
+      value: "5",
+      icon: "極粗",
+    },
+  ];
 
   const updateNodes = (nodes, selectedNodes, updateFn) => {
     return nodes.map((node) => {
@@ -236,58 +288,6 @@ const ToolBox = ({
   const borderPickerToggle = () => {
     setShowBorderPicker((prev) => !prev);
   };
-  const borderStyleOpts = [
-    {
-      value: "solid",
-      icon: (
-        <div className="w-8 h-4 border-2 border-secondary rounded-md"></div>
-      ),
-    },
-    {
-      value: "dashed",
-      icon: (
-        <div className="w-8 h-4 border-dashed border-2 border-secondary rounded-md"></div>
-      ),
-    },
-    {
-      value: "dotted",
-      icon: (
-        <div className="w-8 h-4 border-dotted border-2 border-secondary rounded-md"></div>
-      ),
-    },
-    {
-      value: "double",
-      icon: (
-        <div className="w-8 h-4 border-double border-4 border-secondary rounded-md"></div>
-      ),
-    },
-    {
-      value: "none",
-      icon: "無邊框",
-    },
-  ];
-  const borderWidthOpts = [
-    {
-      value: "1",
-      icon: "極細",
-    },
-    {
-      value: "2",
-      icon: "細",
-    },
-    {
-      value: "3",
-      icon: "適中",
-    },
-    {
-      value: "4",
-      icon: "粗",
-    },
-    {
-      value: "5",
-      icon: "極粗",
-    },
-  ];
 
   return (
     <>
@@ -373,7 +373,7 @@ const ToolBox = ({
                             (opt) => opt.value === borderStyle
                           )?.icon
                         }
-                        <ChevronDownIcon className="size-4 " />
+                        <ChevronDownIcon className="size-4" />
                       </MenuButton>
 
                       <MenuItems
@@ -435,10 +435,8 @@ const ToolBox = ({
                   </div>
                   <Menu as="div" className="relative inline-block w-full mt-4">
                     <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
-                      {
-                        borderWidthOpts.find((opt) => opt.value === borderWidth)
-                          ?.icon
-                      }
+                      {borderWidthOpts.find((opt) => opt.value === borderWidth)
+                        ?.icon || "適中"}
                       <ChevronDownIcon className="size-4 " />
                     </MenuButton>
 
@@ -508,6 +506,7 @@ const ToolBox = ({
                   colorStyleEnabled={colorStyleEnabled}
                   setColorStyleEnabled={setColorStyleEnabled}
                   colorStyleopts={colorStyleopts}
+                  setBgColor={setBgColor}
                 />
               </DisclosurePanel>
             </Disclosure>
