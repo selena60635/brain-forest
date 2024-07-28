@@ -28,11 +28,7 @@ function App() {
         },
         {
           path: "workArea",
-          element: (
-            <PrivateRoute>
-              <WorkArea />
-            </PrivateRoute>
-          ),
+          element: <WorkArea />,
         },
 
         {

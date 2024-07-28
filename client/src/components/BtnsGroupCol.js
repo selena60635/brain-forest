@@ -1,5 +1,9 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Button } from "@headlessui/react";
+import { Context } from "../context/AuthContext";
+import SweetAlert from "../components/SweetAlert";
+import { useNavigate } from "react-router-dom";
+import { Timestamp } from "firebase/firestore";
 
 function BtnsGroupCol({
   rootNode,
@@ -13,11 +17,16 @@ function BtnsGroupCol({
   addChildNode,
   saveMindMap,
   id,
+  currentColorStyle,
+  isSaved,
+  setIsSaved,
 }) {
+  const { user } = useContext(Context);
+  const navigate = useNavigate();
+
   const handleAddSiblingNode = (e) => {
     e.stopPropagation();
     if (selectedNodes.length === 1) {
-      //處理根節點的部分
       if (selectedNodes[0] === rootNode.id) {
         addNode();
         return;
@@ -51,8 +60,35 @@ function BtnsGroupCol({
 
   const handleSaveMindMap = async (e) => {
     e.stopPropagation();
-    await saveMindMap(id);
+    if (!user) {
+      //若是訪客，將試用的檔案暫存到localStorage
+      const state = {
+        colorStyle: currentColorStyle,
+        rootNode,
+        nodes,
+        lastSavedAt: Timestamp.now(),
+      };
+      localStorage.setItem("mindMapTest", JSON.stringify(state));
+
+      const needLoginAlert = await SweetAlert({
+        type: "alert",
+        title: "Please sign in.",
+        icon: "warning",
+        text: "You need to sign in to save files. Would you like to go to the login page now?",
+        confirmButtonText: "Yes",
+        showCancelButton: true,
+        cancelButtonText: "No",
+      });
+
+      if (needLoginAlert.isConfirmed) {
+        navigate(`/login`);
+      }
+    } else {
+      await saveMindMap(id);
+      setIsSaved(true);
+    }
   };
+
   return (
     <div className="space-y-4">
       <div className="btns-group flex-col w-12">
@@ -141,7 +177,12 @@ function BtnsGroupCol({
           </svg>
         </Button>
       </div>
-      <div className="btns-group flex-col w-12">
+      <div className="btns-group flex-col w-12 relative">
+        {!isSaved && (
+          <span className="material-symbols-rounded text-red-500 fill-icon absolute -top-2 -right-2">
+            error
+          </span>
+        )}
         <Button className="btn aspect-square">
           <svg
             height="24px"

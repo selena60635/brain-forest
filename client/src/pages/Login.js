@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -113,12 +113,12 @@ const Login = () => {
   return (
     <>
       <section
-        className="bg-light/50 h-screen flex items-center justify-center px-8 pb-40"
+        className="bg-light/50 h-[calc(100vh-69.14px)] flex items-center justify-center px-8"
         style={{
           background: "url(/BG-01.jpg) center no-repeat",
         }}
       >
-        <div className="flex justify-between items-center gap-8 max-w-6xl mx-auto w-full bg-white/80 shadow-xl rounded-xl px-10 py-20">
+        <div className="flex justify-between items-center gap-8 max-w-6xl mx-auto w-full bg-white/80 shadow-xl rounded-xl px-10 py-20 mb-20">
           <div className="bg-white rounded-lg p-8 pb-6 shadow-2xl text-center w-3/4">
             <form onSubmit={handleFormSubmit} className="space-y-5">
               <input
@@ -205,7 +205,7 @@ const Login = () => {
           <div className="w-full text-secondary font-bold flex flex-col">
             <p className="text-5xl">Join us!</p>
             <p className="text-2xl mt-4">
-              Start planting your{" "}
+              Start planting your
               <span className="text-2xl underline decoration-2">
                 Brain Forest.
               </span>
@@ -214,8 +214,8 @@ const Login = () => {
               <p className="text-xl">
                 Still considering? Click here to try it.
               </p>
-              <button className="rounded-md px-3 py-2 font-bold text-white text-3xl bg-secondary hover:bg-primary ml-4">
-                Go
+              <button className="rounded-md px-3 py-2 font-bold text-white text-3xl bg-secondary hover:bg-primary ml-4 transition-all duration-100 hover:scale-125">
+                <Link to="/workArea">Go</Link>
               </button>
             </div>
           </div>

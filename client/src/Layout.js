@@ -3,13 +3,12 @@ import { Outlet, Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import { Context } from "./context/AuthContext";
-import { delay } from "./pages/WorkArea";
 import SweetAlert from "./components/SweetAlert";
 
 const Layout = () => {
-  const { user, setLoading } = useContext(Context);
+  const { user } = useContext(Context);
   async function handleSignOut() {
-    const result = await SweetAlert({
+    const logoutAlert = await SweetAlert({
       type: "alert",
       title: "Confirm sign out?",
       icon: "warning",
@@ -17,15 +16,15 @@ const Layout = () => {
       showCancelButton: true,
       cancelButtonText: "No, cancel",
     });
-    if (result.isConfirmed) {
+    if (logoutAlert.isConfirmed) {
       try {
-        setLoading(true);
-        await delay(1000);
         await signOut(auth);
       } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+        SweetAlert({
+          type: "toast",
+          title: "Signed out failed!",
+          icon: "error",
+        });
       }
     }
   }
@@ -33,7 +32,7 @@ const Layout = () => {
   return (
     <>
       <header className="bg-light border-b border-secondary text-secondary">
-        <nav className="flex justify-between items-center container mx-auto">
+        <nav className="flex justify-between items-center container mx-auto px-4">
           <div className="flex space-x-3 items-center my-2">
             <Link to="/">
               <img src="brain-forest1.png" alt="" width="60"></img>
