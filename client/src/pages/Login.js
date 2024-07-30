@@ -44,6 +44,7 @@ const Login = () => {
           icon: "success",
         });
         navigate("/folder");
+        console.log("test");
       } else {
         //若不是登入表單，執行註冊
         await createUserWithEmailAndPassword(auth, email, password);
@@ -206,7 +207,7 @@ const Login = () => {
             <p className="text-5xl">Join us!</p>
             <p className="text-2xl mt-4">
               Start planting your
-              <span className="text-2xl underline decoration-2">
+              <span className="text-2xl underline decoration-2 ml-1.5">
                 Brain Forest.
               </span>
             </p>

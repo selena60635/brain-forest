@@ -17,6 +17,27 @@ import { Context } from "../context/AuthContext";
 import { MdChevronRight, MdAdd, MdChevronLeft } from "react-icons/md";
 import { RiDeleteBinLine } from "react-icons/ri";
 
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+});
+
+const formatDateTime = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  const formattedDate = dateFormatter.format(date);
+  const formattedTime = timeFormatter.format(date);
+  const [month, day, year] = formattedDate.split("/");
+  return `${year}/${month}/${day}, ${formattedTime}`;
+};
+
 const Folder = () => {
   const { user } = useContext(Context);
   const [mindMaps, setMindMaps] = useState([]); //存儲使用者所有心智圖檔案
@@ -186,7 +207,11 @@ const Folder = () => {
 
         setMindMaps(mindMapsList);
       } catch (err) {
-        console.error("載入檔案失敗: ", err);
+        SweetAlert({
+          type: "toast",
+          title: "Failed to load file!",
+          icon: "error",
+        });
       } finally {
         await delay(1000);
         setLoading(false);
@@ -210,19 +235,19 @@ const Folder = () => {
 
   return (
     <section
-      className="bg-light/50 h-[calc(100vh-69.14px)] flex item-start justify-center px-8 py-20 "
+      className="bg-light/50 h-[calc(100vh-68.14px)] flex item-start justify-center px-8 pt-20 pb-32"
       style={{
         background: "url(/BG-01.jpg) center no-repeat",
       }}
     >
-      <div className="max-w-6xl mx-auto bg-gradient-to-t from-white/80 to-transparent shadow-xl rounded-xl p-10 flex flex-col justify-between">
+      <div className="max-w-6xl w-full mx-auto bg-white/80 shadow-xl rounded-xl p-10 flex flex-col justify-between">
         {loading ? (
           <Loading />
         ) : (
           <>
             <div className="grid grid-cols-4 gap-8">
               <button
-                className="min-h-24 min-w-60 p-2 rounded-lg flex items-center justify-center border border-gray-400 hover:border-gray-700 hover:bg-primary/10 group transition-all duration-200"
+                className="min-h-24  p-2 rounded-lg flex items-center justify-center border border-gray-400 hover:border-gray-700 hover:bg-primary/10 group transition-all duration-200"
                 onClick={handleAddNewFile}
               >
                 <MdAdd
@@ -234,22 +259,24 @@ const Folder = () => {
               {currentMindMaps.map((mindMap) => (
                 <div
                   key={mindMap.id}
-                  className="p-4 shadow-md bg-[#17493b] text-white rounded-lg relative cursor-pointer transition-all duration-200 hover:scale-105"
+                  className="min-h-24 p-4 pr-8 shadow-md bg-[#17493b] text-white rounded-lg relative cursor-pointer transition-all duration-200 hover:scale-105"
                 >
-                  <Link to={`/workArea/${mindMap.id}`} className="block">
-                    <h3 className="text-lg font-bold mb-2">
+                  <Link
+                    to={`/workArea/${mindMap.id}`}
+                    className="flex flex-col justify-between h-full"
+                  >
+                    <h3 className="text-lg font-semibold truncate ">
                       {mindMap.name || "未命名"}
                     </h3>
-                    <p className="text-sm">
+
+                    <p className="text-sm truncate">
                       {mindMap.lastSavedAt
-                        ? `最後儲存時間: ${new Date(
-                            mindMap.lastSavedAt.seconds * 1000
-                          ).toLocaleString()}`
+                        ? formatDateTime(mindMap.lastSavedAt.seconds)
                         : "未知"}
                     </p>
                   </Link>
                   <button
-                    className="absolute top-2 right-2 text-red-500"
+                    className="absolute top-2 right-2 text-red-500 "
                     onClick={(e) => handleDelete(mindMap.id, e)}
                   >
                     <RiDeleteBinLine size={22} />
@@ -257,7 +284,7 @@ const Folder = () => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-center mt-12  mx-auto space-x-4">
+            <div className="flex justify-center mb-5 mx-auto space-x-4 text-gray-700">
               <button
                 onClick={handlePrevPage}
                 disabled={page === 1}

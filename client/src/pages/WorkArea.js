@@ -283,7 +283,7 @@ const WorkArea = () => {
       } catch (err) {
         SweetAlert({
           type: "toast",
-          title: "Loading failed!",
+          title: "Failed to load file!",
           icon: "error",
         });
       } finally {
