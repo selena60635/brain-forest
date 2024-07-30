@@ -4,6 +4,8 @@ import { Context } from "../context/AuthContext";
 import SweetAlert from "../components/SweetAlert";
 import { useNavigate } from "react-router-dom";
 import { Timestamp } from "firebase/firestore";
+import { RiDeleteBinLine } from "react-icons/ri";
+import { MdError } from "react-icons/md";
 
 function BtnsGroupCol({
   rootNode,
@@ -136,7 +138,7 @@ function BtnsGroupCol({
           </svg>
         </Button>
         <Button onClick={handleDelNode} className="btn aspect-square">
-          <span className="material-symbols-rounded">delete</span>
+          <RiDeleteBinLine size={22} />
         </Button>
       </div>
       <div className="btns-group flex-col w-12">
@@ -179,9 +181,10 @@ function BtnsGroupCol({
       </div>
       <div className="btns-group flex-col w-12 relative">
         {!isSaved && (
-          <span className="material-symbols-rounded text-red-500 fill-icon absolute -top-2 -right-2">
-            error
-          </span>
+          <MdError
+            size={24}
+            className="text-red-500 absolute -top-2 -right-2"
+          />
         )}
         <Button className="btn aspect-square">
           <svg

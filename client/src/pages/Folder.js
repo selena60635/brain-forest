@@ -14,6 +14,8 @@ import { v4 as uuidv4 } from "uuid";
 import { delay } from "./WorkArea";
 import SweetAlert from "../components/SweetAlert";
 import { Context } from "../context/AuthContext";
+import { MdChevronRight, MdAdd, MdChevronLeft } from "react-icons/md";
+import { RiDeleteBinLine } from "react-icons/ri";
 
 const Folder = () => {
   const { user } = useContext(Context);
@@ -223,9 +225,10 @@ const Folder = () => {
                 className="min-h-24 min-w-60 p-2 rounded-lg flex items-center justify-center border border-gray-400 hover:border-gray-700 hover:bg-primary/10 group transition-all duration-200"
                 onClick={handleAddNewFile}
               >
-                <span className="material-symbols-rounded text-gray-400 text-3xl group-hover:text-gray-700 transition-all duration-200">
-                  add
-                </span>
+                <MdAdd
+                  size={24}
+                  className="text-gray-400 text-3xl group-hover:text-gray-700 transition-all duration-200"
+                />
               </button>
 
               {currentMindMaps.map((mindMap) => (
@@ -249,7 +252,7 @@ const Folder = () => {
                     className="absolute top-2 right-2 text-red-500"
                     onClick={(e) => handleDelete(mindMap.id, e)}
                   >
-                    <span className="material-symbols-rounded">delete</span>
+                    <RiDeleteBinLine size={22} />
                   </button>
                 </div>
               ))}
@@ -264,7 +267,7 @@ const Folder = () => {
                     : "border-gray-400  hover:bg-primary hover:text-white hover:border-0"
                 }`}
               >
-                <span className="material-symbols-rounded">chevron_left</span>
+                <MdChevronLeft size={24} />
               </button>
               {pageBtn(pageCount)}
               <button
@@ -276,7 +279,7 @@ const Folder = () => {
                     : "border-gray-400 hover:bg-primary hover:text-white hover:border-0"
                 }`}
               >
-                <span className="material-symbols-rounded">chevron_right</span>
+                <MdChevronRight size={24} />
               </button>
             </div>
           </>

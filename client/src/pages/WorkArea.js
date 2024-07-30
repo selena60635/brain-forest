@@ -24,6 +24,7 @@ import {
 import { db, auth } from "../firebaseConfig";
 import Loading from "./loading";
 import SweetAlert from "../components/SweetAlert";
+import { PiToolbox } from "react-icons/pi";
 
 export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -630,7 +631,7 @@ const WorkArea = () => {
             </div>
             <div
               className={`bottom-10 fixed z-20 transition-all duration-300 ${
-                isToolBoxOpen ? "right-[312px]" : "right-10"
+                isToolBoxOpen ? "right-[356px]" : "right-10"
               }`}
             >
               <BtnsGroupRow
@@ -704,13 +705,11 @@ const WorkArea = () => {
               className="btn aspect-square"
               onClick={() => setIsToolBoxOpen(!isToolBoxOpen)}
             >
-              <span
-                className={`material-symbols-rounded ${
-                  isToolBoxOpen ? "text-primary" : ""
-                }`}
-              >
-                service_toolbox
-              </span>
+              <PiToolbox
+                size={24}
+                strokeWidth="3"
+                className={`${isToolBoxOpen ? "text-primary" : ""}`}
+              />
             </Button>
           </div>
         </div>

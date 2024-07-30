@@ -14,6 +14,7 @@ import {
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { SketchPicker } from "react-color";
+import { FaStrikethrough, FaItalic, FaBold } from "react-icons/fa";
 
 const getAvailableFonts = async () => {
   const fonts = await document.fonts.ready;
@@ -461,7 +462,7 @@ const TextTool = ({
           }`}
           onClick={toggleBold}
         >
-          <span className="material-symbols-rounded">format_bold</span>
+          <FaBold size={18} />
         </Button>
         <Button
           className={`btn grow ${
@@ -471,17 +472,17 @@ const TextTool = ({
           }`}
           onClick={toggleItalic}
         >
-          <span className="material-symbols-rounded">format_italic</span>
+          <FaItalic size={18} />
         </Button>
         <Button
-          className={`btn grow ${
+          className={`btn grow py-1.5 ${
             selectedNode && selectedNode.font.isStrikethrough
               ? "bg-primary text-white hover:bg-primary"
               : ""
           }`}
           onClick={toggleStrikethrough}
         >
-          <span className="material-symbols-rounded">format_strikethrough</span>
+          <FaStrikethrough size={18} />
         </Button>
       </div>
     </div>
