@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
+  useContext,
 } from "react";
 import { Button } from "@headlessui/react";
 import MindMap from "../MindMap";
@@ -22,6 +23,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
+import { Context } from "../context/AuthContext";
 import Loading from "./loading";
 import SweetAlert from "../components/SweetAlert";
 import { PiToolbox } from "react-icons/pi";
@@ -30,6 +32,7 @@ export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const WorkArea = () => {
   const { id } = useParams(); //取得當前頁面id
+  const { user } = useContext(Context);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true); //是否開啟loading page
   const [isSaved, setIsSaved] = useState(true); //紀錄檔案是否還未儲存
@@ -187,6 +190,7 @@ const WorkArea = () => {
 
   //儲存心智圖組件並重導向
   const saveMindMap = async (id = null) => {
+    console.log("saveMindMap");
     try {
       const mindMapData = {
         colorStyle: currentColorStyle,
@@ -224,7 +228,38 @@ const WorkArea = () => {
       });
     }
   };
+  const handleSaveMindMap = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      //若是訪客，將試用的檔案暫存到localStorage
+      const state = {
+        colorStyle: currentColorStyle,
+        rootNode,
+        nodes,
+        lastSavedAt: Timestamp.now(),
+      };
+      localStorage.setItem("mindMapTest", JSON.stringify(state));
 
+      const needLoginAlert = await SweetAlert({
+        type: "alert",
+        title: "Please sign in.",
+        icon: "warning",
+        text: "You need to sign in to save files. Would you like to go to the login page now?",
+        confirmButtonText: "Yes",
+        showCancelButton: true,
+        cancelButtonText: "No",
+      });
+
+      if (needLoginAlert.isConfirmed) {
+        navigate(`/login`);
+      }
+    } else {
+      console.log("id:" + id);
+      await saveMindMap(id);
+      setIsSaved(true);
+    }
+  };
   //重置心智圖組件為初始狀態
   const resetMindMap = useCallback(async () => {
     setCurrentColorStyle(2);
@@ -618,11 +653,8 @@ const WorkArea = () => {
                 findParentNode={findParentNode}
                 addSiblingNode={addSiblingNode}
                 addSiblingChildNode={addSiblingChildNode}
-                saveMindMap={saveMindMap}
-                id={id}
-                currentColorStyle={currentColorStyle}
                 isSaved={isSaved}
-                setIsSaved={setIsSaved}
+                handleSaveMindMap={handleSaveMindMap}
               />
             </div>
 
@@ -677,6 +709,7 @@ const WorkArea = () => {
               findParentNode={findParentNode}
               addSiblingNode={addSiblingNode}
               addSiblingChildNode={addSiblingChildNode}
+              handleSaveMindMap={handleSaveMindMap}
             />
           </div>
         </div>

@@ -25,6 +25,7 @@ const MindMap = ({
   addSiblingNode,
   addSiblingChildNode,
   addChildNode,
+  handleSaveMindMap,
 }) => {
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
   const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
@@ -223,6 +224,9 @@ const MindMap = ({
           addChildNode(selectedNodes[0]);
         }
       }
+      if (e.ctrlKey && e.key === "s") {
+        handleSaveMindMap(e);
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -243,6 +247,7 @@ const MindMap = ({
     addSiblingNode,
     addSiblingChildNode,
     findParentNode,
+    handleSaveMindMap,
   ]);
 
   const rootSvgLoc = getRootSvgLoc();
