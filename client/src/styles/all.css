@@ -47,7 +47,7 @@
 }
 .canvas-wrap {
   /* width: 100%; */
-  height: calc(100vh - 69.14px);
+  height: calc(100vh - 68.14px);
   overflow: scroll;
   user-select: none;
   position: relative;
@@ -101,4 +101,11 @@
   border-radius: 4px;
   box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 0px 1px,
     rgba(0, 0, 0, 0.15) 0px 8px 16px;
+}
+.gradient-text {
+  background: linear-gradient(to top, #16342f, #3ab795 70%);
+  height: auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

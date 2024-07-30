@@ -5,29 +5,30 @@ import { auth } from "./firebaseConfig";
 import { Context } from "./context/AuthContext";
 import SweetAlert from "./components/SweetAlert";
 
-const Layout = () => {
-  const { user } = useContext(Context);
-  async function handleSignOut() {
-    const logoutAlert = await SweetAlert({
-      type: "alert",
-      title: "Confirm sign out?",
-      icon: "warning",
-      confirmButtonText: "Yes, sign out",
-      showCancelButton: true,
-      cancelButtonText: "No, cancel",
-    });
-    if (logoutAlert.isConfirmed) {
-      try {
-        await signOut(auth);
-      } catch (err) {
-        SweetAlert({
-          type: "toast",
-          title: "Signed out failed!",
-          icon: "error",
-        });
-      }
+export async function handleSignOut() {
+  const logoutAlert = await SweetAlert({
+    type: "alert",
+    title: "Confirm sign out?",
+    icon: "warning",
+    confirmButtonText: "Yes, sign out",
+    showCancelButton: true,
+    cancelButtonText: "No, cancel",
+  });
+  if (logoutAlert.isConfirmed) {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      SweetAlert({
+        type: "toast",
+        title: "Signed out failed!",
+        icon: "error",
+      });
     }
   }
+}
+
+const Layout = () => {
+  const { user } = useContext(Context);
 
   return (
     <>
@@ -35,7 +36,7 @@ const Layout = () => {
         <nav className="flex justify-between items-center container mx-auto px-4">
           <div className="flex space-x-3 items-center my-2">
             <Link to="/">
-              <img src="brain-forest1.png" alt="" width="60"></img>
+              <img src="brain-forest.png" alt="" width="60"></img>
             </Link>
             <Link className="text-2xl font-bold " to="/">
               <h1>Brain Forest</h1>
