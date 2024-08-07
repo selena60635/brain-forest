@@ -18,6 +18,7 @@ import { SketchPicker } from "react-color";
 import clsx from "clsx";
 import TextTool from "../components/TextTool";
 import PathTool from "../components/PathTool";
+import FileTool from "../components/FileTool";
 
 const ToolBox = ({
   rootNode,
@@ -33,6 +34,9 @@ const ToolBox = ({
   setColorIndex,
   nodesColor,
   setNodesColor,
+  setSelectedNodes,
+  setLoading,
+  nodeRefs,
 }) => {
   const [bgColor, setBgColor] = useState("#1A227E");
   const [borderColor, setBorderColor] = useState("#1A227E");
@@ -247,11 +251,6 @@ const ToolBox = ({
   }, []);
 
   useEffect(() => {
-    if (selectedNodes.length === 0) {
-      setSelectedTabIndex(1);
-    } else {
-      setSelectedTabIndex(0);
-    }
     if (selectedNodes.length === 1) {
       const findNode = (nodes) => {
         for (const node of nodes) {
@@ -296,8 +295,13 @@ const ToolBox = ({
           <Tab
             className={clsx(
               "grow p-1",
-              selectedNodes.length === 0 && "pointer-events-none opacity-40",
-              "data-[selected]:bg-secondary data-[selected]:text-white data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white"
+              {
+                "pointer-events-none opacity-40 bg-white text-gray-700":
+                  selectedNodes.length === 0,
+                "data-[selected]:bg-secondary data-[selected]:text-white":
+                  selectedNodes.length > 0,
+              },
+              "data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white"
             )}
           >
             樣式
@@ -306,7 +310,7 @@ const ToolBox = ({
             圖面
           </Tab>
           <Tab className="grow p-1 data-[selected]:bg-secondary data-[selected]:text-white data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white">
-            匯出
+            檔案
           </Tab>
         </TabList>
         <TabPanels className="text-gray-700 text-sm">
@@ -527,15 +531,18 @@ const ToolBox = ({
             </Disclosure> */}
           </TabPanel>
           <TabPanel>
-            <Disclosure as="div" className="p-2 border" defaultOpen={true}>
-              <DisclosureButton className="group flex w-full items-center">
-                <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="font-medium">匯出</span>
-              </DisclosureButton>
-              <DisclosurePanel className="mt-3">
-                If you're unhappy with your purchase, we'll refund you in full.
-              </DisclosurePanel>
-            </Disclosure>
+            <FileTool
+              rootNode={rootNode}
+              setRootNode={setRootNode}
+              nodes={nodes}
+              setNodes={setNodes}
+              setSelectedNodes={setSelectedNodes}
+              currentColorStyle={currentColorStyle}
+              setCurrentColorStyle={setCurrentColorStyle}
+              colorStyles={colorStyles}
+              setLoading={setLoading}
+              nodeRefs={nodeRefs}
+            />
           </TabPanel>
         </TabPanels>
       </TabGroup>

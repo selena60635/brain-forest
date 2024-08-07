@@ -114,7 +114,7 @@ const Login = () => {
   return (
     <>
       <section
-        className="bg-light/50 h-[calc(100vh-69.14px)] flex items-center justify-center px-8"
+        className="bg-light/50 h-[calc(100vh-68.14px)] flex items-center justify-center px-8"
         style={{
           background: "url(/BG-01.jpg) center no-repeat",
         }}
@@ -152,12 +152,13 @@ const Login = () => {
                 className="w-full bg-secondary text-white p-2 flex justify-center items-center rounded-md text-white hover:bg-primary"
                 disabled={isSubmitting}
               >
+                Sign in with
                 <svg
                   version="1.1"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 48 48"
                   width="24"
-                  className="mr-2"
+                  className="ml-2"
                 >
                   <path
                     fill="#EA4335"
@@ -176,7 +177,6 @@ const Login = () => {
                     d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
                   ></path>
                 </svg>
-                Sign in with
               </button>
               <div className="text-sm ">
                 {isLogin ? (

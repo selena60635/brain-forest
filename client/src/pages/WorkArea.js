@@ -64,12 +64,12 @@ const WorkArea = () => {
           "#4D49BE",
         ],
         child: [
-          "#FED9D8",
-          "#fdecdb",
-          "#FAEB9E",
-          "#CCF2E5",
-          "#DAE1FF",
-          "#DBDBF2",
+          "#F9423A",
+          "#F6A04D",
+          "#F3D321",
+          "#00BC7B",
+          "#486AFF",
+          "#4D49BE",
         ],
       },
       {
@@ -84,12 +84,12 @@ const WorkArea = () => {
           "#A165A8",
         ],
         child: [
-          "#FED9D8",
-          "#fdecdb",
-          "#FDF6D3",
-          "#CCF2E5",
-          "#DAE1FF",
-          "#DBDBF2",
+          "#FA8155",
+          "#FFAD36",
+          "#B7C82B",
+          "#0098B9",
+          "#7574BC",
+          "#A165A8",
         ],
       },
       {
@@ -104,12 +104,12 @@ const WorkArea = () => {
           "#F1C2CA",
         ],
         child: [
-          "#FED9D8",
-          "#fdecdb",
-          "#FDF6D3",
-          "#CCF2E5",
-          "#DAE1FF",
-          "#DBDBF2",
+          "#9DCFCE",
+          "#F1CD91",
+          "#EC936B",
+          "#DDB3A4",
+          "#C6CA97",
+          "#F1C2CA",
         ],
       },
     ],
@@ -732,6 +732,17 @@ const WorkArea = () => {
             setColorIndex={setColorIndex}
             nodesColor={nodesColor}
             setNodesColor={setNodesColor}
+            // parseListItems={parseListItems}
+            // parseMarkdownToNodes={parseMarkdownToNodes}
+            // handleGenerateMindMap={handleGenerateMindMap}
+            // importFromMarkdown={importFromMarkdown}
+            // markdownContent={markdownContent}
+            // setMarkdownContent={setMarkdownContent}
+
+            newChildNode={newChildNode}
+            setSelectedNodes={setSelectedNodes}
+            setLoading={setLoading}
+            nodeRefs={nodeRefs}
           />
           <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
             <Button
