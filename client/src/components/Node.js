@@ -15,7 +15,7 @@ const selectText = (inputElement) => {
 // 子節點組件
 const ChildNode = ({
   rootNode,
-  childnode,
+  childNode,
   setNodes,
   parentId,
   childRef,
@@ -25,7 +25,7 @@ const ChildNode = ({
   selectedNodes,
   parentRef,
 }) => {
-  const [isEditing, setIsEditing] = useState(childnode.isNew);
+  const [isEditing, setIsEditing] = useState(childNode.isNew);
   const inputRef = useRef(null);
   const svgRef = useRef(null);
 
@@ -39,7 +39,7 @@ const ChildNode = ({
             return {
               ...node,
               children: node.children.map((child) =>
-                child.id === childnode.id ? { ...child, isNew: false } : child
+                child.id === childNode.id ? { ...child, isNew: false } : child
               ),
             };
           }
@@ -47,7 +47,7 @@ const ChildNode = ({
         });
       });
     }
-  }, [isEditing, childnode.id, parentId, setNodes]);
+  }, [isEditing, childNode.id, parentId, setNodes]);
 
   //開啟編輯模式
   const editMode = () => {
@@ -63,7 +63,7 @@ const ChildNode = ({
           return {
             ...node,
             children: node.children.map((child) =>
-              child.id === childnode.id
+              child.id === childNode.id
                 ? { ...child, name: e.target.textContent }
                 : child
             ),
@@ -79,7 +79,10 @@ const ChildNode = ({
       });
     };
     //更新節點數據為更新完名稱的新nodes
-    setNodes((prevNodes) => updateNodeName(prevNodes));
+    if (childNode.name !== e.target.textContent) {
+      setNodes((prevNodes) => updateNodeName(prevNodes));
+    }
+    // setNodes((prevNodes) => updateNodeName(prevNodes));
     setIsEditing(false);
   };
   //取得子節點svg位置
@@ -105,15 +108,15 @@ const ChildNode = ({
       <div
         className={`child-node ${isSelected ? "selected" : ""}`}
         style={{
-          backgroundColor: childnode.bkColor,
-          outline: `${childnode.outline.width} ${childnode.outline.style} ${childnode.outline.color}`,
-          fontFamily: `${childnode.font.family}`,
-          fontSize: `${childnode.font.size}`,
-          fontWeight: `${childnode.font.weight}`,
-          color: `${childnode.font.color}`,
-          fontStyle: `${childnode.font.isItalic ? "italic" : "normal"}`,
+          backgroundColor: childNode.bkColor,
+          outline: `${childNode.outline.width} ${childNode.outline.style} ${childNode.outline.color}`,
+          fontFamily: `${childNode.font.family}`,
+          fontSize: `${childNode.font.size}`,
+          fontWeight: `${childNode.font.weight}`,
+          color: `${childNode.font.color}`,
+          fontStyle: `${childNode.font.isItalic ? "italic" : "normal"}`,
           textDecorationLine: `${
-            childnode.font.isStrikethrough ? "line-through" : "none"
+            childNode.font.isStrikethrough ? "line-through" : "none"
           }`,
         }}
         tabIndex="0"
@@ -131,7 +134,7 @@ const ChildNode = ({
                   : "58px",
                 maxWidth: "500px",
                 textDecorationLine: `${
-                  childnode.font.isStrikethrough ? "line-through" : "none"
+                  childNode.font.isStrikethrough ? "line-through" : "none"
                 }`,
               }}
               contentEditable="true"
@@ -145,37 +148,37 @@ const ChildNode = ({
                 }
               }}
             >
-              {childnode.name}
+              {childNode.name}
             </div>
-            <span>{childnode.name}</span>
+            <span>{childNode.name}</span>
           </>
         ) : (
-          <span>{childnode.name}</span>
+          <span>{childNode.name}</span>
         )}
       </div>
       <div className="children">
-        {childnode.children &&
-          childnode.children.length > 0 &&
-          childnode.children.map((subChildNode, index) => {
+        {childNode.children &&
+          childNode.children.length > 0 &&
+          childNode.children.map((subchildNode, index) => {
             //確保在引用中有當前子節點，若沒有則新增
-            if (!nodeRefs.current[childnode.id]) {
-              nodeRefs.current[childnode.id] = [];
+            if (!nodeRefs.current[childNode.id]) {
+              nodeRefs.current[childNode.id] = [];
             }
             return (
               <ChildNode
-                key={subChildNode.id}
+                key={subchildNode.id}
                 rootNode={rootNode}
-                childnode={subChildNode}
+                childNode={subchildNode}
                 setNodes={setNodes}
-                parentId={childnode.id} //父節點id為上一層子節點id
-                isSelected={selectedNodes.includes(subChildNode.id)}
+                parentId={childNode.id} //父節點id為上一層子節點id
+                isSelected={selectedNodes.includes(subchildNode.id)}
                 nodeRefs={nodeRefs}
                 setSelectedNodes={setSelectedNodes}
                 selectedNodes={selectedNodes}
                 parentRef={childRef} //父節點引用為上一層子節點引用
                 childRef={
-                  nodeRefs.current[childnode.id][index] ||
-                  (nodeRefs.current[childnode.id][index] = React.createRef())
+                  nodeRefs.current[childNode.id][index] ||
+                  (nodeRefs.current[childNode.id][index] = React.createRef())
                 } //子節點引用為上一層子節點的對應索引位置元素，若沒有這個引用則建立一個新的引用
               />
             );
@@ -185,10 +188,10 @@ const ChildNode = ({
       <svg className="subLines" overflow="visible" ref={svgRef}>
         <path
           d={`M ${childLoc.x} ${childLoc.y} Q ${childLoc.x} ${childLoc.childY}, ${childLoc.childX} ${childLoc.childY}`}
-          stroke={childnode.pathColor}
+          stroke={childNode.pathColor}
           fill="none"
-          strokeWidth={childnode.path.width}
-          strokeDasharray={childnode.path.style}
+          strokeWidth={childNode.path.width}
+          strokeDasharray={childNode.path.style}
         />
       </svg>
     </div>
@@ -230,14 +233,17 @@ const Node = ({
   };
   //關閉編輯模式
   const unEditMode = (e) => {
-    setNodes((prev) => {
-      return prev.map((item) => {
-        if (item.id === node.id) {
-          return { ...item, name: e.target.textContent };
-        }
-        return item;
+    if (node.name !== e.target.textContent) {
+      setNodes((prev) => {
+        return prev.map((item) => {
+          if (item.id === node.id) {
+            return { ...item, name: e.target.textContent };
+          }
+          return item;
+        });
       });
-    });
+    }
+
     setIsEditing(false);
   };
 
@@ -297,7 +303,7 @@ const Node = ({
 
       {node.children && node.children.length > 0 && (
         <div className="children flex flex-col items-start">
-          {node.children.map((childnode, childIndex) => {
+          {node.children.map((childNode, childIndex) => {
             if (!nodeRefs.current[node.id][childIndex]) {
               //若nodeRefs中沒有當前子節點的引用，建立一個新的引用
               nodeRefs.current[node.id][childIndex] = React.createRef();
@@ -306,14 +312,14 @@ const Node = ({
             const childRef = nodeRefs.current[node.id][childIndex];
             return (
               <ChildNode
-                key={childnode.id}
+                key={childNode.id}
                 rootNode={rootNode}
-                childnode={childnode}
+                childNode={childNode}
                 setNodes={setNodes}
                 parentId={node.id}
                 childRef={childRef}
                 parentRef={nodeRef} //第一層子節點的父節點是節點
-                isSelected={selectedNodes.includes(childnode.id)}
+                isSelected={selectedNodes.includes(childNode.id)}
                 nodeRefs={nodeRefs}
                 setSelectedNodes={setSelectedNodes}
                 selectedNodes={selectedNodes}

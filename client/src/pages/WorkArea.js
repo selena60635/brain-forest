@@ -732,13 +732,6 @@ const WorkArea = () => {
             setColorIndex={setColorIndex}
             nodesColor={nodesColor}
             setNodesColor={setNodesColor}
-            // parseListItems={parseListItems}
-            // parseMarkdownToNodes={parseMarkdownToNodes}
-            // handleGenerateMindMap={handleGenerateMindMap}
-            // importFromMarkdown={importFromMarkdown}
-            // markdownContent={markdownContent}
-            // setMarkdownContent={setMarkdownContent}
-
             newChildNode={newChildNode}
             setSelectedNodes={setSelectedNodes}
             setLoading={setLoading}

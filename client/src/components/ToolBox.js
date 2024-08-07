@@ -37,6 +37,7 @@ const ToolBox = ({
   setSelectedNodes,
   setLoading,
   nodeRefs,
+  isEditRoot,
 }) => {
   const [bgColor, setBgColor] = useState("#1A227E");
   const [borderColor, setBorderColor] = useState("#1A227E");

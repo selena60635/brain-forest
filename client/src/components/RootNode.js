@@ -37,7 +37,9 @@ const RootNode = ({
 
   // 關閉編輯模式
   const unEditMode = (e) => {
-    setRootNode((prev) => ({ ...prev, name: e.target.textContent }));
+    if (rootNode.name !== e.target.textContent) {
+      setRootNode((prev) => ({ ...prev, name: e.target.textContent }));
+    }
     setIsEditRoot(false);
   };
 
