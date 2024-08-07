@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-
+import axios from "axios";
 import { unified } from "unified";
 import parse from "remark-parse";
 import frontmatter from "remark-frontmatter";
 import { parse as parseYaml } from "yaml";
 import { delay } from "../pages/WorkArea";
-
+import { RiSparkling2Line } from "react-icons/ri";
+import { FaArrowCircleUp } from "react-icons/fa";
 import { trio } from "ldrs";
 
 const FileTool = ({
@@ -24,7 +25,9 @@ const FileTool = ({
   trio.register();
 
   const [markdown, setMarkdown] = useState(""); // 用來存儲 Markdown 內容
-
+  const [markdownAI, setMarkdownAI] = useState(""); // 用來存儲 Markdown 內容
+  const [topic, setTopic] = useState(""); // 用來存儲使用者輸入的主題
+  const [loadingAi, setLoadingAi] = useState(false); // 控制 AI 請求的 loading 狀態
   const [fileName, setFileName] = useState("請選取 .md 檔案");
 
   //將心智圖轉換成Markdown
@@ -216,6 +219,63 @@ const FileTool = ({
     }
   };
 
+  //OpenAI生成心智圖
+  const fetchMindmapFromOpenAI = async (topic) => {
+    const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+    try {
+      setLoadingAi(true);
+      const response = await axios.post(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: `
+              You are a professional mind map expert, skilled in creating structured mind maps in Markdown format based on different themes with strict format rules.
+
+              Expected Format:
+              Create a mind map in Markdown format using the following hierarchical structure rules:
+              - "# Subject" as the root node
+              - "## Subject" as a node
+              - "- Subject" as a child node
+              - "- Subject" as a sub-child node
+              ...and so on.
+
+              Example:
+              # Cats
+              ## Basic Features
+              - Physical Characteristics
+                - Four Legs
+              - Habits
+              ## Breeds
+              - Hairless Cats
+                - Sphynx
+              ## Behavior
+              ## Culture
+            `,
+            },
+            { role: "user", content: topic },
+          ],
+          max_tokens: 500, // 根據需要調整 token 的長度
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+        }
+      );
+
+      const markdownContent = response.data.choices[0].message.content;
+      setMarkdownAI(markdownContent);
+    } catch (err) {
+      console.error("Error fetching data from OpenAI:", err);
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
   return (
     <div className="">
       <div className="flex flex-col pt-2 pb-4 px-4 border-t">
@@ -251,6 +311,45 @@ const FileTool = ({
               ? "bg-gray-300 text-white"
               : "cursor-pointer bg-primary text-white hover:bg-[#078B68]"
           }`}
+        >
+          生成
+        </button>
+      </div>
+      <div className="flex flex-col p-4 border-t">
+        <span className="flex items-center font-medium mb-4">
+          <RiSparkling2Line className="mr-1" size={18} />
+          AI 生成工具
+        </span>
+        <div className="border rounded p-4 mb-4 h-40 overflow-y-scroll">
+          <pre>{markdownAI}</pre>
+        </div>
+        <div className="pl-3 border rounded flex justify-between mb-4">
+          <input
+            type="text"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="輸入主題"
+          />
+          <button
+            onClick={() => fetchMindmapFromOpenAI(topic)}
+            className="border-l cursor-pointer hover:bg-gray-100 p-2"
+            disabled={loadingAi || !topic}
+          >
+            {loadingAi ? (
+              <l-trio size={19} speed="2" color="#3AB795"></l-trio>
+            ) : (
+              <FaArrowCircleUp size={24} className="text-primary" />
+            )}
+          </button>
+        </div>
+        <button
+          onClick={() => handleCreateMindMap(markdownAI)}
+          className={`p-2 rounded ${
+            !markdownAI
+              ? "bg-gray-300 text-white"
+              : "cursor-pointer bg-primary text-white hover:bg-[#078B68]"
+          }`}
+          disabled={!markdownAI}
         >
           生成
         </button>
