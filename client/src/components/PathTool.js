@@ -191,11 +191,14 @@ const PathTool = ({
   //節點顏色風格
   const updateNodesColor = (nodes, colorStyle, parentColorIndex = null) => {
     return nodes.map((node, index) => {
-      const nodeColorIndex = index % colorStyle.nodes.length;
+      const nodeColorIndex =
+        parentColorIndex !== null
+          ? parentColorIndex
+          : index % colorStyle.nodes.length;
       const newBkColor =
         parentColorIndex === null
           ? colorStyle.nodes[nodeColorIndex]
-          : colorStyle.child[parentColorIndex];
+          : colorStyle.child[nodeColorIndex];
       return {
         ...node,
         bkColor: newBkColor,
