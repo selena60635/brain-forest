@@ -47,7 +47,7 @@
 }
 .canvas-wrap {
   /* width: 100%; */
-  height: calc(100vh - 68.14px);
+  height: calc(100vh - 65px);
   overflow: scroll;
   user-select: none;
   position: relative;

@@ -114,7 +114,7 @@ const Login = () => {
   return (
     <>
       <section
-        className="bg-light/50 h-[calc(100vh-68.14px)] flex items-center justify-center px-8"
+        className="bg-light/50 h-[calc(100vh-65px)] flex items-center justify-center px-8"
         style={{
           background: "url(/BG-01.jpg) center no-repeat",
         }}

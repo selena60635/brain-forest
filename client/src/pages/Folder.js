@@ -235,7 +235,7 @@ const Folder = () => {
 
   return (
     <section
-      className="bg-light/50 h-[calc(100vh-68.14px)] flex item-start justify-center px-8 pt-20 pb-32"
+      className="bg-light/50 h-[calc(100vh-65px)] flex item-start justify-center px-8 pt-20 pb-32"
       style={{
         background: "url(/BG-01.jpg) center no-repeat",
       }}

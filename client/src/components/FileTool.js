@@ -24,9 +24,9 @@ const FileTool = ({
 }) => {
   trio.register();
 
-  const [markdown, setMarkdown] = useState(""); // 用來存儲 Markdown 內容
-  const [markdownAI, setMarkdownAI] = useState(""); // 用來存儲 Markdown 內容
-  const [topic, setTopic] = useState(""); // 用來存儲使用者輸入的主題
+  const [markdown, setMarkdown] = useState("");
+  const [markdownAI, setMarkdownAI] = useState("");
+  const [topic, setTopic] = useState("");
   const [loadingAi, setLoadingAi] = useState(false); // 控制 AI 請求的 loading 狀態
   const [fileName, setFileName] = useState("請選取 .md 檔案");
 
@@ -34,7 +34,6 @@ const FileTool = ({
   const convertMindmap = (nodes, level = 0, preface = true) => {
     let content = "";
 
-    // 包含 YAML 元數據來存儲顏色風格
     if (preface) {
       content += `---\ncolorStyle: ${currentColorStyle}\n---\n\n`;
     }
@@ -113,7 +112,6 @@ const FileTool = ({
         },
       };
 
-      // 處理嵌套列表，傳遞當前父節點顏色索引
       if (listItem.children[1] && listItem.children[1].type === "list") {
         node.children = parseTochildNodes(
           listItem.children[1].children,
@@ -130,7 +128,6 @@ const FileTool = ({
     const processor = unified().use(parse).use(frontmatter, ["yaml"]);
 
     const tree = processor.parse(content);
-    console.log(tree);
     let colorStyle = 2;
     let result = [];
 
@@ -257,7 +254,7 @@ const FileTool = ({
             },
             { role: "user", content: topic },
           ],
-          max_tokens: 500, // 根據需要調整 token 的長度
+          max_tokens: 500,
         },
         {
           headers: {
@@ -280,7 +277,6 @@ const FileTool = ({
     <div className="">
       <div className="flex flex-col pt-2 pb-4 px-4 border-t">
         <span className="font-medium mb-2">匯出</span>
-
         <button
           onClick={exportMarkdown}
           className="bg-primary text-white p-2 rounded hover:bg-[#078B68]"

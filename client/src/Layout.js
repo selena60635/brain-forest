@@ -34,10 +34,7 @@ const Layout = () => {
     <>
       <header className="bg-light border-b border-secondary text-secondary">
         <nav className="flex justify-between items-center container mx-auto px-4">
-          <div className="flex space-x-3 items-center my-2">
-            <Link to="/">
-              <img src="brain-forest.png" alt="" width="60"></img>
-            </Link>
+          <div className="flex space-x-3 items-center my-4">
             <Link className="text-2xl font-bold " to="/">
               <h1>Brain Forest</h1>
             </Link>

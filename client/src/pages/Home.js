@@ -11,7 +11,7 @@ const Home = () => {
   return (
     <>
       <section
-        className="bg-light/50  h-[calc(100vh-68.14px)] flex item-start justify-center px-8 text-gray-700"
+        className="bg-light/50  h-[calc(100vh-65px)] flex item-start justify-center px-8 text-gray-700"
         style={{
           background: "url(/BG-01.jpg) center no-repeat",
         }}
@@ -44,7 +44,7 @@ const Home = () => {
           </h3>
           <ul className="space-y-20 flex flex-col text-white">
             <li className="flex justify-between drop-shadow-md justify-self-start w-3/4 mr-auto">
-              <div className="rounded-l-full bg-secondary p-8">
+              <div className="rounded-l-full bg-secondary p-8 pl-12">
                 <h4 className="text-xl font-semibold mb-2">
                   Idea visualization
                 </h4>
@@ -74,7 +74,7 @@ const Home = () => {
               </div>
             </li>
             <li className="flex justify-between drop-shadow-md justify-self-start w-3/4 mr-auto">
-              <div className="rounded-l-full bg-secondary p-8">
+              <div className="rounded-l-full bg-secondary p-8 pl-12">
                 <h4 className="text-xl font-semibold mb-2">
                   Share Your Idea Tree
                 </h4>
