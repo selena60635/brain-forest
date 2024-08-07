@@ -9,6 +9,7 @@ import { delay } from "../pages/WorkArea";
 import { RiSparkling2Line } from "react-icons/ri";
 import { FaArrowCircleUp } from "react-icons/fa";
 import { trio } from "ldrs";
+import SweetAlert from "../components/SweetAlert";
 
 const FileTool = ({
   rootNode,
@@ -135,9 +136,11 @@ const FileTool = ({
     if (yamlNode) {
       try {
         const data = parseYaml(yamlNode.value);
-        colorStyle = data.colorStyle || colorStyle;
-      } catch (error) {
-        console.error("Failed to parse YAML frontmatter:", error);
+        if (data.colorStyle >= 0 && data.colorStyle < 3) {
+          colorStyle = data.colorStyle;
+        }
+      } catch (err) {
+        console.log("生成失敗" + err);
       }
     }
 
@@ -197,9 +200,32 @@ const FileTool = ({
       nodes: result.slice(1),
     };
   };
+
   //將Markdown文件轉換為心智圖組件並渲染
   const handleCreateMindMap = async (content) => {
     if (content) {
+      const rootPattern = /^#\s+.+/gm; //檢查文件內容是否至少有一個根節點
+
+      if (!rootPattern.test(content)) {
+        SweetAlert({
+          type: "alert",
+          title: "檔案格式錯誤",
+          html: `<p class="text-left mb-4">檔案不符合格式，請確認檔案中至少含有一個 "# 主題"。</p>
+          <div class="text-left text-sm">
+         <p >範例：</p>
+        <div class="bg-gray-100 p-4">
+          # Cats<br/>
+          ## Basic Features<br/>
+          - Physical Characteristics<br/>
+          &nbsp;&nbsp;&nbsp;&nbsp;- Four Legs
+        </div>
+        </div>`,
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+
+        return;
+      }
       try {
         setLoading(true);
         await delay(1000);
@@ -211,7 +237,7 @@ const FileTool = ({
           .map(() => React.createRef());
         setLoading(false);
       } catch (err) {
-        console.log(err);
+        console.log("生成失敗" + err);
       }
     }
   };
@@ -267,7 +293,7 @@ const FileTool = ({
       const markdownContent = response.data.choices[0].message.content;
       setMarkdownAI(markdownContent);
     } catch (err) {
-      console.error("Error fetching data from OpenAI:", err);
+      console.log("生成失敗" + err);
     } finally {
       setLoadingAi(false);
     }

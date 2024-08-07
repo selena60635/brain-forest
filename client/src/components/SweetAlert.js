@@ -5,6 +5,7 @@ const SweetAlert = async ({
   type,
   title,
   icon,
+  html,
   text,
   confirmButtonText,
   showCancelButton,
@@ -35,6 +36,7 @@ const SweetAlert = async ({
   return MySwal.fire({
     title,
     icon,
+    html,
     text,
     confirmButtonText,
     showCancelButton,
