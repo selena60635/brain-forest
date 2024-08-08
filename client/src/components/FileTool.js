@@ -140,7 +140,7 @@ const FileTool = ({
           colorStyle = data.colorStyle;
         }
       } catch (err) {
-        console.log("生成失敗" + err);
+        console.error(err);
       }
     }
 
@@ -237,7 +237,7 @@ const FileTool = ({
           .map(() => React.createRef());
         setLoading(false);
       } catch (err) {
-        console.log("生成失敗" + err);
+        console.error(err);
       }
     }
   };
@@ -293,7 +293,7 @@ const FileTool = ({
       const markdownContent = response.data.choices[0].message.content;
       setMarkdownAI(markdownContent);
     } catch (err) {
-      console.log("生成失敗" + err);
+      console.error(err);
     } finally {
       setLoadingAi(false);
     }
@@ -312,6 +312,7 @@ const FileTool = ({
       </div>
       <div className="flex flex-col pt-2 pb-4 px-4 border-t">
         <span className="font-medium mb-2">匯入</span>
+
         <div className="flex items-center gap-2  border rounded mb-2">
           <label className="px-2 py-1 rounded-l border-r cursor-pointer hover:bg-gray-100">
             <input

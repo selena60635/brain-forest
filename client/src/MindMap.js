@@ -26,9 +26,10 @@ const MindMap = ({
   addSiblingChildNode,
   addChildNode,
   handleSaveMindMap,
+  rootNodeRef,
+  getNodeCanvasLoc,
 }) => {
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
-  const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
 
   //取得根結點svg位置
@@ -59,25 +60,7 @@ const MindMap = ({
     },
     [svgRef]
   );
-  //取得節點canvas位置
-  const getNodeCanvasLoc = useCallback(
-    (nodeRef) => {
-      if (nodeRef && nodeRef.current && canvasRef.current) {
-        const nodeRect = nodeRef.current.getBoundingClientRect();
-        const canvasRect = canvasRef.current.getBoundingClientRect();
-        return {
-          left: nodeRect.left - canvasRect.left + canvasRef.current.scrollLeft,
-          top: nodeRect.top - canvasRect.top + canvasRef.current.scrollTop,
-          right:
-            nodeRect.right - canvasRect.left + canvasRef.current.scrollLeft,
-          bottom:
-            nodeRect.bottom - canvasRect.top + canvasRef.current.scrollTop,
-        };
-      }
-      return { left: 0, top: 0, right: 0, bottom: 0 };
-    },
-    [canvasRef]
-  );
+
   //更新節點與根節點的連接線
   const updateLocs = useCallback(() => {
     setNodes((prev) => [...prev]);
@@ -187,6 +170,7 @@ const MindMap = ({
     nodeRefs,
     setSelectedNodes,
     getNodeCanvasLoc,
+    rootNodeRef,
   ]);
 
   useEffect(() => {

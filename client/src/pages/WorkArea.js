@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
   useContext,
+  useLayoutEffect,
 } from "react";
 import { Button } from "@headlessui/react";
 import MindMap from "../MindMap";
@@ -184,13 +185,56 @@ const WorkArea = () => {
     [rootNode.path.style, rootNode.path.width]
   );
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
+  const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
   const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
   const [isToolBoxOpen, setIsToolBoxOpen] = useState(false);
 
+  //取得節點canvas位置
+  const getNodeCanvasLoc = useCallback(
+    (nodeRef) => {
+      if (nodeRef && nodeRef.current && canvasRef.current) {
+        const nodeRect = nodeRef.current.getBoundingClientRect();
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        return {
+          left: nodeRect.left - canvasRect.left + canvasRef.current.scrollLeft,
+          top: nodeRect.top - canvasRect.top + canvasRef.current.scrollTop,
+          right:
+            nodeRect.right - canvasRect.left + canvasRef.current.scrollLeft,
+          bottom:
+            nodeRect.bottom - canvasRect.top + canvasRef.current.scrollTop,
+        };
+      }
+      return { left: 0, top: 0, right: 0, bottom: 0 };
+    },
+    [canvasRef]
+  );
+  //滾動至畫布的中心點(根節點)
+  const scrollToCenter = useCallback(
+    (behavior) => {
+      if (canvasRef.current && rootNodeRef.current) {
+        const rootPosition = getNodeCanvasLoc(rootNodeRef);
+        const { clientWidth, clientHeight } = canvasRef.current;
+        const scrollToX =
+          rootPosition.left -
+          clientWidth / 2 +
+          (rootPosition.right - rootPosition.left) / 2;
+        const scrollToY =
+          rootPosition.top -
+          clientHeight / 2 +
+          (rootPosition.bottom - rootPosition.top) / 2;
+        canvasRef.current.scrollTo({
+          left: scrollToX,
+          top: scrollToY,
+          behavior: behavior,
+        });
+      }
+    },
+    [canvasRef, rootNodeRef, getNodeCanvasLoc]
+  );
+
   //儲存心智圖組件並重導向
   const saveMindMap = async (id = null) => {
-    console.log("saveMindMap");
     try {
       const mindMapData = {
         colorStyle: currentColorStyle,
@@ -255,11 +299,11 @@ const WorkArea = () => {
         navigate(`/login`);
       }
     } else {
-      console.log("id:" + id);
       await saveMindMap(id);
       setIsSaved(true);
     }
   };
+
   //重置心智圖組件為初始狀態
   const resetMindMap = useCallback(async () => {
     setCurrentColorStyle(2);
@@ -298,7 +342,7 @@ const WorkArea = () => {
     setSelectedNodes,
   ]);
 
-  //獲取並設定心智圖組件狀態
+  //獲取檔案並設定心智圖組件狀態
   const fetchMindMap = useCallback(
     async (mindMapId) => {
       try {
@@ -613,22 +657,17 @@ const WorkArea = () => {
     setIsSaved(false);
   }, [nodesString, rootNodeString]);
 
-  // 初始滾動至畫布的中心點
-  useEffect(() => {
+  // 初始渲染設定
+  useLayoutEffect(() => {
     window.addEventListener("keydown", (e) => {
       if (e.key === "Tab") {
         e.preventDefault();
       }
     });
-    if (canvasRef.current) {
-      const { clientWidth, clientHeight, scrollWidth, scrollHeight } =
-        canvasRef.current;
-      canvasRef.current.scrollTo({
-        left: (scrollWidth - clientWidth) / 2,
-        top: (scrollHeight - clientHeight) / 2,
-      });
+    if (rootNodeRef.current) {
+      scrollToCenter("auto");
     }
-  }, []);
+  }, [scrollToCenter, loading, rootNodeRef]);
 
   return (
     <>
@@ -666,18 +705,7 @@ const WorkArea = () => {
                 isToolBoxOpen ? "right-[356px]" : "right-10"
               }`}
             >
-              <BtnsGroupRow
-                selectedNodes={selectedNodes}
-                rootNode={rootNode}
-                nodes={nodes}
-                setRootNode={setRootNode}
-                addNode={addNode}
-                delNode={delNode}
-                addChildNode={addChildNode}
-                findParentNode={findParentNode}
-                addSiblingNode={addSiblingNode}
-                addSiblingChildNode={addSiblingChildNode}
-              />
+              <BtnsGroupRow scrollToCenter={scrollToCenter} />
             </div>
           </div>
 
@@ -710,6 +738,8 @@ const WorkArea = () => {
               addSiblingNode={addSiblingNode}
               addSiblingChildNode={addSiblingChildNode}
               handleSaveMindMap={handleSaveMindMap}
+              rootNodeRef={rootNodeRef}
+              getNodeCanvasLoc={getNodeCanvasLoc}
             />
           </div>
         </div>

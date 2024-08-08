@@ -3,7 +3,7 @@ import { Button } from "@headlessui/react";
 import { MdOutlinePanTool, MdAdd, MdRemove } from "react-icons/md";
 import { HiArrowsPointingIn, HiArrowsPointingOut } from "react-icons/hi2";
 
-function BtnsGroup() {
+function BtnsGroupRow({ scrollToCenter }) {
   return (
     <div className="flex space-x-4">
       <div className="btns-group h-12">
@@ -15,7 +15,10 @@ function BtnsGroup() {
         <Button className="btn aspect-square">
           <HiArrowsPointingOut size={24} />
         </Button>
-        <Button className="btn aspect-square">
+        <Button
+          className="btn aspect-square"
+          onClick={() => scrollToCenter("smooth")}
+        >
           <HiArrowsPointingIn size={24} />
         </Button>
         <Button className="btn aspect-square">
@@ -29,4 +32,4 @@ function BtnsGroup() {
   );
 }
 
-export default BtnsGroup;
+export default BtnsGroupRow;
