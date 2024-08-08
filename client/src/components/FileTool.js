@@ -34,21 +34,25 @@ const FileTool = ({
   //將心智圖轉換成Markdown
   const convertMindmap = (nodes, level = 0, preface = true) => {
     let content = "";
-
+    //前言
     if (preface) {
       content += `---\ncolorStyle: ${currentColorStyle}\n---\n\n`;
     }
-
     nodes.forEach((node) => {
       if (level === 0) {
+        //處理根節點
         content += `# ${node.name || "未命名"}\n`;
         level++;
       } else if (level === 1) {
+        //處理節點
         content += `## ${node.name || "未命名"}\n`;
       } else {
+        //處理子節點
         content += `${"  ".repeat(level - 2)}- ${node.name || "未命名"}\n`;
       }
+
       if (node.children && node.children.length > 0) {
+        //若有children，遞迴處理其子節點
         content += convertMindmap(node.children, level + 1, false);
       }
     });
@@ -57,31 +61,33 @@ const FileTool = ({
 
   //將轉換完成的Markdown匯出
   const exportMarkdown = () => {
-    const markdownContent = convertMindmap([rootNode, ...nodes]);
-    const blob = new Blob([markdownContent], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
+    const markdownContent = convertMindmap([rootNode, ...nodes]); //轉換完畢的心智圖組件內容
+    const blob = new Blob([markdownContent], { type: "text/markdown" }); //建立一個包含Markdown內容的Blob物件
+    const url = URL.createObjectURL(blob); //建立blob臨時下載連結
     const link = document.createElement("a");
     link.href = url;
     link.download = "mindmap.md";
-    link.click();
-    URL.revokeObjectURL(url);
+    link.click(); //觸發點擊事件下載檔案
+    URL.revokeObjectURL(url); //釋放臨時URL
   };
 
   //處理匯入的Markdown文件
   const importMarkdown = (file) => {
-    const reader = new FileReader();
+    const reader = new FileReader(); //建立一個FileReader物件，用於讀取文件內容
     reader.onload = (e) => {
+      //文件讀取完畢時，設定markdown為獲取到的文件內容
       const markdown = e.target.result;
       setMarkdown(markdown);
     };
-    reader.readAsText(file);
+    reader.readAsText(file); //以文本格式讀取文件
   };
+
   //上傳檔案後執行處理文件等操作
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0]; //取得上傳的檔案
     if (file) {
-      setFileName(file.name);
-      importMarkdown(file);
+      setFileName(file.name); //設置檔案名狀態
+      importMarkdown(file); //處理上傳的檔案
     } else {
       setFileName("請選取 .md 檔案");
       setMarkdown("");
@@ -92,7 +98,7 @@ const FileTool = ({
   const parseTochildNodes = (listItems, colorStyle, colorIndex) => {
     return listItems.map((listItem) => {
       const style = colorStyles[colorStyle];
-      // 使用父節點的顏色索引來選擇子節點的顏色
+      //子節點的顏色索引與父節點的顏色索引是相同的
       const bkColor = style.child[colorIndex % style.child.length];
       const node = {
         id: uuidv4(),
@@ -117,10 +123,9 @@ const FileTool = ({
         node.children = parseTochildNodes(
           listItem.children[1].children,
           colorStyle,
-          colorIndex // 傳遞父節點顏色索引
+          colorIndex
         );
       }
-
       return node;
     });
   };
@@ -148,7 +153,6 @@ const FileTool = ({
       const style = colorStyles[colorStyle];
       const nodeColorIndex = index % style.nodes.length;
       const bkColor = index !== null ? style.nodes[nodeColorIndex] : style.root;
-
       return {
         id: uuidv4(),
         name: name,
@@ -223,7 +227,6 @@ const FileTool = ({
           icon: "error",
           confirmButtonText: "OK",
         });
-
         return;
       }
       try {

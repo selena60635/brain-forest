@@ -79,15 +79,27 @@ const Home = () => {
                   Share Your Idea Tree
                 </h4>
                 <p>
-                  Provide export functionality to share your idea tree with
-                  others, allowing creativity to grow together.
+                  Provide export and import functionality to share your idea
+                  tree with others, allowing creativity to grow together.
                 </p>
               </div>
               <img
                 className="rounded-r-full w-96"
-                src="Rich Style Tools.jpg"
-                alt="Rich Style Tools"
+                src="Share Your Idea Tree.jpg"
+                alt="Share Your Idea Tree"
               ></img>
+            </li>
+            <li className="flex justify-between drop-shadow-md justify-self-start w-3/4 ml-auto">
+              <img className="rounded-l-full w-96" src="AI.jpg" alt="AI"></img>
+              <div className="rounded-r-full bg-secondary p-8">
+                <h4 className="text-xl font-semibold mb-2">
+                  AI Generation Tool
+                </h4>
+                <p>
+                  Let OpenAI help you quickly build your idea tree, ensuring
+                  every idea takes shape rapidly.
+                </p>
+              </div>
             </li>
           </ul>
         </div>
