@@ -15,6 +15,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { SketchPicker } from "react-color";
 import { FaStrikethrough, FaItalic, FaBold } from "react-icons/fa";
+import { updateSelectedNodes } from "./ToolBox";
 
 const getAvailableFonts = async () => {
   const fonts = await document.fonts.ready;
@@ -65,24 +66,6 @@ const TextTool = ({
           font.toLowerCase().includes(query.toLowerCase())
         );
 
-  const updateNodes = (nodes, selectedNodes, updateFn) => {
-    return nodes.map((node) => {
-      if (selectedNodes.includes(node.id)) {
-        return {
-          ...node,
-          ...updateFn(node),
-          children: updateNodes(node.children || [], selectedNodes, updateFn),
-        };
-      }
-      if (node.children && node.children.length > 0) {
-        return {
-          ...node,
-          children: updateNodes(node.children, selectedNodes, updateFn),
-        };
-      }
-      return node;
-    });
-  };
   const fontFamilyChange = (font) => {
     setFontFamily(font);
     if (selectedNodes.length > 0) {
@@ -93,7 +76,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: { ...node.font, family: font },
         }))
       );
@@ -112,7 +95,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: { ...node.font, size: size + "px" },
         }))
       );
@@ -189,7 +172,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: { ...node.font, weight: size, isBold: size === "700" },
         }))
       );
@@ -210,7 +193,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: { ...node.font, color: newColor.hex },
         }))
       );
@@ -249,7 +232,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: {
             ...node.font,
             weight: newWeight,
@@ -274,7 +257,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: {
             ...node.font,
             isItalic: !isItalic,
@@ -298,7 +281,7 @@ const TextTool = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: {
             ...node.font,
             isStrikethrough: !isStrikethrough,

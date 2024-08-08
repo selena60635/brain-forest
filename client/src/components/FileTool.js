@@ -141,7 +141,7 @@ const FileTool = ({
     if (yamlNode) {
       try {
         const data = parseYaml(yamlNode.value);
-        if (data.colorStyle >= 0 && data.colorStyle < 3) {
+        if (data.colorStyle >= 0 && data.colorStyle <= 3) {
           colorStyle = data.colorStyle;
         }
       } catch (err) {

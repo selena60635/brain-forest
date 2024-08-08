@@ -72,15 +72,7 @@ const MindMap = ({
 
   useLayoutEffect(() => {
     updateLocs();
-  }, [
-    nodesString,
-    rootNodeString,
-    nodeRefs,
-    setNodes,
-    setRootNode,
-    getNodeSvgLoc,
-    updateLocs,
-  ]);
+  }, [nodesString, rootNodeString, setNodes, setRootNode, updateLocs]);
 
   //判定是否被選取
   const isNodeSelected = useCallback(

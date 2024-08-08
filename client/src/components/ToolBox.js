@@ -20,6 +20,33 @@ import TextTool from "../components/TextTool";
 import PathTool from "../components/PathTool";
 import FileTool from "../components/FileTool";
 
+export const updateNodes = (nodes, updateFn) => {
+  return nodes.map((node) => ({
+    ...node,
+    ...updateFn(node),
+    children: node.children ? updateNodes(node.children, updateFn) : [],
+  }));
+};
+export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
+  return nodes.map((node) => {
+    if (selectedNodes.includes(node.id)) {
+      return {
+        ...node,
+        ...updateFn(node),
+        children: node.children
+          ? updateSelectedNodes(node.children, selectedNodes, updateFn)
+          : [],
+      };
+    }
+    if (node.children && node.children.length > 0) {
+      return {
+        ...node,
+        children: updateSelectedNodes(node.children, selectedNodes, updateFn),
+      };
+    }
+    return node;
+  });
+};
 const ToolBox = ({
   rootNode,
   setRootNode,
@@ -37,7 +64,6 @@ const ToolBox = ({
   setSelectedNodes,
   setLoading,
   nodeRefs,
-  isEditRoot,
 }) => {
   const [bgColor, setBgColor] = useState("#1A227E");
   const [borderColor, setBorderColor] = useState("#1A227E");
@@ -54,7 +80,6 @@ const ToolBox = ({
   const [colorStyleEnabled, setColorStyleEnabled] = useState(true);
   const colorStyleopts = [
     {
-      label: "風格2",
       colors: [
         "#F9423A",
         "#F6A04D",
@@ -66,7 +91,6 @@ const ToolBox = ({
       ],
     },
     {
-      label: "風格3",
       colors: [
         "#FA8155",
         "#FFAD36",
@@ -78,7 +102,6 @@ const ToolBox = ({
       ],
     },
     {
-      label: "風格4",
       colors: [
         "#9DCFCE",
         "#F1CD91",
@@ -143,25 +166,6 @@ const ToolBox = ({
     },
   ];
 
-  const updateNodes = (nodes, selectedNodes, updateFn) => {
-    return nodes.map((node) => {
-      if (selectedNodes.includes(node.id)) {
-        return {
-          ...node,
-          ...updateFn(node),
-          children: updateNodes(node.children || [], selectedNodes, updateFn),
-        };
-      }
-      if (node.children && node.children.length > 0) {
-        return {
-          ...node,
-          children: updateNodes(node.children, selectedNodes, updateFn),
-        };
-      }
-      return node;
-    });
-  };
-
   const bgColorChange = (newColor) => {
     setBgColor(newColor.hex);
     if (selectedNodes.length > 0) {
@@ -172,7 +176,9 @@ const ToolBox = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({ bkColor: newColor.hex }))
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
+          bkColor: newColor.hex,
+        }))
       );
     }
   };
@@ -187,7 +193,7 @@ const ToolBox = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           outline: { ...node.outline, color: newColor.hex },
         }))
       );
@@ -204,7 +210,7 @@ const ToolBox = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           outline: { ...node.outline, style: style },
         }))
       );
@@ -220,7 +226,7 @@ const ToolBox = ({
         }));
       }
       setNodes((prev) =>
-        updateNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           outline: { ...node.outline, width: width + "px" },
         }))
       );
@@ -252,6 +258,9 @@ const ToolBox = ({
   }, []);
 
   useEffect(() => {
+    if (selectedNodes.length === 0) {
+      setSelectedTabIndex(1);
+    }
     if (selectedNodes.length === 1) {
       const findNode = (nodes) => {
         for (const node of nodes) {
@@ -308,7 +317,7 @@ const ToolBox = ({
             樣式
           </Tab>
           <Tab className="grow p-1 data-[selected]:bg-secondary data-[selected]:text-white data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white">
-            圖面
+            佈景
           </Tab>
           <Tab className="grow p-1 data-[selected]:bg-secondary data-[selected]:text-white data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white">
             檔案
@@ -516,21 +525,7 @@ const ToolBox = ({
               </DisclosurePanel>
             </Disclosure>
           </TabPanel>
-          <TabPanel>
-            <div className="border p-2">
-              風格配色
-              <div>背景顏色</div>
-            </div>
-            {/* <Disclosure as="div" className="p-2 border" defaultOpen={true}>
-              <DisclosureButton className="group flex w-full items-center">
-                <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
-                <span className="font-medium">主圖架構</span>
-              </DisclosureButton>
-              <DisclosurePanel className="mt-3">
-                If you're unhappy with your purchase, we'll refund you in full.
-              </DisclosurePanel>
-            </Disclosure> */}
-          </TabPanel>
+          <TabPanel></TabPanel>
           <TabPanel>
             <FileTool
               rootNode={rootNode}
