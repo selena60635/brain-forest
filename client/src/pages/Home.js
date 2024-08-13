@@ -114,7 +114,7 @@ const Home = () => {
             harvest unlimited inspiration.
           </p>
           <button className="rounded-md font-bold text-white text-5xl bg-secondary hover:bg-primary ml-4 transition-all duration-100 hover:scale-125">
-            <Link to="/login" className="px-12 py-4 block">
+            <Link to={user ? "/folder" : "/login"} className="px-12 py-4 block">
               Go
             </Link>
           </button>

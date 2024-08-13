@@ -382,9 +382,9 @@ const WorkArea = () => {
   const saveMindMap = async (id = null) => {
     try {
       const mindMapData = {
-        theme: currentTheme,
-        colorStyle: currentColorStyle,
-        canvasBg: { style: canvasBgStyle, color: canvasBgColor },
+        currentTheme,
+        currentColorStyle,
+        canvasBg: { canvasBgStyle, canvasBgColor },
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -423,7 +423,9 @@ const WorkArea = () => {
     if (!user) {
       //若是訪客，將試用的檔案暫存到localStorage
       const state = {
-        colorStyle: currentColorStyle,
+        currentTheme,
+        currentColorStyle,
+        canvasBg: { canvasBgStyle, canvasBgColor },
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -502,10 +504,10 @@ const WorkArea = () => {
           const mindMapData = docSnap.data();
           setRootNode(mindMapData.rootNode);
           setNodes(mindMapData.nodes);
-          setCurrentColorStyle(mindMapData.colorStyle);
-          setCurrentTheme(mindMapData.theme || 0);
-          setCanvasBgColor(mindMapData.canvasBg?.color || "#00000");
-          setCanvasBgStyle(mindMapData.canvasBg?.style || "none");
+          setCurrentColorStyle(mindMapData.currentColorStyle);
+          setCurrentTheme(mindMapData.currentTheme || 0);
+          setCanvasBgColor(mindMapData.canvasBg?.canvasBgColor || "#00000");
+          setCanvasBgStyle(mindMapData.canvasBg?.canvasBgStyle || "none");
           nodeRefs.current = new Array(mindMapData.nodes.length)
             .fill(null)
             .map(() => React.createRef());

@@ -119,7 +119,7 @@ const Folder = () => {
     try {
       const userId = auth.currentUser.uid;
       const newMindMapData = {
-        colorStyle: 1,
+        currentColorStyle: 1,
         rootNode: {
           id: uuidv4(),
           name: "根節點",
@@ -163,10 +163,9 @@ const Folder = () => {
     async (file) => {
       try {
         const userId = auth.currentUser.uid;
-        const newMindMapData = file;
         const docRef = await addDoc(
           collection(db, "users", userId, "mindMaps"),
-          newMindMapData
+          file
         );
         SweetAlert({
           type: "toast",
