@@ -45,11 +45,16 @@ const RootNode = ({
 
   return (
     <div
-      className={`rootnode ${isSelected ? "selected" : ""}`}
+      className={`rootnode  ${isSelected ? "selected" : ""}`}
       tabIndex="0"
       ref={rootRef}
       onDoubleClick={editMode}
       style={{
+        "--outline-width": `${
+          rootNode.outline.style !== "none"
+            ? parseInt(rootNode.outline.width, 10)
+            : 0
+        }px`,
         backgroundColor: rootNode.bkColor,
         outline: `${rootNode.outline.width} ${rootNode.outline.style} ${rootNode.outline.color}`,
         fontSize: `${rootNode.font.size}`,

@@ -34,24 +34,26 @@ const ColorStyleTool = ({
   const nodeColorChange = (newColor) => {
     setColor(newColor.hex);
     setBgColor(newColor.hex);
-    if (selectedNodes.length > 0) {
-      if (selectedNodes.includes(rootNode.id)) {
-        setNodesColor(newColor.hex);
-        setRootNode((prev) => ({
-          ...prev,
+    if (selectedNodes.length > 0 && selectedNodes.includes(rootNode.id)) {
+      setColorStyleEnabled(false);
+      setCurrentColorStyle(0);
+      setColorIndex(0);
+      setNodesColor(newColor.hex);
+      setRootNode((prev) => ({
+        ...prev,
+        bkColor: newColor.hex,
+        pathColor: newColor.hex,
+        outline: { ...prev.outline, color: newColor.hex },
+      }));
+      setNodes((prev) =>
+        updateNodes(prev, () => ({
           bkColor: newColor.hex,
           pathColor: newColor.hex,
-          outline: { ...prev.outline, color: newColor.hex },
-        }));
-        setNodes((prev) =>
-          updateNodes(prev, () => ({
-            bkColor: newColor.hex,
-            pathColor: newColor.hex,
-          }))
-        );
-      }
+        }))
+      );
+    } else {
       setNodes((prev) =>
-        updateSelectedNodes(prev, selectedNodes, (node) => ({
+        updateSelectedNodes(prev, selectedNodes, () => ({
           bkColor: newColor.hex,
           pathColor: newColor.hex,
         }))
@@ -65,7 +67,7 @@ const ColorStyleTool = ({
 
   const nodesColorChange = (newColor) => {
     setNodesColor(newColor.hex);
-
+    setColorIndex(0);
     if (
       isGlobal ||
       (selectedNodes.length > 0 && selectedNodes[0] === rootNode.id)
@@ -81,7 +83,7 @@ const ColorStyleTool = ({
         updateNodes(prev, (node) => ({
           bkColor: newColor.hex,
           pathColor: newColor.hex,
-          outline: { ...prev.outline, color: newColor.hex },
+          outline: { ...node.outline, color: newColor.hex },
           font: { ...node.font, color: "#FFFFFF" },
         }))
       );
@@ -119,10 +121,8 @@ const ColorStyleTool = ({
       if (selectedNode) {
         setColor(selectedNode.pathColor || nodesColor);
       }
-      if (selectedNode.id === rootNode.id) {
-        setColorStyleEnabled(currentColorStyle !== 0); // 根據多彩模式的 index 設定狀態
-      }
     }
+    setColorStyleEnabled(currentColorStyle !== 0);
   }, [
     selectedNodes,
     rootNode,
@@ -138,7 +138,7 @@ const ColorStyleTool = ({
   };
 
   const colorStyleEnabledChange = (e) => {
-    const index = e.target.checked ? 2 : 0;
+    const index = e.target.checked ? 1 : 0;
     setCurrentColorStyle(index);
     setColorIndex(0);
     setColorStyleEnabled(e.target.checked);
@@ -150,7 +150,7 @@ const ColorStyleTool = ({
       font: { ...prevRootNode.font, color: colorStyles[index].text },
     }));
   };
-  //節點顏色風格
+  // //節點顏色風格
   const updateNodesColor = (nodes, colorStyle, parentColorIndex = null) => {
     return nodes.map((node, index) => {
       const nodeColorIndex =
@@ -191,8 +191,9 @@ const ColorStyleTool = ({
 
   return (
     <>
+      {/* 單一節點顏色選取 */}
       {!isGlobal && selectedNodes[0] !== rootNode.id && (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center relative">
           <span className="ml-1">分支顏色</span>
           <div
             ref={colorBtnRef}
@@ -202,7 +203,7 @@ const ColorStyleTool = ({
           ></div>
           {showColorPicker && (
             <div
-              className="absolute z-10 top-0 right-0 react-color-sketch"
+              className="absolute z-10 top-0 right-10 react-color-sketch"
               ref={colorPickerRef}
             >
               <SketchPicker
@@ -234,7 +235,7 @@ const ColorStyleTool = ({
         </div>
       )}
       {(isGlobal || selectedNodes[0] === rootNode.id) && (
-        <div className="flex justify-between">
+        <div className="flex justify-between relative">
           <label htmlFor="colorStyleEnabled" className="flex items-center">
             <input
               id="colorStyleEnabled"
@@ -306,10 +307,7 @@ const ColorStyleTool = ({
               ></div>
 
               {showStylePicker && (
-                <div
-                  className="absolute z-10 top-6 right-10"
-                  ref={stylePickerRef}
-                >
+                <div className="absolute z-10 right-10" ref={stylePickerRef}>
                   <SketchPicker
                     color={nodesColor}
                     onChangeComplete={nodesColorChange}

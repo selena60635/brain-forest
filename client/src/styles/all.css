@@ -21,19 +21,61 @@
     @apply relative z-0 flex items-center justify-center;
   }
   .rootnode {
-    @apply flex items-center justify-center py-2 px-4 rounded-2xl;
+    @apply flex items-center justify-center py-2 px-4 rounded-2xl  outline-offset-2;
   }
   .node {
-    @apply flex items-center justify-center py-2 px-4 my-4 ml-40 rounded-2xl;
+    @apply flex items-center justify-center py-2 px-4 my-4 ml-40 rounded-2xl outline-offset-2;
   }
   .child-node {
-    @apply flex items-center justify-center p-2 my-4 ml-24 rounded-2xl;
+    @apply flex items-center justify-center p-2 my-4 ml-24 rounded-2xl outline-offset-2;
   }
   .btn {
     @apply flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100;
   }
   .btns-group {
     @apply flex bg-white/50 shadow-lg backdrop-blur-lg p-1 rounded-lg border;
+  }
+  .bg-dot {
+    background-image: radial-gradient(#bbbbbb 5%, transparent 0);
+    background-size: 35px 35px;
+  }
+  .bg-dot-sm {
+    @apply bg-white;
+    background-image: radial-gradient(#000000 20%, transparent 0);
+    background-size: 7px 7px;
+  }
+  .bg-grid {
+    background-image: linear-gradient(#e7e7e7 1px, transparent 0),
+      linear-gradient(90deg, #e7e7e7 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+  .bg-grid-sm {
+    @apply bg-white;
+    background-image: linear-gradient(#838383 1px, transparent 0),
+      linear-gradient(90deg, #838383 1px, transparent 0);
+    background-size: 10px 10px;
+    background-position: 25% 75%;
+  }
+  .bg-dot-dark {
+    background-image: radial-gradient(#575757 5%, transparent 0);
+    background-size: 35px 35px;
+  }
+  .bg-dot-sm-dark {
+    @apply bg-[#3d3d3d];
+    background-image: radial-gradient(#fff 20%, transparent 0);
+    background-size: 7px 7px;
+  }
+  .bg-grid-dark {
+    background-image: linear-gradient(#3f3f3f 1px, transparent 0),
+      linear-gradient(90deg, #3f3f3f 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+  .bg-grid-sm-dark {
+    @apply bg-[#3d3d3d];
+    background-image: linear-gradient(#fff 1px, transparent 0),
+      linear-gradient(90deg, #fff 1px, transparent 0);
+    background-size: 10px 10px;
+    background-position: 25% 75%;
   }
 }
 
@@ -86,10 +128,10 @@
 .selected::after {
   content: "";
   position: absolute;
-  top: -6px;
-  right: -6px;
-  bottom: -6px;
-  left: -6px;
+  top: calc(-5px - var(--outline-width));
+  right: calc(-5px - var(--outline-width));
+  bottom: calc(-5px - var(--outline-width));
+  left: calc(-5px - var(--outline-width));
   border-radius: 10px;
   border: 2px solid #0099ff;
 }

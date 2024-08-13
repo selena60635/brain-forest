@@ -22,6 +22,13 @@ const FileTool = ({
   setSelectedNodes,
   setLoading,
   nodeRefs,
+  canvasBgStyle,
+  setCanvasBgStyle,
+  currentTheme,
+  setCurrentTheme,
+  canvasBgColor,
+  setCanvasBgColor,
+  themes,
 }) => {
   trio.register();
 
@@ -36,7 +43,7 @@ const FileTool = ({
     let content = "";
     //前言
     if (preface) {
-      content += `---\ncolorStyle: ${currentColorStyle}\n---\n\n`;
+      content += `---\ncolorStyle: ${currentColorStyle}\ncanvasBgStyle: "${canvasBgStyle}"\ncanvasBgColor: "${canvasBgColor}"\ntheme: ${currentTheme}\n---\n\n`;
     }
     nodes.forEach((node) => {
       if (level === 0) {
@@ -95,9 +102,12 @@ const FileTool = ({
   };
 
   //解析Markdown文件並轉換為子節點元件
-  const parseTochildNodes = (listItems, colorStyle, colorIndex) => {
+  const parseTochildNodes = (listItems, colorStyle, colorIndex, theme) => {
     return listItems.map((listItem) => {
-      const style = colorStyles[colorStyle];
+      const style =
+        colorStyle !== 0
+          ? themes[theme].colorStyles[colorStyle - 1]
+          : colorStyles[colorStyle];
       //子節點的顏色索引與父節點的顏色索引是相同的
       const bkColor = style.child[colorIndex % style.child.length];
       const node = {
@@ -123,7 +133,8 @@ const FileTool = ({
         node.children = parseTochildNodes(
           listItem.children[1].children,
           colorStyle,
-          colorIndex
+          colorIndex,
+          theme
         );
       }
       return node;
@@ -134,7 +145,10 @@ const FileTool = ({
     const processor = unified().use(parse).use(frontmatter, ["yaml"]);
 
     const tree = processor.parse(content);
-    let colorStyle = 2;
+    let colorStyle = 1;
+    let canvasBgStyle = "none";
+    let canvasBgColor = "#fff";
+    let theme = 0;
     let result = [];
 
     const yamlNode = tree.children.find((node) => node.type === "yaml");
@@ -144,13 +158,25 @@ const FileTool = ({
         if (data.colorStyle >= 0 && data.colorStyle <= 3) {
           colorStyle = data.colorStyle;
         }
+        if (data.theme >= 0 && data.theme <= 2) {
+          theme = data.theme;
+        }
+        canvasBgStyle = data.canvasBgStyle || "none";
+        canvasBgColor = data.canvasBgColor || "#fff";
       } catch (err) {
         console.error(err);
       }
     }
-
+    setCurrentTheme(theme);
+    setCanvasBgColor(canvasBgColor);
+    setCanvasBgStyle(canvasBgStyle);
+    setCurrentColorStyle(colorStyle);
+    setSelectedNodes([]);
     const createNode = (name, colorStyle, index = null) => {
-      const style = colorStyles[colorStyle];
+      const style =
+        colorStyle !== 0
+          ? themes[theme].colorStyles[colorStyle - 1]
+          : colorStyles[colorStyle];
       const nodeColorIndex = index % style.nodes.length;
       const bkColor = index !== null ? style.nodes[nodeColorIndex] : style.root;
       return {
@@ -188,16 +214,14 @@ const FileTool = ({
         const nodes = parseTochildNodes(
           item.children,
           colorStyle,
-          (colorIndex - 1) % colorStyles[colorStyle].nodes.length
+          (colorIndex - 1) % colorStyles[colorStyle].nodes.length,
+          theme
         );
         if (currentParent) {
           currentParent.children.push(...nodes);
         }
       }
     });
-
-    setCurrentColorStyle(colorStyle);
-    setSelectedNodes([]);
 
     return {
       rootNode: result[0],
@@ -304,7 +328,7 @@ const FileTool = ({
 
   return (
     <div className="">
-      <div className="flex flex-col pt-2 pb-4 px-4 border-t">
+      <div className="flex flex-col p-4 border-t">
         <span className="font-medium mb-2">匯出</span>
         <button
           onClick={exportMarkdown}
@@ -313,7 +337,7 @@ const FileTool = ({
           匯出成 Markdown
         </button>
       </div>
-      <div className="flex flex-col pt-2 pb-4 px-4 border-t">
+      <div className="flex flex-col p-4 border-t">
         <span className="font-medium mb-2">匯入</span>
 
         <div className="flex items-center gap-2  border rounded mb-2">

@@ -19,13 +19,16 @@ import clsx from "clsx";
 import TextTool from "../components/TextTool";
 import PathTool from "../components/PathTool";
 import FileTool from "../components/FileTool";
+import ThemeTool from "../components/ThemeTool";
 
 export const updateNodes = (nodes, updateFn) => {
-  return nodes.map((node) => ({
-    ...node,
-    ...updateFn(node),
-    children: node.children ? updateNodes(node.children, updateFn) : [],
-  }));
+  return nodes.map((node) => {
+    return {
+      ...node,
+      ...updateFn(node),
+      children: node.children ? updateNodes(node.children, updateFn) : [],
+    };
+  });
 };
 export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
   return nodes.map((node) => {
@@ -47,6 +50,33 @@ export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
     return node;
   });
 };
+export const updateNodesColor = (
+  nodes,
+  colorStyle,
+  parentColorIndex = null
+) => {
+  return nodes.map((node, index) => {
+    const nodeColorIndex =
+      parentColorIndex !== null
+        ? parentColorIndex
+        : index % colorStyle.nodes.length;
+    const newBkColor =
+      parentColorIndex === null
+        ? colorStyle.nodes[nodeColorIndex]
+        : colorStyle.child[nodeColorIndex];
+    return {
+      ...node,
+      bkColor: newBkColor,
+      pathColor: newBkColor,
+      outline: { ...node.outline, color: newBkColor },
+      font: { ...node.font, color: colorStyle.text },
+      children: node.children
+        ? updateNodesColor(node.children, colorStyle, nodeColorIndex)
+        : [],
+    };
+  });
+};
+
 const ToolBox = ({
   rootNode,
   setRootNode,
@@ -64,7 +94,15 @@ const ToolBox = ({
   setSelectedNodes,
   setLoading,
   nodeRefs,
+  themes,
+  currentTheme,
+  setCurrentTheme,
+  canvasBgColor,
+  setCanvasBgColor,
+  canvasBgStyle,
+  setCanvasBgStyle,
 }) => {
+  const [fontFamily, setFontFamily] = useState("Noto Sans TC");
   const [bgColor, setBgColor] = useState("#1A227E");
   const [borderColor, setBorderColor] = useState("#1A227E");
   const [borderStyle, setBorderStyle] = useState("none");
@@ -78,41 +116,10 @@ const ToolBox = ({
   const borderBtnRef = useRef(null);
 
   const [colorStyleEnabled, setColorStyleEnabled] = useState(true);
-  const colorStyleopts = [
-    {
-      colors: [
-        "#F9423A",
-        "#F6A04D",
-        "#F3D321",
-        "#00BC7B",
-        "#486AFF",
-        "#4D49BE",
-        "#000229",
-      ],
-    },
-    {
-      colors: [
-        "#FA8155",
-        "#FFAD36",
-        "#B7C82B",
-        "#0098B9",
-        "#7574BC",
-        "#A165A8",
-        "#000229",
-      ],
-    },
-    {
-      colors: [
-        "#9DCFCE",
-        "#F1CD91",
-        "#EC936B",
-        "#DDB3A4",
-        "#C6CA97",
-        "#F1C2CA",
-        "#92C1B7",
-      ],
-    },
-  ];
+  const colorStyleopts = colorStyles.slice(1).map((style) => {
+    return { colors: [...style.nodes, style.root] };
+  });
+
   const borderStyleOpts = [
     {
       value: "solid",
@@ -325,11 +332,7 @@ const ToolBox = ({
         </TabList>
         <TabPanels className="text-gray-700 text-sm">
           <TabPanel>
-            <Disclosure
-              as="div"
-              className="pt-2 pb-4 px-4 border-t"
-              defaultOpen={true}
-            >
+            <Disclosure as="div" className="p-4 border-t" defaultOpen={true}>
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
                 <span className="font-medium">形狀</span>
@@ -339,10 +342,10 @@ const ToolBox = ({
                   <span>底色</span>
                   <div
                     ref={bgBtnRef}
-                    className="w-12 h-6 ml-2 rounded-md border border-gray-300"
+                    className="w-12 h-6 ml-2 rounded-md border border-gray-300 "
                     style={{ backgroundColor: bgColor }}
                     onClick={bgPickerToggle}
-                  />
+                  ></div>
                   {showBgPicker && (
                     <div
                       className="absolute z-10 top-0 right-10 react-color-sketch"
@@ -415,7 +418,7 @@ const ToolBox = ({
                     />
                     {showBorderPicker && (
                       <div
-                        className="absolute z-10 top-0 right-10 react-color-sketch"
+                        className="absolute z-10 right-10 react-color-sketch"
                         ref={borderPickerRef}
                       >
                         <SketchPicker
@@ -447,7 +450,10 @@ const ToolBox = ({
                       </div>
                     )}
                   </div>
-                  <Menu as="div" className="relative inline-block w-full mt-4">
+                  <Menu
+                    as="div"
+                    className="relative inline-block w-full mt-4 mb-1"
+                  >
                     <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
                       {borderWidthOpts.find((opt) => opt.value === borderWidth)
                         ?.icon || "適中"}
@@ -473,16 +479,12 @@ const ToolBox = ({
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure
-              as="div"
-              className="pt-2 pb-4 px-4 border-t"
-              defaultOpen={true}
-            >
+            <Disclosure as="div" className="p-4 border-t" defaultOpen={true}>
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
                 <span className="font-medium">文字</span>
               </DisclosureButton>
-              <DisclosurePanel className="mt-3">
+              <DisclosurePanel className="mt-3 mb-1">
                 <TextTool
                   rootNode={rootNode}
                   setRootNode={setRootNode}
@@ -490,14 +492,12 @@ const ToolBox = ({
                   setNodes={setNodes}
                   selectedNodes={selectedNodes}
                   findNode={findNode}
+                  fontFamily={fontFamily}
+                  setFontFamily={setFontFamily}
                 />
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure
-              as="div"
-              className="pt-2 pb-4 px-4 border-t"
-              defaultOpen={true}
-            >
+            <Disclosure as="div" className="p-4 border-t" defaultOpen={true}>
               <DisclosureButton className="group flex w-full items-center">
                 <ChevronDownIcon className="-rotate-90 size-5 fill-gray-400 group-data-[hover]:fill-gray-700 group-data-[open]:rotate-0" />
                 <span className=" font-medium">分支</span>
@@ -525,7 +525,37 @@ const ToolBox = ({
               </DisclosurePanel>
             </Disclosure>
           </TabPanel>
-          <TabPanel></TabPanel>
+          <TabPanel>
+            <ThemeTool
+              rootNode={rootNode}
+              setRootNode={setRootNode}
+              nodes={nodes}
+              setNodes={setNodes}
+              selectedNodes={selectedNodes}
+              currentColorStyle={currentColorStyle}
+              setCurrentColorStyle={setCurrentColorStyle}
+              colorStyles={colorStyles}
+              colorIndex={colorIndex}
+              setColorIndex={setColorIndex}
+              nodesColor={nodesColor}
+              setNodesColor={setNodesColor}
+              findNode={findNode}
+              colorStyleEnabled={colorStyleEnabled}
+              setColorStyleEnabled={setColorStyleEnabled}
+              colorStyleopts={colorStyleopts}
+              setBgColor={setBgColor}
+              isGlobal={true}
+              themes={themes}
+              currentTheme={currentTheme}
+              setCurrentTheme={setCurrentTheme}
+              canvasBgColor={canvasBgColor}
+              setCanvasBgColor={setCanvasBgColor}
+              canvasBgStyle={canvasBgStyle}
+              setCanvasBgStyle={setCanvasBgStyle}
+              fontFamily={fontFamily}
+              setFontFamily={setFontFamily}
+            />
+          </TabPanel>
           <TabPanel>
             <FileTool
               rootNode={rootNode}
@@ -538,6 +568,15 @@ const ToolBox = ({
               colorStyles={colorStyles}
               setLoading={setLoading}
               nodeRefs={nodeRefs}
+              setColorIndex={setColorIndex}
+              setColorStyleEnabled={setColorStyleEnabled}
+              currentTheme={currentTheme}
+              setCurrentTheme={setCurrentTheme}
+              canvasBgColor={canvasBgColor}
+              setCanvasBgColor={setCanvasBgColor}
+              canvasBgStyle={canvasBgStyle}
+              setCanvasBgStyle={setCanvasBgStyle}
+              themes={themes}
             />
           </TabPanel>
         </TabPanels>

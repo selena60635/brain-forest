@@ -41,9 +41,147 @@ const WorkArea = () => {
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
 
-  const [currentColorStyle, setCurrentColorStyle] = useState(2); //目前顏色風格索引
+  const [currentTheme, setCurrentTheme] = useState(0); // 當前主題索引
+  const [currentColorStyle, setCurrentColorStyle] = useState(1); //目前顏色風格索引
   const [colorIndex, setColorIndex] = useState(0); //目前節點顏色索引
   const [nodesColor, setNodesColor] = useState("#17493b"); //純色模式目前顏色
+  const [canvasBgColor, setCanvasBgColor] = useState("#fff");
+  const [canvasBgStyle, setCanvasBgStyle] = useState("none");
+  const themes = useMemo(
+    () => [
+      {
+        name: "繽紛彩虹",
+        colorStyles: [
+          {
+            root: "#000229",
+            text: "#FFFFFF",
+            nodes: [
+              "#FA8155",
+              "#FFAD36",
+              "#B7C82B",
+              "#0098B9",
+              "#7574BC",
+              "#A165A8",
+            ],
+            child: [
+              "#FA8155",
+              "#FFAD36",
+              "#B7C82B",
+              "#0098B9",
+              "#7574BC",
+              "#A165A8",
+            ],
+          },
+          {
+            root: "#000229",
+            text: "#FFFFFF",
+            nodes: [
+              "#F9423A",
+              "#F6A04D",
+              "#F3D321",
+              "#00BC7B",
+              "#486AFF",
+              "#4D49BE",
+            ],
+            child: [
+              "#F9423A",
+              "#F6A04D",
+              "#F3D321",
+              "#00BC7B",
+              "#486AFF",
+              "#4D49BE",
+            ],
+          },
+          {
+            root: "#92C1B7",
+            text: "#000000",
+            nodes: [
+              "#9DCFCE",
+              "#F1CD91",
+              "#EC936B",
+              "#DDB3A4",
+              "#C6CA97",
+              "#F1C2CA",
+            ],
+            child: [
+              "#9DCFCE",
+              "#F1CD91",
+              "#EC936B",
+              "#DDB3A4",
+              "#C6CA97",
+              "#F1C2CA",
+            ],
+          },
+        ],
+      },
+      {
+        name: "粉紅佳人",
+        colorStyles: [
+          {
+            root: "#000229",
+            text: "#fff",
+            nodes: [
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+            ],
+            child: [
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+              "#7574BC",
+            ],
+          },
+          {
+            root: "#000229",
+            text: "#fff",
+            nodes: [
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+            ],
+            child: [
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+              "#A165A8",
+            ],
+          },
+          {
+            root: "#000229",
+            text: "#fff",
+            nodes: [
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+            ],
+            child: [
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+              "#0098B9",
+            ],
+          },
+        ],
+      },
+    ],
+    []
+  );
   //所有顏色風格
   const colorStyles = useMemo(
     () => [
@@ -53,69 +191,11 @@ const WorkArea = () => {
         nodes: [nodesColor],
         child: [nodesColor],
       },
-      {
-        root: "#000229",
-        text: "#FFFFFF",
-        nodes: [
-          "#F9423A",
-          "#F6A04D",
-          "#F3D321",
-          "#00BC7B",
-          "#486AFF",
-          "#4D49BE",
-        ],
-        child: [
-          "#F9423A",
-          "#F6A04D",
-          "#F3D321",
-          "#00BC7B",
-          "#486AFF",
-          "#4D49BE",
-        ],
-      },
-      {
-        root: "#000229",
-        text: "#FFFFFF",
-        nodes: [
-          "#FA8155",
-          "#FFAD36",
-          "#B7C82B",
-          "#0098B9",
-          "#7574BC",
-          "#A165A8",
-        ],
-        child: [
-          "#FA8155",
-          "#FFAD36",
-          "#B7C82B",
-          "#0098B9",
-          "#7574BC",
-          "#A165A8",
-        ],
-      },
-      {
-        root: "#92C1B7",
-        text: "#000000",
-        nodes: [
-          "#9DCFCE",
-          "#F1CD91",
-          "#EC936B",
-          "#DDB3A4",
-          "#C6CA97",
-          "#F1C2CA",
-        ],
-        child: [
-          "#9DCFCE",
-          "#F1CD91",
-          "#EC936B",
-          "#DDB3A4",
-          "#C6CA97",
-          "#F1C2CA",
-        ],
-      },
+      ...themes[currentTheme].colorStyles,
     ],
-    [nodesColor]
+    [nodesColor, themes, currentTheme]
   );
+
   const rootColor = colorStyles[currentColorStyle].root; //取得當前顏色風格的根節點顏色
   const textColor = colorStyles[currentColorStyle].text; //取得當前顏色風格的文字顏色
   //取得當前顏色風格相應的節點顏色，並按照順序提取使用
@@ -237,7 +317,9 @@ const WorkArea = () => {
   const saveMindMap = async (id = null) => {
     try {
       const mindMapData = {
+        theme: currentTheme,
         colorStyle: currentColorStyle,
+        canvasBg: { style: canvasBgStyle, color: canvasBgColor },
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -306,7 +388,10 @@ const WorkArea = () => {
 
   //重置心智圖組件為初始狀態
   const resetMindMap = useCallback(async () => {
-    setCurrentColorStyle(2);
+    setCurrentTheme(0);
+    setCurrentColorStyle(1);
+    setCanvasBgColor("#fff");
+    setCanvasBgStyle("none");
     setColorIndex(0);
     setNodesColor("#17493b");
     setRootNode({
@@ -355,6 +440,9 @@ const WorkArea = () => {
           setRootNode(mindMapData.rootNode);
           setNodes(mindMapData.nodes);
           setCurrentColorStyle(mindMapData.colorStyle);
+          setCurrentTheme(mindMapData.theme || 0);
+          setCanvasBgColor(mindMapData.canvasBg?.color || "#00000");
+          setCanvasBgStyle(mindMapData.canvasBg?.style || "none");
           nodeRefs.current = new Array(mindMapData.nodes.length)
             .fill(null)
             .map(() => React.createRef());
@@ -365,6 +453,7 @@ const WorkArea = () => {
           title: "Failed to load file!",
           icon: "error",
         });
+        console.log(err);
       } finally {
         await delay(1000); // loading頁面至少顯示1秒
         setLoading(false);
@@ -655,7 +744,7 @@ const WorkArea = () => {
   const rootNodeString = JSON.stringify(rootNode);
   useEffect(() => {
     setIsSaved(false);
-  }, [nodesString, rootNodeString]);
+  }, [nodesString, rootNodeString, canvasBgStyle, canvasBgColor]);
 
   // 初始渲染設定
   useLayoutEffect(() => {
@@ -720,7 +809,10 @@ const WorkArea = () => {
               }}
             />
           )}
-          <div className="canvas">
+          <div
+            className={`canvas ${canvasBgStyle}`}
+            style={{ backgroundColor: canvasBgColor }}
+          >
             <MindMap
               selectBox={selectBox}
               canvasRef={canvasRef}
@@ -740,6 +832,7 @@ const WorkArea = () => {
               handleSaveMindMap={handleSaveMindMap}
               rootNodeRef={rootNodeRef}
               getNodeCanvasLoc={getNodeCanvasLoc}
+              scrollToCenter={scrollToCenter}
             />
           </div>
         </div>
@@ -766,6 +859,13 @@ const WorkArea = () => {
             setSelectedNodes={setSelectedNodes}
             setLoading={setLoading}
             nodeRefs={nodeRefs}
+            themes={themes}
+            currentTheme={currentTheme}
+            setCurrentTheme={setCurrentTheme}
+            canvasBgColor={canvasBgColor}
+            setCanvasBgColor={setCanvasBgColor}
+            canvasBgStyle={canvasBgStyle}
+            setCanvasBgStyle={setCanvasBgStyle}
           />
           <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
             <Button

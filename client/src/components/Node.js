@@ -17,7 +17,7 @@ const ChildNode = ({
   rootNode,
   childNode,
   setNodes,
-  parentId,
+  parentNode,
   childRef,
   isSelected,
   nodeRefs,
@@ -35,7 +35,7 @@ const ChildNode = ({
       selectText(inputRef.current);
       setNodes((prevNodes) => {
         return prevNodes.map((node) => {
-          if (node.id === parentId) {
+          if (node.id === parentNode.id) {
             return {
               ...node,
               children: node.children.map((child) =>
@@ -47,7 +47,7 @@ const ChildNode = ({
         });
       });
     }
-  }, [isEditing, childNode.id, parentId, setNodes]);
+  }, [isEditing, childNode.id, parentNode.id, setNodes]);
 
   //開啟編輯模式
   const editMode = () => {
@@ -58,7 +58,7 @@ const ChildNode = ({
     //遞迴遍歷nodes每一層，更新子節點名稱
     const updateNodeName = (nodes) => {
       return nodes.map((node) => {
-        if (node.id === parentId) {
+        if (node.id === parentNode.id) {
           //若當前節點是父節點，更新其children內相應的子節點名稱
           return {
             ...node,
@@ -82,7 +82,6 @@ const ChildNode = ({
     if (childNode.name !== e.target.textContent) {
       setNodes((prevNodes) => updateNodeName(prevNodes));
     }
-    // setNodes((prevNodes) => updateNodeName(prevNodes));
     setIsEditing(false);
   };
   //取得子節點svg位置
@@ -91,13 +90,22 @@ const ChildNode = ({
       const childRect = childRef.current.getBoundingClientRect();
       const parentRect = parentRef.current.getBoundingClientRect();
       const svgRect = svgRef.current.getBoundingClientRect();
+      const offset = parseInt(childNode.outline.width, 10);
       return {
-        x: parentRect.left - svgRect.left + parentRect.width - 2,
+        x:
+          parentRect.left -
+          svgRect.left +
+          parentRect.width +
+          (parentNode.outline.style !== "none" ? offset : 0),
         y: parentRect.top - svgRect.top + parentRect.height / 2,
-        childX: childRect.left - svgRect.left,
+        childX:
+          childRect.left -
+          svgRect.left -
+          (childNode.outline.style !== "none" ? offset : 0),
         childY: childRect.top - svgRect.top + childRect.height / 2,
       };
     }
+
     return { x: 0, y: 0, childX: 0, childY: 0 };
   };
 
@@ -108,6 +116,11 @@ const ChildNode = ({
       <div
         className={`child-node ${isSelected ? "selected" : ""}`}
         style={{
+          "--outline-width": `${
+            childNode.outline.style !== "none"
+              ? parseInt(childNode.outline.width, 10)
+              : 0
+          }px`,
           backgroundColor: childNode.bkColor,
           outline: `${childNode.outline.width} ${childNode.outline.style} ${childNode.outline.color}`,
           fontFamily: `${childNode.font.family}`,
@@ -170,7 +183,7 @@ const ChildNode = ({
                 rootNode={rootNode}
                 childNode={subchildNode}
                 setNodes={setNodes}
-                parentId={childNode.id} //父節點id為上一層子節點id
+                parentNode={childNode} //父節點id為上一層子節點id
                 isSelected={selectedNodes.includes(subchildNode.id)}
                 nodeRefs={nodeRefs}
                 setSelectedNodes={setSelectedNodes}
@@ -252,6 +265,9 @@ const Node = ({
       <div
         className={`node ${isSelected ? "selected" : ""}`}
         style={{
+          "--outline-width": `${
+            node.outline.style !== "none" ? parseInt(node.outline.width, 10) : 0
+          }px`,
           backgroundColor: node.bkColor,
           outline: `${node.outline.width} ${node.outline.style} ${node.outline.color}`,
           fontFamily: `${node.font.family}`,
@@ -316,7 +332,7 @@ const Node = ({
                 rootNode={rootNode}
                 childNode={childNode}
                 setNodes={setNodes}
-                parentId={node.id}
+                parentNode={node}
                 childRef={childRef}
                 parentRef={nodeRef} //第一層子節點的父節點是節點
                 isSelected={selectedNodes.includes(childNode.id)}

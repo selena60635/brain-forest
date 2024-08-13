@@ -119,13 +119,13 @@ const Folder = () => {
     try {
       const userId = auth.currentUser.uid;
       const newMindMapData = {
-        colorStyle: 2,
+        colorStyle: 1,
         rootNode: {
           id: uuidv4(),
           name: "根節點",
           bkColor: "#000229",
           pathColor: "#000229",
-          outline: { color: "#000229", width: "2px", style: "none" },
+          outline: { color: "#000229", width: "3px", style: "none" },
           font: {
             family: "Noto Sans TC",
             size: "24px",

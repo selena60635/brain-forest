@@ -28,31 +28,42 @@ const MindMap = ({
   handleSaveMindMap,
   rootNodeRef,
   getNodeCanvasLoc,
+  scrollToCenter,
 }) => {
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
 
   //取得根結點svg位置
-  const getRootSvgLoc = () => {
+  const getRootSvgLoc = (outlineWidth) => {
     if (rootNodeRef.current && svgRef.current) {
       const rootRect = rootNodeRef.current.getBoundingClientRect(); // 獲取根節點的矩形物件
       const svgRect = svgRef.current.getBoundingClientRect(); // 獲取 SVG 的矩形物件
+      const offset = parseInt(outlineWidth, 10);
       return {
-        x: rootRect.left - svgRect.left + rootRect.width - 2, // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
+        x:
+          rootRect.left -
+          svgRect.left +
+          rootRect.width +
+          (rootNode.outline.style !== "none" ? offset : -2), // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
         y: rootRect.top - svgRect.top + rootRect.height / 2, // 計算根節點的中心點相對於g的Y坐標
       };
     }
+
     return { x: 0, y: 0 };
   };
 
   //取得節點svg位置
   const getNodeSvgLoc = useCallback(
-    (nodeRef) => {
+    (nodeRef, node) => {
       if (nodeRef && nodeRef.current && svgRef.current) {
         const nodeRect = nodeRef.current.getBoundingClientRect();
         const svgRect = svgRef.current.getBoundingClientRect();
+        const offset = parseInt(node.outline.width, 10);
         return {
-          x: nodeRect.left - svgRect.left,
+          x:
+            nodeRect.left -
+            svgRect.left -
+            (node.outline.style !== "none" ? offset : 0),
           y: nodeRect.top - svgRect.top + nodeRect.height / 2,
         };
       }
@@ -168,8 +179,9 @@ const MindMap = ({
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
-        ["Enter", "Delete", "Tab"].includes(e.key) &&
-        selectedNodes.length === 1
+        (["Enter", "Delete", "Tab"].includes(e.key) &&
+          selectedNodes.length === 1) ||
+        ["F1"].includes(e.key)
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -203,6 +215,9 @@ const MindMap = ({
       if (e.ctrlKey && e.key === "s") {
         handleSaveMindMap(e);
       }
+      if (e.key === "F1") {
+        scrollToCenter("smooth");
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -224,9 +239,10 @@ const MindMap = ({
     addSiblingChildNode,
     findParentNode,
     handleSaveMindMap,
+    scrollToCenter,
   ]);
 
-  const rootSvgLoc = getRootSvgLoc();
+  const rootSvgLoc = getRootSvgLoc(rootNode.outline.width);
 
   return (
     <div className="mindmap">
@@ -264,7 +280,7 @@ const MindMap = ({
         ref={svgRef}
       >
         {nodes.map((node, index) => {
-          const nodeLoc = getNodeSvgLoc(nodeRefs.current[index]);
+          const nodeLoc = getNodeSvgLoc(nodeRefs.current[index], node);
           return (
             <React.Fragment key={node.id}>
               <path
