@@ -22,7 +22,6 @@ const ThemeTool = ({
   colorStyleEnabled,
   setColorStyleEnabled,
   colorStyleopts,
-  setBgColor,
   themes,
   currentTheme,
   setCurrentTheme,
@@ -196,7 +195,6 @@ const ThemeTool = ({
           colorStyleEnabled={colorStyleEnabled}
           setColorStyleEnabled={setColorStyleEnabled}
           colorStyleopts={colorStyleopts}
-          setBgColor={setBgColor}
           isGlobal={true}
         />
       </div>

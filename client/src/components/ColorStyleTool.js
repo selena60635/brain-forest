@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { SketchPicker } from "react-color";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { updateNodes, updateSelectedNodes } from "./ToolBox";
+import { updateNodes, updateSelectedNodes, updateNodesColor } from "./ToolBox";
 
 const ColorStyleTool = ({
   rootNode,
@@ -20,7 +20,6 @@ const ColorStyleTool = ({
   colorStyleEnabled,
   setColorStyleEnabled,
   colorStyleopts,
-  setBgColor,
   isGlobal,
 }) => {
   const [color, setColor] = useState(nodesColor);
@@ -33,7 +32,7 @@ const ColorStyleTool = ({
 
   const nodeColorChange = (newColor) => {
     setColor(newColor.hex);
-    setBgColor(newColor.hex);
+
     if (selectedNodes.length > 0 && selectedNodes.includes(rootNode.id)) {
       setColorStyleEnabled(false);
       setCurrentColorStyle(0);
@@ -46,16 +45,18 @@ const ColorStyleTool = ({
         outline: { ...prev.outline, color: newColor.hex },
       }));
       setNodes((prev) =>
-        updateNodes(prev, () => ({
+        updateNodes(prev, (node) => ({
           bkColor: newColor.hex,
           pathColor: newColor.hex,
+          outline: { ...node.outline, color: newColor.hex },
         }))
       );
-    } else {
+    } else if (selectedNodes.length > 0) {
       setNodes((prev) =>
-        updateSelectedNodes(prev, selectedNodes, () => ({
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
           bkColor: newColor.hex,
           pathColor: newColor.hex,
+          outline: { ...node.outline, color: newColor.hex },
         }))
       );
     }
@@ -68,6 +69,7 @@ const ColorStyleTool = ({
   const nodesColorChange = (newColor) => {
     setNodesColor(newColor.hex);
     setColorIndex(0);
+
     if (
       isGlobal ||
       (selectedNodes.length > 0 && selectedNodes[0] === rootNode.id)
@@ -149,29 +151,6 @@ const ColorStyleTool = ({
       outline: { ...prevRootNode.outline, color: colorStyles[index].root },
       font: { ...prevRootNode.font, color: colorStyles[index].text },
     }));
-  };
-  // //節點顏色風格
-  const updateNodesColor = (nodes, colorStyle, parentColorIndex = null) => {
-    return nodes.map((node, index) => {
-      const nodeColorIndex =
-        parentColorIndex !== null
-          ? parentColorIndex
-          : index % colorStyle.nodes.length;
-      const newBkColor =
-        parentColorIndex === null
-          ? colorStyle.nodes[nodeColorIndex]
-          : colorStyle.child[nodeColorIndex];
-      return {
-        ...node,
-        bkColor: newBkColor,
-        pathColor: newBkColor,
-        outline: { ...node.outline, color: newBkColor },
-        font: { ...node.font, color: colorStyle.text },
-        children: node.children
-          ? updateNodesColor(node.children, colorStyle, nodeColorIndex)
-          : [],
-      };
-    });
   };
 
   const colorStyleChange = (index) => {

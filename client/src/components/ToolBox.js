@@ -268,7 +268,7 @@ const ToolBox = ({
     if (selectedNodes.length === 0) {
       setSelectedTabIndex(1);
     }
-    if (selectedNodes.length === 1) {
+    if (selectedNodes.length > 0) {
       const findNode = (nodes) => {
         for (const node of nodes) {
           if (node.id === selectedNodes[0]) return node;
@@ -520,7 +520,6 @@ const ToolBox = ({
                   colorStyleEnabled={colorStyleEnabled}
                   setColorStyleEnabled={setColorStyleEnabled}
                   colorStyleopts={colorStyleopts}
-                  setBgColor={setBgColor}
                 />
               </DisclosurePanel>
             </Disclosure>
@@ -543,7 +542,6 @@ const ToolBox = ({
               colorStyleEnabled={colorStyleEnabled}
               setColorStyleEnabled={setColorStyleEnabled}
               colorStyleopts={colorStyleopts}
-              setBgColor={setBgColor}
               isGlobal={true}
               themes={themes}
               currentTheme={currentTheme}

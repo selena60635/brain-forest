@@ -20,7 +20,6 @@ const PathTool = ({
   colorStyleEnabled,
   setColorStyleEnabled,
   colorStyleopts,
-  setBgColor,
 }) => {
   const [pathWidth, setPathWidth] = useState("3");
   const [pathStyle, setPathStyle] = useState("solid");
@@ -236,7 +235,6 @@ const PathTool = ({
         colorStyleEnabled={colorStyleEnabled}
         setColorStyleEnabled={setColorStyleEnabled}
         colorStyleopts={colorStyleopts}
-        setBgColor={setBgColor}
         isGlobal={false}
       />
     </div>

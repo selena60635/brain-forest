@@ -40,10 +40,7 @@ const TextTool = ({
   fontFamily,
   setFontFamily,
 }) => {
-  // const [query, setQuery] = useState("");
   const [sizeQuery, setSizeQuery] = useState("");
-  // const [fontFamily, setFontFamily] = useState("Noto Sans TC");
-  // const [availableFonts, setAvailableFonts] = useState([]);
   const [fontSize, setFontSize] = useState("16");
   const [fontWeight, setFontWeight] = useState("400");
   const [isItalic, setIsItalic] = useState(false);
@@ -52,39 +49,6 @@ const TextTool = ({
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef(null);
   const btnRef = useRef(null);
-
-  // //fontFamily
-  // useEffect(() => {
-  //   const fetchFonts = async () => {
-  //     const fonts = await getAvailableFonts();
-  //     setAvailableFonts(fonts);
-  //   };
-  //   fetchFonts();
-  // }, []);
-
-  // const filteredFonts =
-  //   query === ""
-  //     ? availableFonts
-  //     : availableFonts.filter((font) =>
-  //         font.toLowerCase().includes(query.toLowerCase())
-  //       );
-
-  // const fontFamilyChange = (font) => {
-  //   setFontFamily(font);
-  //   if (selectedNodes.length > 0) {
-  //     if (selectedNodes.includes(rootNode.id)) {
-  //       setRootNode((prev) => ({
-  //         ...prev,
-  //         font: { ...prev.font, family: font },
-  //       }));
-  //     }
-  //     setNodes((prev) =>
-  //       updateSelectedNodes(prev, selectedNodes, (node) => ({
-  //         font: { ...node.font, family: font },
-  //       }))
-  //     );
-  //   }
-  // };
 
   //fontSize
   const fontSizeOpts = ["8", "10", "12", "14", "16", "24", "36", "48", "60"];
@@ -320,44 +284,6 @@ const TextTool = ({
     <div className="space-y-4">
       <div className="flex justify-between space-x-4">
         <div className="flex flex-col space-y-4">
-          {/* <Combobox
-            value={fontFamily}
-            onChange={fontFamilyChange}
-            onClose={() => setQuery("")}
-          >
-            <div className="relative group w-full">
-              <ComboboxInput
-                className={clsx(
-                  "w-full h-6 rounded-md border shadow bg-white pl-2 pr-6 py-1",
-                  "group-hover:bg-gray-100 data-[open]:bg-gray-100"
-                )}
-                displayValue={() => fontFamily}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              <ComboboxButton className="absolute inset-y-0 right-0 px-2">
-                <ChevronDownIcon className="size-4 group-hover:fill-black" />
-              </ComboboxButton>
-            </div>
-
-            <ComboboxOptions
-              anchor="bottom"
-              transition
-              className={clsx(
-                "w-[var(--input-width)] rounded-md border shadow-lg bg-white py-1 [--anchor-gap:var(--spacing-1)] empty:invisible",
-                "transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
-              )}
-            >
-              {filteredFonts.map((font) => (
-                <ComboboxOption
-                  key={font}
-                  value={font}
-                  className="group flex cursor-default items-center gap-2 px-4 py-1 data-[focus]:bg-gray-100"
-                >
-                  <div className="text-sm">{font}</div>
-                </ComboboxOption>
-              ))}
-            </ComboboxOptions>
-          </Combobox> */}
           <FontFamilyTool
             rootNode={rootNode}
             setRootNode={setRootNode}
@@ -366,6 +292,7 @@ const TextTool = ({
             selectedNodes={selectedNodes}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
+            isGlobal={false}
           />
           <Menu as="div" className="relative block w-full ">
             <MenuButton className="flex items-center justify-between rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
