@@ -213,7 +213,9 @@ const MindMap = ({
         }
       }
       if (e.ctrlKey && e.key === "s") {
-        handleSaveMindMap(e);
+        e.preventDefault();
+        e.stopPropagation();
+        handleSaveMindMap();
       }
       if (e.key === "F1") {
         scrollToCenter("smooth");
