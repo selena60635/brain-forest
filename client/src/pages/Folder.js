@@ -9,7 +9,7 @@ import {
 } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 import { db, auth } from "../firebaseConfig";
-import Loading from "./loading";
+import Loading from "./Loading";
 import { v4 as uuidv4 } from "uuid";
 import { delay } from "./WorkArea";
 import SweetAlert from "../components/SweetAlert";

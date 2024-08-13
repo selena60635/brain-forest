@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { Outlet, Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth } from "./firebaseConfig";
-import { Context } from "./context/AuthContext";
-import SweetAlert from "./components/SweetAlert";
+import { auth } from "../firebaseConfig";
+import { Context } from "../context/AuthContext";
+import SweetAlert from "./SweetAlert";
 
 export async function handleSignOut() {
   const logoutAlert = await SweetAlert({

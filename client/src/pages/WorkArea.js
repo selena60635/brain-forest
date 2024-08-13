@@ -8,11 +8,11 @@ import React, {
   useLayoutEffect,
 } from "react";
 import { Button } from "@headlessui/react";
-import MindMap from "../MindMap";
+import MindMap from "../components/MindMap";
 import BtnsGroupCol from "../components/BtnsGroupCol";
 import BtnsGroupRow from "../components/BtnsGroupRow";
 import Shortcuts from "../components/Shortcuts";
-import ToolBox from "../components/ToolBox";
+import ToolBox from "../components/tools/ToolBox";
 import { v4 as uuidv4 } from "uuid";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -25,7 +25,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 import { Context } from "../context/AuthContext";
-import Loading from "./loading";
+import Loading from "./Loading";
 import SweetAlert from "../components/SweetAlert";
 import { PiToolbox } from "react-icons/pi";
 
@@ -169,12 +169,12 @@ const WorkArea = () => {
               "#996566",
             ],
             child: [
-              "#C2777D",
-              "#B16067",
-              "#A84D57",
-              "#8F646B",
-              "#BD7F8A",
-              "#9C5D68",
+              "#B0737F",
+              "#CE8091",
+              "#A45F63",
+              "#D2848C",
+              "#AD6B71",
+              "#996566",
             ],
           },
         ],

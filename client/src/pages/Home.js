@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Context } from "../context/AuthContext";
-import { handleSignOut } from "../Layout";
+import { handleSignOut } from "../components/Layout";
 import { FaGithub } from "react-icons/fa";
 import { IoMail } from "react-icons/io5";
 import { FaPhone } from "react-icons/fa6";

@@ -5,8 +5,8 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
-import Node from "./components/Node";
-import RootNode from "./components/RootNode";
+import Node from "./Node";
+import RootNode from "./RootNode";
 
 // 心智圖組件
 const MindMap = ({

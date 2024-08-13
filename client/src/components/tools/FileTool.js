@@ -5,11 +5,11 @@ import { unified } from "unified";
 import parse from "remark-parse";
 import frontmatter from "remark-frontmatter";
 import { parse as parseYaml } from "yaml";
-import { delay } from "../pages/WorkArea";
+import { delay } from "../../pages/WorkArea";
 import { RiSparkling2Line } from "react-icons/ri";
 import { FaArrowCircleUp } from "react-icons/fa";
 import { trio } from "ldrs";
-import SweetAlert from "../components/SweetAlert";
+import SweetAlert from "../SweetAlert";
 
 const FileTool = ({
   rootNode,

@@ -16,10 +16,10 @@ import {
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { SketchPicker } from "react-color";
 import clsx from "clsx";
-import TextTool from "../components/TextTool";
-import PathTool from "../components/PathTool";
-import FileTool from "../components/FileTool";
-import ThemeTool from "../components/ThemeTool";
+import TextTool from "./TextTool";
+import PathTool from "./PathTool";
+import FileTool from "./FileTool";
+import ThemeTool from "./ThemeTool";
 
 export const updateNodes = (nodes, updateFn) => {
   return nodes.map((node) => {

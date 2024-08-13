@@ -265,8 +265,8 @@ const ThemeTool = ({
           setFontFamily={setFontFamily}
           isGlobal={true}
         />
-        {/* <p>分支線段寬度</p>
-        <p>分支線段樣式</p> */}
+        <p>分支線段寬度</p>
+        <p>分支線段樣式</p>
       </div>
     </div>
   );
