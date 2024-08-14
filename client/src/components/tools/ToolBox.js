@@ -99,8 +99,16 @@ const ToolBox = ({
   setCanvasBgColor,
   canvasBgStyle,
   setCanvasBgStyle,
+  pathWidth,
+  setPathWidth,
+  pathStyle,
+  setPathStyle,
+  fontFamily,
+  setFontFamily,
 }) => {
-  const [fontFamily, setFontFamily] = useState("Noto Sans TC");
+  // const [pathWidth, setPathWidth] = useState("3");
+  // const [pathStyle, setPathStyle] = useState("solid");
+  // const [fontFamily, setFontFamily] = useState("Noto Sans TC");
   const [selectedTabIndex, setSelectedTabIndex] = useState(1);
   const [colorStyleEnabled, setColorStyleEnabled] = useState(true);
   const colorStyleopts = colorStyles.slice(1).map((style) => {
@@ -185,6 +193,10 @@ const ToolBox = ({
                   setNodes={setNodes}
                   selectedNodes={selectedNodes}
                   findNode={findNode}
+                  pathWidth={pathWidth}
+                  setPathWidth={setPathWidth}
+                  pathStyle={pathStyle}
+                  setPathStyle={setPathStyle}
                   isGlobal={false}
                 />
                 <ColorStyleTool
@@ -266,6 +278,10 @@ const ToolBox = ({
                 setNodes={setNodes}
                 selectedNodes={selectedNodes}
                 findNode={findNode}
+                pathWidth={pathWidth}
+                setPathWidth={setPathWidth}
+                pathStyle={pathStyle}
+                setPathStyle={setPathStyle}
                 isGlobal={true}
               />
             </div>
@@ -291,6 +307,12 @@ const ToolBox = ({
               canvasBgStyle={canvasBgStyle}
               setCanvasBgStyle={setCanvasBgStyle}
               themes={themes}
+              pathWidth={pathWidth}
+              setPathWidth={setPathWidth}
+              pathStyle={pathStyle}
+              setPathStyle={setPathStyle}
+              fontFamily={fontFamily}
+              setFontFamily={setFontFamily}
             />
           </TabPanel>
         </TabPanels>

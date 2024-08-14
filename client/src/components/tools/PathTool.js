@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { updateNodes, updateSelectedNodes } from "./ToolBox";
@@ -11,9 +11,13 @@ const PathTool = ({
   selectedNodes,
   findNode,
   isGlobal,
+  pathWidth,
+  setPathWidth,
+  pathStyle,
+  setPathStyle,
 }) => {
-  const [pathWidth, setPathWidth] = useState("3");
-  const [pathStyle, setPathStyle] = useState("solid");
+  // const [pathWidth, setPathWidth] = useState("3");
+  // const [pathStyle, setPathStyle] = useState("solid");
   const pathWidthOpts = [
     {
       value: "1",
@@ -157,7 +161,15 @@ const PathTool = ({
         );
       }
     }
-  }, [selectedNodes, rootNode, nodes, findNode, isGlobal]);
+  }, [
+    selectedNodes,
+    rootNode,
+    nodes,
+    findNode,
+    isGlobal,
+    setPathStyle,
+    setPathWidth,
+  ]);
 
   return (
     <div>

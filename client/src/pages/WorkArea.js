@@ -47,6 +47,10 @@ const WorkArea = () => {
   const [nodesColor, setNodesColor] = useState("#17493b"); //純色模式目前顏色
   const [canvasBgColor, setCanvasBgColor] = useState("#fff");
   const [canvasBgStyle, setCanvasBgStyle] = useState("none");
+  const [pathWidth, setPathWidth] = useState("3");
+  const [pathStyle, setPathStyle] = useState("solid");
+  const [fontFamily, setFontFamily] = useState("Noto Sans TC");
+
   const themes = useMemo(
     () => [
       {
@@ -275,14 +279,14 @@ const WorkArea = () => {
     pathColor: rootColor,
     outline: { color: rootColor, width: "3px", style: "none" },
     font: {
-      family: "Noto Sans TC",
+      family: fontFamily,
       size: "24px",
       weight: "400",
       color: textColor,
     },
     path: {
-      width: "3",
-      style: "0",
+      width: pathWidth,
+      style: pathStyle,
     },
   });
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
@@ -297,17 +301,17 @@ const WorkArea = () => {
       pathColor: color,
       outline: { color: color, width: "3px", style: "none" },
       font: {
-        family: "Noto Sans TC",
+        family: fontFamily,
         size: "20px",
         weight: "400",
         color: textColor,
       },
       path: {
-        width: rootNode.path.width,
-        style: rootNode.path.style,
+        width: pathWidth,
+        style: pathStyle,
       },
     }),
-    [color, textColor, rootNode.path.style, rootNode.path.width]
+    [color, textColor, pathWidth, pathStyle, fontFamily]
   );
 
   const newChildNode = useMemo(
@@ -318,16 +322,16 @@ const WorkArea = () => {
       children: [],
       outline: { width: "3px", style: "none" },
       font: {
-        family: "Noto Sans TC",
+        family: fontFamily,
         size: "16px",
         weight: "400",
       },
       path: {
-        width: rootNode.path.width,
-        style: rootNode.path.style,
+        width: pathWidth,
+        style: pathStyle,
       },
     }),
-    [rootNode.path.style, rootNode.path.width]
+    [pathWidth, pathStyle, fontFamily]
   );
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
@@ -385,6 +389,8 @@ const WorkArea = () => {
         currentTheme,
         currentColorStyle,
         canvasBg: { canvasBgStyle, canvasBgColor },
+        path: { pathWidth, pathStyle },
+        fontFamily,
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -426,6 +432,8 @@ const WorkArea = () => {
         currentTheme,
         currentColorStyle,
         canvasBg: { canvasBgStyle, canvasBgColor },
+        path: { pathWidth, pathStyle },
+        fontFamily,
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -453,12 +461,6 @@ const WorkArea = () => {
 
   //重置心智圖組件為初始狀態
   const resetMindMap = useCallback(async () => {
-    setCurrentTheme(0);
-    setCurrentColorStyle(1);
-    setCanvasBgColor("#fff");
-    setCanvasBgStyle("none");
-    setColorIndex(0);
-    setNodesColor("#17493b");
     setRootNode({
       id: uuidv4(),
       name: "根節點",
@@ -477,20 +479,11 @@ const WorkArea = () => {
       },
     });
     setNodes([]);
-    setSelectedNodes([]);
     nodeRefs.current = [];
     await delay(1000); // loading頁面至少顯示1秒
     setLoading(false);
     setIsSaved(true);
-  }, [
-    setCurrentColorStyle,
-    setNodesColor,
-    setRootNode,
-    setNodes,
-    setColorIndex,
-    nodeRefs,
-    setSelectedNodes,
-  ]);
+  }, [setRootNode, setNodes, nodeRefs]);
 
   //獲取檔案並設定心智圖組件狀態
   const fetchMindMap = useCallback(
@@ -504,10 +497,18 @@ const WorkArea = () => {
           const mindMapData = docSnap.data();
           setRootNode(mindMapData.rootNode);
           setNodes(mindMapData.nodes);
-          setCurrentColorStyle(mindMapData.currentColorStyle);
-          setCurrentTheme(mindMapData.currentTheme || 0);
-          setCanvasBgColor(mindMapData.canvasBg?.canvasBgColor || "#00000");
-          setCanvasBgStyle(mindMapData.canvasBg?.canvasBgStyle || "none");
+          setCurrentColorStyle((prev) => mindMapData.currentColorStyle || prev);
+          setCurrentTheme((prev) => mindMapData.currentTheme || prev);
+          setCanvasBgColor(
+            (prev) => mindMapData.canvasBg?.canvasBgColor || prev
+          );
+          setCanvasBgStyle(
+            (prev) => mindMapData.canvasBg?.canvasBgStyle || prev
+          );
+          setPathWidth((prev) => mindMapData.path?.pathWidth || prev);
+          setPathStyle((prev) => mindMapData.path?.pathStyle || prev);
+          setFontFamily((prev) => mindMapData.fontFamily || prev);
+
           nodeRefs.current = new Array(mindMapData.nodes.length)
             .fill(null)
             .map(() => React.createRef());
@@ -931,6 +932,12 @@ const WorkArea = () => {
             setCanvasBgColor={setCanvasBgColor}
             canvasBgStyle={canvasBgStyle}
             setCanvasBgStyle={setCanvasBgStyle}
+            pathWidth={pathWidth}
+            setPathWidth={setPathWidth}
+            pathStyle={pathStyle}
+            setPathStyle={setPathStyle}
+            fontFamily={fontFamily}
+            setFontFamily={setFontFamily}
           />
           <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
             <Button

@@ -29,6 +29,12 @@ const FileTool = ({
   canvasBgColor,
   setCanvasBgColor,
   themes,
+  pathWidth,
+  setPathWidth,
+  pathStyle,
+  setPathStyle,
+  fontFamily,
+  setFontFamily,
 }) => {
   trio.register();
 
@@ -43,7 +49,7 @@ const FileTool = ({
     let content = "";
     //前言
     if (preface) {
-      content += `---\ncolorStyle: ${currentColorStyle}\ncanvasBgStyle: "${canvasBgStyle}"\ncanvasBgColor: "${canvasBgColor}"\ntheme: ${currentTheme}\n---\n\n`;
+      content += `---\ncolorStyle: ${currentColorStyle}\ncanvasBgStyle: "${canvasBgStyle}"\ncanvasBgColor: "${canvasBgColor}"\ntheme: ${currentTheme}\npathWidth: "${pathWidth}"\npathStyle: "${pathStyle}"\nfontFamily: "${fontFamily}"\n---\n\n`;
     }
     nodes.forEach((node) => {
       if (level === 0) {
@@ -102,7 +108,15 @@ const FileTool = ({
   };
 
   //解析Markdown文件並轉換為子節點元件
-  const parseTochildNodes = (listItems, colorStyle, colorIndex, theme) => {
+  const parseTochildNodes = (
+    listItems,
+    colorStyle,
+    colorIndex,
+    theme,
+    pathWidth,
+    pathStyle,
+    fontFamily
+  ) => {
     return listItems.map((listItem) => {
       const style =
         colorStyle !== 0
@@ -118,14 +132,14 @@ const FileTool = ({
         pathColor: bkColor,
         outline: { color: bkColor, width: "3px", style: "none" },
         font: {
-          family: "Noto Sans TC",
+          family: fontFamily,
           size: "16px",
           weight: "400",
           color: style.text,
         },
         path: {
-          width: "3",
-          style: "0",
+          width: pathWidth,
+          style: pathStyle,
         },
       };
 
@@ -134,7 +148,10 @@ const FileTool = ({
           listItem.children[1].children,
           colorStyle,
           colorIndex,
-          theme
+          theme,
+          pathWidth,
+          pathStyle,
+          fontFamily
         );
       }
       return node;
@@ -149,6 +166,9 @@ const FileTool = ({
     let canvasBgStyle = "none";
     let canvasBgColor = "#fff";
     let theme = 0;
+    let pathWidth = "3";
+    let pathStyle = "0";
+    let fontFamily = "Noto Sans TC";
     let result = [];
 
     const yamlNode = tree.children.find((node) => node.type === "yaml");
@@ -161,8 +181,15 @@ const FileTool = ({
         if (data.theme >= 0 && data.theme <= 2) {
           theme = data.theme;
         }
+        if (data.pathStyle === "none") {
+          pathWidth = "0";
+        } else if (data.pathStyle === "dashed") {
+          pathStyle = "8";
+          pathWidth = data.pathWidth || "3";
+        }
         canvasBgStyle = data.canvasBgStyle || "none";
         canvasBgColor = data.canvasBgColor || "#fff";
+        fontFamily = data.fontFamily || "Noto Sans TC";
       } catch (err) {
         console.error(err);
       }
@@ -171,7 +198,11 @@ const FileTool = ({
     setCanvasBgColor(canvasBgColor);
     setCanvasBgStyle(canvasBgStyle);
     setCurrentColorStyle(colorStyle);
+    setPathWidth(pathWidth);
+    setPathStyle(pathStyle);
+    setFontFamily(fontFamily);
     setSelectedNodes([]);
+
     const createNode = (name, colorStyle, index = null) => {
       const style =
         colorStyle !== 0
@@ -187,42 +218,63 @@ const FileTool = ({
         pathColor: bkColor,
         outline: { color: bkColor, width: "3px", style: "none" },
         font: {
-          family: "Noto Sans TC",
+          family: fontFamily,
           size: index !== null ? "20px" : "24px",
           weight: "400",
           color: style.text,
         },
         path: {
-          width: "3",
-          style: "0",
+          width: pathWidth,
+          style: pathStyle,
         },
       };
     };
 
     let currentParent = [];
     let colorIndex = 2;
-    tree.children.forEach((item) => {
-      if (item.type === "heading" && item.depth === 1) {
-        const rootNode = createNode(item.children[0].value, colorStyle);
-        result.push(rootNode);
-      } else if (item.type === "heading" && item.depth === 2) {
-        let node = createNode(item.children[0].value, colorStyle, colorIndex);
-        result.push(node);
-        currentParent = node;
-        colorIndex++;
-      } else if (item.type === "list") {
-        const nodes = parseTochildNodes(
-          item.children,
-          colorStyle,
-          (colorIndex - 1) % colorStyles[colorStyle].nodes.length,
-          theme
-        );
-        if (currentParent) {
-          currentParent.children.push(...nodes);
+    try {
+      tree.children.forEach((item) => {
+        if (item.type === "heading" && item.depth === 1) {
+          const rootNode = createNode(item.children[0].value, colorStyle);
+          result.push(rootNode);
+        } else if (item.type === "heading" && item.depth === 2) {
+          let node = createNode(item.children[0].value, colorStyle, colorIndex);
+          result.push(node);
+          currentParent = node;
+          colorIndex++;
+        } else if (item.type === "list") {
+          const nodes = parseTochildNodes(
+            item.children,
+            colorStyle,
+            (colorIndex - 1) % colorStyles[colorStyle].nodes.length,
+            theme,
+            pathWidth,
+            pathStyle,
+            fontFamily
+          );
+          if (currentParent) {
+            currentParent.children.push(...nodes);
+          }
         }
-      }
-    });
-
+      });
+    } catch (err) {
+      SweetAlert({
+        type: "alert",
+        title: "檔案格式錯誤",
+        html: `<p class="text-left mb-4">請確認檔案符合範例格式。</p>
+        <div class="text-left text-sm">
+       <p >範例：</p>
+      <div class="bg-gray-100 p-4">
+        # Cats<br/>
+        ## Basic Features<br/>
+        - Physical Characteristics<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;- Four Legs
+      </div>
+      </div>`,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
     return {
       rootNode: result[0],
       nodes: result.slice(1),
@@ -253,19 +305,16 @@ const FileTool = ({
         });
         return;
       }
-      try {
-        setLoading(true);
-        await delay(1000);
-        const mindMapData = parseToNodes(content);
-        setRootNode(mindMapData.rootNode);
-        setNodes(mindMapData.nodes);
-        nodeRefs.current = new Array(mindMapData.nodes.length)
-          .fill(null)
-          .map(() => React.createRef());
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-      }
+
+      setLoading(true);
+      await delay(1000);
+      const mindMapData = parseToNodes(content);
+      setRootNode((prev) => mindMapData.rootNode || prev);
+      setNodes((prev) => mindMapData.nodes || prev);
+      nodeRefs.current = new Array(mindMapData.nodes.length)
+        .fill(null)
+        .map(() => React.createRef());
+      setLoading(false);
     }
   };
 

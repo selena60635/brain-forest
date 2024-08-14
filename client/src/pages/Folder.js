@@ -119,7 +119,6 @@ const Folder = () => {
     try {
       const userId = auth.currentUser.uid;
       const newMindMapData = {
-        currentColorStyle: 1,
         rootNode: {
           id: uuidv4(),
           name: "根節點",
