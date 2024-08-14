@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import ColorStyleTool from "./ColorStyleTool";
 import { updateNodes, updateSelectedNodes } from "./ToolBox";
 
 const PathTool = ({
@@ -10,16 +9,8 @@ const PathTool = ({
   nodes,
   setNodes,
   selectedNodes,
-  currentColorStyle,
-  setCurrentColorStyle,
-  colorStyles,
-  setColorIndex,
-  nodesColor,
-  setNodesColor,
   findNode,
-  colorStyleEnabled,
-  setColorStyleEnabled,
-  colorStyleopts,
+  isGlobal,
 }) => {
   const [pathWidth, setPathWidth] = useState("3");
   const [pathStyle, setPathStyle] = useState("solid");
@@ -45,30 +36,27 @@ const PathTool = ({
       icon: "極粗",
     },
   ];
+
   const pathWidthChange = (width) => {
     setPathWidth(width);
-
-    if (selectedNodes.length > 0) {
-      if (selectedNodes[0] === rootNode.id) {
-        setRootNode((prev) => ({
-          ...prev,
-          path: { ...prev.path, width: width },
-        }));
-        setNodes((prev) =>
-          updateNodes(prev, (node) => ({
-            path: { ...node.path, width: width },
-          }))
-        );
-      } else {
-        setNodes((prev) =>
-          updateSelectedNodes(prev, selectedNodes, (node) => ({
-            path: { ...node.path, width: width },
-          }))
-        );
-      }
+    if (isGlobal) {
+      setRootNode((prev) => ({
+        ...prev,
+        path: { ...prev.path, width: width },
+      }));
+      setNodes((prev) =>
+        updateNodes(prev, (node) => ({
+          path: { ...node.path, width: width },
+        }))
+      );
+    } else if (selectedNodes.length > 0) {
+      setNodes((prev) =>
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
+          path: { ...node.path, width: width },
+        }))
+      );
     }
   };
-
   const pathStyleOpts = [
     {
       label: "solid",
@@ -110,51 +98,52 @@ const PathTool = ({
       icon: "無",
     },
   ];
+
   const pathStyleChange = (value, style) => {
-    let newWidth = pathWidth;
-    if (style === "none") {
-      newWidth = "0";
-    } else if (pathWidth === "0") {
-      newWidth = "3";
-    }
+    let newWidth = style === "none" ? "0" : pathWidth === "0" ? "3" : pathWidth;
     setPathWidth(newWidth);
     setPathStyle(style);
-
-    if (selectedNodes.length > 0) {
-      if (selectedNodes[0] === rootNode.id) {
-        setRootNode((prev) => ({
-          ...prev,
+    if (isGlobal) {
+      setRootNode((prev) => ({
+        ...prev,
+        path: {
+          ...prev.path,
+          style: value,
+          width: newWidth,
+        },
+      }));
+      setNodes((prev) =>
+        updateNodes(prev, (node) => ({
           path: {
-            ...prev.path,
+            ...node.path,
             style: value,
             width: newWidth,
           },
-        }));
-        setNodes((prev) =>
-          updateNodes(prev, (node) => ({
-            path: {
-              ...node.path,
-              style: value,
-              width: newWidth,
-            },
-          }))
-        );
-      } else {
-        setNodes((prev) =>
-          updateSelectedNodes(prev, selectedNodes, (node) => ({
-            path: {
-              ...node.path,
-              style: value,
-              width: newWidth,
-            },
-          }))
-        );
-      }
+        }))
+      );
+    } else if (selectedNodes.length > 0) {
+      setNodes((prev) =>
+        updateSelectedNodes(prev, selectedNodes, (node) => ({
+          path: {
+            ...node.path,
+            style: value,
+            width: newWidth,
+          },
+        }))
+      );
     }
   };
-
   useEffect(() => {
-    if (selectedNodes.length > 0) {
+    if (isGlobal) {
+      setPathWidth(rootNode.path.width || "3");
+      setPathStyle(
+        rootNode.path.width === "0"
+          ? "none"
+          : rootNode.path.style === "0"
+          ? "solid"
+          : "dashed"
+      );
+    } else if (selectedNodes.length > 0) {
       const selectedNode = findNode([rootNode, ...nodes], selectedNodes[0]);
 
       if (selectedNode) {
@@ -168,11 +157,12 @@ const PathTool = ({
         );
       }
     }
-  }, [selectedNodes, rootNode, nodes, findNode]);
+  }, [selectedNodes, rootNode, nodes, findNode, isGlobal]);
 
   return (
-    <div className="space-y-4">
-      <Menu as="div" className="relative inline-block w-full">
+    <div>
+      {isGlobal && <p className="mb-2">分支線段寬度</p>}
+      <Menu as="div" className="relative inline-block w-full mb-4">
         <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
           {pathStyleOpts.find((opt) => opt.label === pathStyle)?.icon}
 
@@ -195,48 +185,29 @@ const PathTool = ({
           ))}
         </MenuItems>
       </Menu>
-      <div className="flex gap-4">
-        <Menu as="div" className="relative inline-block w-full">
-          <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
-            {pathWidthOpts.find((opt) => opt.value === pathWidth)?.icon || "無"}
-            <ChevronDownIcon className="size-4 " />
-          </MenuButton>
+      {isGlobal && <p className="mb-2">分支線段樣式</p>}
+      <Menu as="div" className="relative inline-block w-full mb-4">
+        <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
+          {pathWidthOpts.find((opt) => opt.value === pathWidth)?.icon || "無"}
+          <ChevronDownIcon className="size-4 " />
+        </MenuButton>
 
-          <MenuItems
-            transition
-            className="absolute z-10 left-0 right-0 origin-top-right rounded-md border shadow-lg bg-white py-1 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-          >
-            {pathWidthOpts.map((opt) => (
-              <MenuItem key={opt.value}>
-                <button
-                  onClick={() => pathWidthChange(opt.value)}
-                  className="group flex items-center gap-2 px-2 py-1 w-full data-[focus]:bg-gray-100"
-                >
-                  {opt.icon}
-                </button>
-              </MenuItem>
-            ))}
-          </MenuItems>
-        </Menu>
-      </div>
-      <ColorStyleTool
-        rootNode={rootNode}
-        setRootNode={setRootNode}
-        nodes={nodes}
-        setNodes={setNodes}
-        selectedNodes={selectedNodes}
-        currentColorStyle={currentColorStyle}
-        setCurrentColorStyle={setCurrentColorStyle}
-        colorStyles={colorStyles}
-        setColorIndex={setColorIndex}
-        nodesColor={nodesColor}
-        setNodesColor={setNodesColor}
-        findNode={findNode}
-        colorStyleEnabled={colorStyleEnabled}
-        setColorStyleEnabled={setColorStyleEnabled}
-        colorStyleopts={colorStyleopts}
-        isGlobal={false}
-      />
+        <MenuItems
+          transition
+          className="absolute z-10 left-0 right-0 origin-top-right rounded-md border shadow-lg bg-white py-1 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+        >
+          {pathWidthOpts.map((opt) => (
+            <MenuItem key={opt.value}>
+              <button
+                onClick={() => pathWidthChange(opt.value)}
+                className="group flex items-center gap-2 px-2 py-1 w-full data-[focus]:bg-gray-100"
+              >
+                {opt.icon}
+              </button>
+            </MenuItem>
+          ))}
+        </MenuItems>
+      </Menu>
     </div>
   );
 };

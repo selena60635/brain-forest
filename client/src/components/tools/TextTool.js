@@ -18,18 +18,6 @@ import { FaStrikethrough, FaItalic, FaBold } from "react-icons/fa";
 import { updateSelectedNodes } from "./ToolBox";
 import FontFamilyTool from "./FontFamilyTool";
 
-export const getAvailableFonts = async () => {
-  const fonts = await document.fonts.ready;
-  const fontList = [];
-  const excludedFonts = ["Material Symbols Rounded", "Poppins"];
-  fonts.forEach((font) => {
-    if (excludedFonts.includes(font.family)) return;
-    fontList.push(font.family);
-  });
-
-  return [...new Set(fontList)];
-};
-
 const TextTool = ({
   rootNode,
   setRootNode,
@@ -264,7 +252,6 @@ const TextTool = ({
       const selectedNode = findNode([rootNode, ...nodes], selectedNodes[0]);
 
       if (selectedNode) {
-        setFontFamily(selectedNode.font.family || "Noto Sans TC");
         setFontSize(
           selectedNode.font.size
             ? selectedNode.font.size.replace("px", "")
@@ -276,7 +263,7 @@ const TextTool = ({
         setIsStrikethrough(selectedNode.font.isStrikethrough || false);
       }
     }
-  }, [selectedNodes, rootNode, nodes, findNode, setFontFamily]);
+  }, [selectedNodes, rootNode, nodes, findNode]);
 
   let selectedNode = findNode([rootNode, ...nodes], selectedNodes[0]);
 
@@ -292,6 +279,7 @@ const TextTool = ({
             selectedNodes={selectedNodes}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
+            findNode={findNode}
             isGlobal={false}
           />
           <Menu as="div" className="relative block w-full ">
