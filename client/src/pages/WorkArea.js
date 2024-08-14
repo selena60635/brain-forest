@@ -285,8 +285,8 @@ const WorkArea = () => {
       color: textColor,
     },
     path: {
-      width: pathWidth,
-      style: pathStyle,
+      width: pathStyle === "none" ? "0" : pathWidth,
+      style: pathStyle === "dashed" ? "8" : "0",
     },
   });
   const [nodes, setNodes] = useState([]); //定義節點們的狀態，用来存儲所有節點，初始為空陣列
@@ -307,8 +307,8 @@ const WorkArea = () => {
         color: textColor,
       },
       path: {
-        width: pathWidth,
-        style: pathStyle,
+        width: pathStyle === "none" ? "0" : pathWidth,
+        style: pathStyle === "dashed" ? "8" : "0",
       },
     }),
     [color, textColor, pathWidth, pathStyle, fontFamily]
@@ -327,8 +327,8 @@ const WorkArea = () => {
         weight: "400",
       },
       path: {
-        width: pathWidth,
-        style: pathStyle,
+        width: pathStyle === "none" ? "0" : pathWidth,
+        style: pathStyle === "dashed" ? "8" : "0",
       },
     }),
     [pathWidth, pathStyle, fontFamily]

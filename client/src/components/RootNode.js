@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 
 //聚焦到inputbox並自動選取文本
-const selectText = (inputElement) => {
+export const selectText = (inputElement) => {
   if (inputElement) {
     inputElement.focus(); //將焦點設置到inputRef目前引用的Dom元素上
     //選取整個文本

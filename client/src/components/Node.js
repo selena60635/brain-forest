@@ -1,16 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-
-// 聚焦到 inputbox 並自動選取文本
-const selectText = (inputElement) => {
-  if (inputElement) {
-    inputElement.focus();
-    const range = document.createRange();
-    range.selectNodeContents(inputElement);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-};
+import { selectText } from "../components/RootNode";
 
 // 子節點組件
 const ChildNode = ({
