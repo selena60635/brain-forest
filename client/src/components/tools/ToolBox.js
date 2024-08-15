@@ -106,9 +106,6 @@ const ToolBox = ({
   fontFamily,
   setFontFamily,
 }) => {
-  // const [pathWidth, setPathWidth] = useState("3");
-  // const [pathStyle, setPathStyle] = useState("solid");
-  // const [fontFamily, setFontFamily] = useState("Noto Sans TC");
   const [selectedTabIndex, setSelectedTabIndex] = useState(1);
   const [colorStyleEnabled, setColorStyleEnabled] = useState(true);
   const colorStyleopts = colorStyles.slice(1).map((style) => {

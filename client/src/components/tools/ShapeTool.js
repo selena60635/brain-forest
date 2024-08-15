@@ -254,7 +254,7 @@ const ShapeTool = ({
           <div className="flex flex-wrap justify-between items-center relative">
             <span>邊框</span>
             <div className="flex">
-              <Menu>
+              <Menu as="div" className="relative inline-block">
                 <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow w-20 h-6 px-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white ">
                   {
                     borderStyleOpts.find((opt) => opt.value === borderStyle)
@@ -265,8 +265,7 @@ const ShapeTool = ({
 
                 <MenuItems
                   transition
-                  anchor="bottom end"
-                  className="w-20 origin-top-right rounded-xl border shadow-lg bg-white p-1 text-sm transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+                  className="absolute z-10 left-0 right-0 w-20 origin-top-right rounded-xl border shadow-lg bg-white p-1 text-sm transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
                 >
                   {borderStyleOpts.map((opt) => (
                     <MenuItem key={opt.value}>

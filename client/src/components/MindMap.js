@@ -29,6 +29,7 @@ const MindMap = ({
   rootNodeRef,
   getNodeCanvasLoc,
   scrollToCenter,
+  handleFullScreen,
 }) => {
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
@@ -39,6 +40,7 @@ const MindMap = ({
       const rootRect = rootNodeRef.current.getBoundingClientRect(); // 獲取根節點的矩形物件
       const svgRect = svgRef.current.getBoundingClientRect(); // 獲取 SVG 的矩形物件
       const offset = parseInt(outlineWidth, 10);
+
       return {
         x:
           rootRect.left -
@@ -176,12 +178,12 @@ const MindMap = ({
     rootNodeRef,
   ]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback(
+    (e) => {
       if (
         (["Enter", "Delete", "Tab"].includes(e.key) &&
           selectedNodes.length === 1) ||
-        ["F1"].includes(e.key)
+        ["F1", "F2"].includes(e.key)
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -220,29 +222,30 @@ const MindMap = ({
       if (e.key === "F1") {
         scrollToCenter("smooth");
       }
-    };
+      if (e.key === "F2") {
+        handleFullScreen();
+      }
+    },
+    [
+      selectedNodes,
+      addNode,
+      addChildNode,
+      addSiblingChildNode,
+      addSiblingNode,
+      delNode,
+      findParentNode,
+      handleSaveMindMap,
+      nodes,
+      rootNode,
+      scrollToCenter,
+      handleFullScreen,
+    ]
+  );
 
+  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [
-    selectedNodes,
-    isEditRoot,
-    rootNode.id,
-    delNode,
-    addNode,
-    addChildNode,
-    nodeRefs,
-    nodes,
-    rootNode,
-    setNodes,
-    setSelectedNodes,
-    updateLocs,
-    addSiblingNode,
-    addSiblingChildNode,
-    findParentNode,
-    handleSaveMindMap,
-    scrollToCenter,
-  ]);
+  }, [handleKeyDown]);
 
   const rootSvgLoc = getRootSvgLoc(rootNode.outline.width);
 

@@ -40,7 +40,8 @@ const WorkArea = () => {
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
-
+  const pageRef = useRef(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(0); // 當前主題索引
   const [currentColorStyle, setCurrentColorStyle] = useState(1); //目前顏色風格索引
   const [colorIndex, setColorIndex] = useState(0); //目前節點顏色索引
@@ -381,6 +382,48 @@ const WorkArea = () => {
     },
     [canvasRef, rootNodeRef, getNodeCanvasLoc]
   );
+
+  const handleFullScreen = () => {
+    if (!isFullScreen) {
+      if (pageRef.current.requestFullscreen) {
+        //最新版瀏覽器幾乎都支援
+        pageRef.current.requestFullscreen();
+      } else if (pageRef.current.mozRequestFullScreen) {
+        //Firefox
+        pageRef.current.mozRequestFullScreen();
+      } else if (pageRef.current.webkitRequestFullscreen) {
+        //Safari、Chrome、Opera
+        pageRef.current.webkitRequestFullscreen();
+      } else if (pageRef.current.msRequestFullscreen) {
+        //Edge
+        pageRef.current.msRequestFullscreen();
+      }
+      setIsFullScreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      setIsFullScreen(false);
+    }
+  };
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullScreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullScreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullScreenChange);
+    };
+  }, []);
 
   //儲存心智圖組件並重導向
   const saveMindMap = async (id = null) => {
@@ -814,11 +857,6 @@ const WorkArea = () => {
 
   // 初始渲染設定
   useLayoutEffect(() => {
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Tab") {
-        e.preventDefault();
-      }
-    });
     if (rootNodeRef.current) {
       scrollToCenter("auto");
     }
@@ -827,129 +865,148 @@ const WorkArea = () => {
   return (
     <>
       {loading && <Loading />}
-      <div className="flex w-full">
+
+      <div
+        className={`flex w-full ${isFullScreen && "h-screen"}`}
+        ref={pageRef}
+      >
         <div
-          className={`canvas-wrap transition-all duration-300 ${
+          className={`transition-all duration-300 ease-in-out ${
             isToolBoxOpen ? "w-6/12 sm:w-10/12" : "w-screen"
           }`}
-          onMouseDown={handleMouseDown}
-          ref={canvasRef}
         >
-          <div ref={btnsRef}>
-            <div className="top-[90px] left-5 fixed z-20">
-              <BtnsGroupCol
-                selectedNodes={selectedNodes}
-                rootNode={rootNode}
+          <div
+            className={`canvas-wrap ${
+              isFullScreen ? "h-screen" : "h-[calc(100vh-65px)]"
+            }`}
+            onMouseDown={handleMouseDown}
+            ref={canvasRef}
+          >
+            <div ref={btnsRef}>
+              <div className="top-[90px] left-5 fixed z-20">
+                <BtnsGroupCol
+                  selectedNodes={selectedNodes}
+                  rootNode={rootNode}
+                  nodes={nodes}
+                  addNode={addNode}
+                  delNode={delNode}
+                  addChildNode={addChildNode}
+                  findParentNode={findParentNode}
+                  addSiblingNode={addSiblingNode}
+                  addSiblingChildNode={addSiblingChildNode}
+                  isSaved={isSaved}
+                  handleSaveMindMap={handleSaveMindMap}
+                />
+              </div>
+
+              <div className="btns-group bottom-10 left-5 fixed z-20 h-12">
+                <Shortcuts />
+              </div>
+              <div
+                className={`bottom-10 fixed z-20 transition-all duration-300 ease-in-out ${
+                  isToolBoxOpen ? "right-[356px]" : "right-10"
+                }`}
+              >
+                <BtnsGroupRow
+                  scrollToCenter={scrollToCenter}
+                  handleFullScreen={handleFullScreen}
+                />
+              </div>
+            </div>
+
+            {selectBox && (
+              <div
+                className="select-box"
+                style={{
+                  left: selectBox.left,
+                  top: selectBox.top,
+                  width: selectBox.width,
+                  height: selectBox.height,
+                }}
+              />
+            )}
+            <div
+              className={`canvas ${canvasBgStyle}`}
+              style={{ backgroundColor: canvasBgColor }}
+            >
+              <MindMap
+                selectBox={selectBox}
+                canvasRef={canvasRef}
+                setNodes={setNodes}
                 nodes={nodes}
+                nodeRefs={nodeRefs}
+                rootNode={rootNode}
+                setRootNode={setRootNode}
+                selectedNodes={selectedNodes}
+                setSelectedNodes={setSelectedNodes}
                 addNode={addNode}
                 delNode={delNode}
                 addChildNode={addChildNode}
                 findParentNode={findParentNode}
                 addSiblingNode={addSiblingNode}
                 addSiblingChildNode={addSiblingChildNode}
-                isSaved={isSaved}
                 handleSaveMindMap={handleSaveMindMap}
+                rootNodeRef={rootNodeRef}
+                getNodeCanvasLoc={getNodeCanvasLoc}
+                scrollToCenter={scrollToCenter}
+                handleFullScreen={handleFullScreen}
               />
             </div>
-
-            <div className="btns-group bottom-10 left-5 fixed z-20 h-12">
-              <Shortcuts />
-            </div>
-            <div
-              className={`bottom-10 fixed z-20 transition-all duration-300 ${
-                isToolBoxOpen ? "right-[356px]" : "right-10"
-              }`}
-            >
-              <BtnsGroupRow scrollToCenter={scrollToCenter} />
-            </div>
-          </div>
-
-          {selectBox && (
-            <div
-              className="select-box"
-              style={{
-                left: selectBox.left,
-                top: selectBox.top,
-                width: selectBox.width,
-                height: selectBox.height,
-              }}
-            />
-          )}
-          <div
-            className={`canvas ${canvasBgStyle}`}
-            style={{ backgroundColor: canvasBgColor }}
-          >
-            <MindMap
-              selectBox={selectBox}
-              canvasRef={canvasRef}
-              setNodes={setNodes}
-              nodes={nodes}
-              nodeRefs={nodeRefs}
-              rootNode={rootNode}
-              setRootNode={setRootNode}
-              selectedNodes={selectedNodes}
-              setSelectedNodes={setSelectedNodes}
-              addNode={addNode}
-              delNode={delNode}
-              addChildNode={addChildNode}
-              findParentNode={findParentNode}
-              addSiblingNode={addSiblingNode}
-              addSiblingChildNode={addSiblingChildNode}
-              handleSaveMindMap={handleSaveMindMap}
-              rootNodeRef={rootNodeRef}
-              getNodeCanvasLoc={getNodeCanvasLoc}
-              scrollToCenter={scrollToCenter}
-            />
           </div>
         </div>
+
         <div
-          className={`absolute right-0 w-6/12 sm:w-2/12 transition-transform duration-300 ${
+          className={`bg-white absolute right-0 w-6/12 sm:w-2/12 transition-all duration-300 ease-in-out ${
             isToolBoxOpen ? "translate-x-0" : "translate-x-full "
           }`}
         >
-          <ToolBox
-            rootNode={rootNode}
-            setRootNode={setRootNode}
-            nodes={nodes}
-            setNodes={setNodes}
-            selectedNodes={selectedNodes}
-            currentColorStyle={currentColorStyle}
-            setCurrentColorStyle={setCurrentColorStyle}
-            colorStyles={colorStyles}
-            findNode={findNode}
-            colorIndex={colorIndex}
-            setColorIndex={setColorIndex}
-            nodesColor={nodesColor}
-            setNodesColor={setNodesColor}
-            newChildNode={newChildNode}
-            setSelectedNodes={setSelectedNodes}
-            setLoading={setLoading}
-            nodeRefs={nodeRefs}
-            themes={themes}
-            currentTheme={currentTheme}
-            setCurrentTheme={setCurrentTheme}
-            canvasBgColor={canvasBgColor}
-            setCanvasBgColor={setCanvasBgColor}
-            canvasBgStyle={canvasBgStyle}
-            setCanvasBgStyle={setCanvasBgStyle}
-            pathWidth={pathWidth}
-            setPathWidth={setPathWidth}
-            pathStyle={pathStyle}
-            setPathStyle={setPathStyle}
-            fontFamily={fontFamily}
-            setFontFamily={setFontFamily}
-          />
-          <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
-            <Button
-              className="btn aspect-square"
-              onClick={() => setIsToolBoxOpen(!isToolBoxOpen)}
-            >
-              <PiToolbox
-                size={24}
-                strokeWidth="3"
-                className={`${isToolBoxOpen ? "text-primary" : ""}`}
-              />
-            </Button>
+          <div
+            className={`${isFullScreen ? "h-screen" : "h-[calc(100vh-65px)]"}`}
+          >
+            <ToolBox
+              rootNode={rootNode}
+              setRootNode={setRootNode}
+              nodes={nodes}
+              setNodes={setNodes}
+              selectedNodes={selectedNodes}
+              currentColorStyle={currentColorStyle}
+              setCurrentColorStyle={setCurrentColorStyle}
+              colorStyles={colorStyles}
+              findNode={findNode}
+              colorIndex={colorIndex}
+              setColorIndex={setColorIndex}
+              nodesColor={nodesColor}
+              setNodesColor={setNodesColor}
+              newChildNode={newChildNode}
+              setSelectedNodes={setSelectedNodes}
+              setLoading={setLoading}
+              nodeRefs={nodeRefs}
+              themes={themes}
+              currentTheme={currentTheme}
+              setCurrentTheme={setCurrentTheme}
+              canvasBgColor={canvasBgColor}
+              setCanvasBgColor={setCanvasBgColor}
+              canvasBgStyle={canvasBgStyle}
+              setCanvasBgStyle={setCanvasBgStyle}
+              pathWidth={pathWidth}
+              setPathWidth={setPathWidth}
+              pathStyle={pathStyle}
+              setPathStyle={setPathStyle}
+              fontFamily={fontFamily}
+              setFontFamily={setFontFamily}
+            />
+            <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
+              <Button
+                className="btn aspect-square"
+                onClick={() => setIsToolBoxOpen(!isToolBoxOpen)}
+              >
+                <PiToolbox
+                  size={24}
+                  strokeWidth="3"
+                  className={`${isToolBoxOpen ? "text-primary" : ""}`}
+                />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -306,6 +306,8 @@ const TextTool = ({
         </div>
         <div className="flex flex-col items-end space-y-4 relative">
           <Combobox
+            as="div"
+            className="relative"
             value={fontSize}
             onChange={fontSizeChange}
             onClose={() => setSizeQuery("")}
@@ -327,10 +329,9 @@ const TextTool = ({
             </div>
 
             <ComboboxOptions
-              anchor="bottom"
               transition
               className={clsx(
-                " w-[var(--input-width)] rounded-md border shadow-lg bg-white py-1 [--anchor-gap:var(--spacing-1)] empty:invisible",
+                "absolute z-10  w-[var(--input-width)] rounded-md border shadow-lg bg-white py-1 [--anchor-gap:var(--spacing-1)] empty:invisible",
                 "transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
               )}
             >

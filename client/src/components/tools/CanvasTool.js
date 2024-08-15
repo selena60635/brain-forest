@@ -102,7 +102,7 @@ const CanvasTool = ({
       </div>
       <div className="flex justify-between">
         <p>畫布背景樣式</p>
-        <Menu>
+        <Menu as="div" className="relative inline-block">
           <MenuButton className="flex items-center justify-between gap-2 rounded-md border shadow py-2 px-3 w-36 h-12 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white ">
             {canvasBgStyleOpts.find((opt) => opt.value === canvasBgStyle)?.icon}
             <ChevronDownIcon className="size-4" />
@@ -110,8 +110,7 @@ const CanvasTool = ({
 
           <MenuItems
             transition
-            anchor="bottom end"
-            className="grid grid-cols-2 gap-2 origin-top-right rounded-md border shadow-lg bg-white p-4 w-36 text-sm transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+            className="absolute z-10 grid grid-cols-2 gap-2 origin-top-right rounded-md border shadow-lg bg-white p-4 w-36 text-sm transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
           >
             {canvasBgStyleOpts.map((opt) => (
               <MenuItem key={opt.value}>

@@ -114,6 +114,8 @@ const FontFamilyTool = ({
     <>
       {isGlobal && <p className="mb-2">整體字型</p>}
       <Combobox
+        as="div"
+        className="relative"
         value={fontFamily}
         onChange={fontFamilyChange}
         onClose={() => setQuery("")}
@@ -133,10 +135,9 @@ const FontFamilyTool = ({
         </div>
 
         <ComboboxOptions
-          anchor="bottom"
           transition
           className={clsx(
-            "w-[var(--input-width)] rounded-md border shadow-lg bg-white py-1 [--anchor-gap:var(--spacing-1)] empty:invisible",
+            "absolute z-10  w-[var(--input-width)] rounded-md border shadow-lg bg-white py-1 [--anchor-gap:var(--spacing-1)] empty:invisible",
             "transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
           )}
         >
