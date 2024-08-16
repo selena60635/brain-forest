@@ -567,6 +567,7 @@ const WorkArea = () => {
   //pan mode
   const handlePanMouseDown = (e) => {
     if (!isPanMode) return;
+    canvasRef.current.style.cursor = "grabbing";
     const startX = e.clientX;
     const startY = e.clientY;
     const startScrollLeft = canvasRef.current.scrollLeft;
@@ -582,6 +583,7 @@ const WorkArea = () => {
     const handlePanMouseUp = () => {
       window.removeEventListener("mousemove", handlePanMouseMove);
       window.removeEventListener("mouseup", handlePanMouseUp);
+      canvasRef.current.style.cursor = "grab";
     };
 
     window.addEventListener("mousemove", handlePanMouseMove);
@@ -907,7 +909,15 @@ const WorkArea = () => {
   };
 
   const togglePanMode = () => {
-    setIsPanMode((prev) => !prev);
+    setIsPanMode((prev) => {
+      const newPanMode = !prev;
+      if (newPanMode) {
+        canvasRef.current.style.cursor = "grab";
+      } else {
+        canvasRef.current.style.cursor = "auto";
+      }
+      return newPanMode;
+    });
   };
 
   return (
