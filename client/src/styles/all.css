@@ -80,8 +80,8 @@
 }
 
 .canvas {
-  width: 10000px;
-  height: 5000px;
+  width: 20000px;
+  height: 20000px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -90,8 +90,13 @@
   overflow: scroll;
   user-select: none;
   position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-
+.canvas-wrap::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
 .input-box {
   position: absolute;
   background: white;

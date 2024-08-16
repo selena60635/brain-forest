@@ -39,6 +39,7 @@ const WorkArea = () => {
   const [isSaved, setIsSaved] = useState(true); //紀錄檔案是否還未儲存
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isPanMode, setIsPanMode] = useState(false);
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
@@ -512,20 +513,23 @@ const WorkArea = () => {
   //繪製生成選取框
   const handleMouseDown = (e) => {
     if (e.button !== 0 || btnsRef.current.contains(e.target)) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    selectStart.current = {
-      x: e.clientX + canvasRef.current.scrollLeft - rect.left,
-      y: e.clientY + canvasRef.current.scrollTop - rect.top,
-    };
-    setSelectBox({
-      left: selectStart.current.x,
-      top: selectStart.current.y,
-      width: 0,
-      height: 0,
-    });
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    if (isPanMode) {
+      handlePanMouseDown(e);
+    } else {
+      const rect = canvasRef.current.getBoundingClientRect();
+      selectStart.current = {
+        x: e.clientX + canvasRef.current.scrollLeft - rect.left,
+        y: e.clientY + canvasRef.current.scrollTop - rect.top,
+      };
+      setSelectBox({
+        left: selectStart.current.x,
+        top: selectStart.current.y,
+        width: 0,
+        height: 0,
+      });
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
   };
 
   const handleMouseMove = (e) => {
@@ -559,6 +563,29 @@ const WorkArea = () => {
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
     setSelectBox(null);
+  };
+  //pan mode
+  const handlePanMouseDown = (e) => {
+    if (!isPanMode) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startScrollLeft = canvasRef.current.scrollLeft;
+    const startScrollTop = canvasRef.current.scrollTop;
+
+    const handlePanMouseMove = (moveEvent) => {
+      const xOffset = moveEvent.clientX - startX;
+      const yOffset = moveEvent.clientY - startY;
+      canvasRef.current.scrollLeft = startScrollLeft - xOffset;
+      canvasRef.current.scrollTop = startScrollTop - yOffset;
+    };
+
+    const handlePanMouseUp = () => {
+      window.removeEventListener("mousemove", handlePanMouseMove);
+      window.removeEventListener("mouseup", handlePanMouseUp);
+    };
+
+    window.addEventListener("mousemove", handlePanMouseMove);
+    window.addEventListener("mouseup", handlePanMouseUp);
   };
 
   const findParentNode = useCallback(
@@ -816,7 +843,7 @@ const WorkArea = () => {
     [canvasRef, rootRef, getNodeCanvasLoc]
   );
 
-  const handleFullScreen = () => {
+  const toggleFullScreen = () => {
     if (!isFullScreen) {
       if (pageRef.current.requestFullscreen) {
         //最新版瀏覽器幾乎都支援
@@ -845,16 +872,17 @@ const WorkArea = () => {
       setIsFullScreen(false);
     }
   };
+  //監聽全螢幕事件(F12、Esc)，使isFullScreen能夠正確設置
   useEffect(() => {
-    const handleFullScreenChange = () => {
+    const toggleFullScreenChange = () => {
       if (!document.fullscreenElement) {
         setIsFullScreen(false);
       }
     };
-    document.addEventListener("fullscreenchange", handleFullScreenChange);
+    document.addEventListener("fullscreenchange", toggleFullScreenChange);
 
     return () => {
-      document.removeEventListener("fullscreenchange", handleFullScreenChange);
+      document.removeEventListener("fullscreenchange", toggleFullScreenChange);
     };
   }, []);
   // 初始渲染設定
@@ -867,9 +895,9 @@ const WorkArea = () => {
   const handleZoom = (type) => {
     setZoomLevel((prev) => {
       if (type === "in") {
-        return Math.min(prev * 1.25, 3); // 放大，最大300% (3)
+        return Math.min(prev * 1.25, 3); //最大300%
       } else if (type === "out") {
-        return Math.max(prev * 0.8, 0.4); // 縮小，最小40% (0.4)
+        return Math.max(prev * 0.8, 0.4); //最小40%
       } else if (type === "reset") {
         return 1;
       } else {
@@ -877,6 +905,11 @@ const WorkArea = () => {
       }
     });
   };
+
+  const togglePanMode = () => {
+    setIsPanMode((prev) => !prev);
+  };
+
   return (
     <>
       {loading && <Loading />}
@@ -900,15 +933,15 @@ const WorkArea = () => {
             <div ref={btnsRef}>
               <div className="top-[90px] left-5 fixed z-20">
                 <BtnsGroupCol
-                  selectedNodes={selectedNodes}
                   rootNode={rootNode}
                   nodes={nodes}
+                  selectedNodes={selectedNodes}
                   addNode={addNode}
                   delNode={delNode}
-                  addChildNode={addChildNode}
                   findParentNode={findParentNode}
                   addSiblingNode={addSiblingNode}
                   addSiblingChildNode={addSiblingChildNode}
+                  addChildNode={addChildNode}
                   isSaved={isSaved}
                   handleSaveMindMap={handleSaveMindMap}
                 />
@@ -924,8 +957,10 @@ const WorkArea = () => {
               >
                 <BtnsGroupRow
                   scrollToCenter={scrollToCenter}
-                  handleFullScreen={handleFullScreen}
+                  toggleFullScreen={toggleFullScreen}
                   handleZoom={handleZoom}
+                  togglePanMode={togglePanMode}
+                  isPanMode={isPanMode}
                 />
               </div>
             </div>
@@ -950,29 +985,29 @@ const WorkArea = () => {
               }}
             >
               <MindMap
-                selectBox={selectBox}
-                canvasRef={canvasRef}
-                setNodes={setNodes}
                 nodes={nodes}
-                nodeRefs={nodeRefs}
+                setNodes={setNodes}
                 rootNode={rootNode}
                 setRootNode={setRootNode}
                 selectedNodes={selectedNodes}
                 setSelectedNodes={setSelectedNodes}
-                addNode={addNode}
+                selectBox={selectBox}
+                rootRef={rootRef}
+                canvasRef={canvasRef}
+                nodeRefs={nodeRefs}
                 delNode={delNode}
-                addChildNode={addChildNode}
                 findParentNode={findParentNode}
+                addNode={addNode}
                 addSiblingNode={addSiblingNode}
                 addSiblingChildNode={addSiblingChildNode}
+                addChildNode={addChildNode}
                 handleSaveMindMap={handleSaveMindMap}
-                rootRef={rootRef}
                 getNodeCanvasLoc={getNodeCanvasLoc}
                 scrollToCenter={scrollToCenter}
-                handleFullScreen={handleFullScreen}
+                toggleFullScreen={toggleFullScreen}
                 zoomLevel={zoomLevel}
-                setZoomLevel={setZoomLevel}
                 handleZoom={handleZoom}
+                togglePanMode={togglePanMode}
               />
             </div>
           </div>
@@ -984,7 +1019,9 @@ const WorkArea = () => {
           }`}
         >
           <div
-            className={`${isFullScreen ? "h-screen" : "h-[calc(100vh-65px)]"}`}
+            className={`${
+              isFullScreen ? "h-screen" : "h-[calc(100vh-65px)]"
+            } border-l shadow-lg`}
           >
             <ToolBox
               rootNode={rootNode}
@@ -996,11 +1033,9 @@ const WorkArea = () => {
               setCurrentColorStyle={setCurrentColorStyle}
               colorStyles={colorStyles}
               findNode={findNode}
-              colorIndex={colorIndex}
               setColorIndex={setColorIndex}
               nodesColor={nodesColor}
               setNodesColor={setNodesColor}
-              newChildNode={newChildNode}
               setSelectedNodes={setSelectedNodes}
               setLoading={setLoading}
               nodeRefs={nodeRefs}

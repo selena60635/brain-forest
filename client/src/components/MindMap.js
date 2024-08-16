@@ -10,28 +10,29 @@ import RootNode from "./RootNode";
 
 // 心智圖組件
 const MindMap = ({
-  selectBox,
-  canvasRef,
-  addNode,
-  setNodes,
   nodes,
+  setNodes,
   rootNode,
   setRootNode,
-  setSelectedNodes,
   selectedNodes,
+  setSelectedNodes,
+  selectBox,
+  rootRef,
+  canvasRef,
   nodeRefs,
   delNode,
   findParentNode,
+  addNode,
   addSiblingNode,
   addSiblingChildNode,
   addChildNode,
   handleSaveMindMap,
-  rootRef,
   getNodeCanvasLoc,
   scrollToCenter,
-  handleFullScreen,
+  toggleFullScreen,
   zoomLevel,
   handleZoom,
+  togglePanMode,
 }) => {
   const [isAnyEditing, setIsAnyEditing] = useState(false);
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
@@ -191,7 +192,7 @@ const MindMap = ({
       if (
         (["Enter", "Delete", "Tab"].includes(e.key) &&
           selectedNodes.length === 1) ||
-        ["F1", "F2"].includes(e.key)
+        ["F1", "F2", " "].includes(e.key)
       ) {
         e.preventDefault();
         e.stopPropagation();
@@ -227,12 +228,15 @@ const MindMap = ({
         e.stopPropagation();
         handleSaveMindMap();
       }
+      //ToCenter
       if (e.key === "F1") {
         scrollToCenter("smooth");
       }
+      //FullScreen
       if (e.key === "F2") {
-        handleFullScreen();
+        toggleFullScreen();
       }
+      //zoom in/zoom out/reset
       if (!isAnyEditing) {
         if (e.key === "=") {
           e.stopPropagation();
@@ -244,6 +248,10 @@ const MindMap = ({
           e.stopPropagation();
           handleZoom("reset");
         }
+      }
+      //pan mode
+      if (e.key === " ") {
+        togglePanMode();
       }
     },
     [
@@ -258,9 +266,10 @@ const MindMap = ({
       nodes,
       rootNode,
       scrollToCenter,
-      handleFullScreen,
+      toggleFullScreen,
       handleZoom,
       isAnyEditing,
+      togglePanMode,
     ]
   );
 
