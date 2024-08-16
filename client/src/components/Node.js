@@ -13,6 +13,9 @@ const ChildNode = ({
   setSelectedNodes,
   selectedNodes,
   parentRef,
+  zoomLevel,
+  isAnyEditing,
+  setIsAnyEditing,
 }) => {
   const [isEditing, setIsEditing] = useState(childNode.isNew);
   const inputRef = useRef(null);
@@ -41,6 +44,7 @@ const ChildNode = ({
   //開啟編輯模式
   const editMode = () => {
     setIsEditing(true);
+    setIsAnyEditing(true);
   };
   //關閉編輯模式
   const unEditMode = (e) => {
@@ -72,6 +76,7 @@ const ChildNode = ({
       setNodes((prevNodes) => updateNodeName(prevNodes));
     }
     setIsEditing(false);
+    setIsAnyEditing(false);
   };
   //取得子節點svg位置
   const getChildSvgLoc = (childRef, parentRef, svgRef) => {
@@ -79,18 +84,20 @@ const ChildNode = ({
       const childRect = childRef.current.getBoundingClientRect();
       const parentRect = parentRef.current.getBoundingClientRect();
       const svgRect = svgRef.current.getBoundingClientRect();
-      const offset = parseInt(childNode.outline.width, 10);
+      const parentOffset = parseInt(parentNode.outline.width, 10);
+      const childOffset = parseInt(childNode.outline.width, 10);
+
       return {
         x:
           parentRect.left -
           svgRect.left +
           parentRect.width +
-          (parentNode.outline.style !== "none" ? offset : 0),
+          (parentNode.outline.style !== "none" ? parentOffset : -2) * zoomLevel,
         y: parentRect.top - svgRect.top + parentRect.height / 2,
         childX:
           childRect.left -
           svgRect.left -
-          (childNode.outline.style !== "none" ? offset : 0),
+          (childNode.outline.style !== "none" ? childOffset : 0) * zoomLevel,
         childY: childRect.top - svgRect.top + childRect.height / 2,
       };
     }
@@ -131,10 +138,11 @@ const ChildNode = ({
               ref={inputRef}
               className="input-box"
               style={{
-                minWidth: childRef.current
-                  ? childRef.current.getBoundingClientRect().width
-                  : "58px",
-                maxWidth: "500px",
+                minWidth: `${
+                  (childRef.current?.getBoundingClientRect().width ?? 64) /
+                  zoomLevel
+                }px`,
+                maxWidth: `${500 / zoomLevel}px`,
                 textDecorationLine: `${
                   childNode.font.isStrikethrough ? "line-through" : "none"
                 }`,
@@ -182,18 +190,28 @@ const ChildNode = ({
                   nodeRefs.current[childNode.id][index] ||
                   (nodeRefs.current[childNode.id][index] = React.createRef())
                 } //子節點引用為上一層子節點的對應索引位置元素，若沒有這個引用則建立一個新的引用
+                zoomLevel={zoomLevel}
+                isAnyEditing={isAnyEditing}
+                setIsAnyEditing={setIsAnyEditing}
               />
             );
           })}
       </div>
 
-      <svg className="subLines" overflow="visible" ref={svgRef}>
+      <svg
+        className="subLines"
+        overflow="visible"
+        style={{
+          transform: `scale(${1 / zoomLevel})`,
+        }}
+        ref={svgRef}
+      >
         <path
           d={`M ${childLoc.x} ${childLoc.y} Q ${childLoc.x} ${childLoc.childY}, ${childLoc.childX} ${childLoc.childY}`}
           stroke={childNode.pathColor}
           fill="none"
-          strokeWidth={childNode.path.width}
-          strokeDasharray={childNode.path.style}
+          strokeWidth={childNode.path.width * zoomLevel}
+          strokeDasharray={childNode.path.style * zoomLevel}
         />
       </svg>
     </div>
@@ -210,6 +228,9 @@ const Node = ({
   selectedNodes,
   nodeRefs,
   setSelectedNodes,
+  zoomLevel,
+  isAnyEditing,
+  setIsAnyEditing,
 }) => {
   const [isEditing, setIsEditing] = useState(node.isNew);
   const inputRef = useRef(null);
@@ -232,6 +253,7 @@ const Node = ({
   //開啟編輯模式
   const editMode = () => {
     setIsEditing(true);
+    setIsAnyEditing(true);
   };
   //關閉編輯模式
   const unEditMode = (e) => {
@@ -245,8 +267,8 @@ const Node = ({
         });
       });
     }
-
     setIsEditing(false);
+    setIsAnyEditing(false);
   };
 
   return (
@@ -278,10 +300,11 @@ const Node = ({
               ref={inputRef}
               className="input-box"
               style={{
-                minWidth: nodeRef.current
-                  ? nodeRef.current.getBoundingClientRect().width
-                  : "64px",
-                maxWidth: "500px",
+                minWidth: `${
+                  (nodeRef.current?.getBoundingClientRect().width ?? 80) /
+                  zoomLevel
+                }px`,
+                maxWidth: `${500 / zoomLevel}px`,
                 textDecorationLine: `${
                   node.font.isStrikethrough ? "line-through" : "none"
                 }`,
@@ -328,6 +351,9 @@ const Node = ({
                 nodeRefs={nodeRefs}
                 setSelectedNodes={setSelectedNodes}
                 selectedNodes={selectedNodes}
+                zoomLevel={zoomLevel}
+                isAnyEditing={isAnyEditing}
+                setIsAnyEditing={setIsAnyEditing}
               />
             );
           })}

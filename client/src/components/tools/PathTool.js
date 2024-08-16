@@ -16,8 +16,6 @@ const PathTool = ({
   pathStyle,
   setPathStyle,
 }) => {
-  // const [pathWidth, setPathWidth] = useState("3");
-  // const [pathStyle, setPathStyle] = useState("solid");
   const pathWidthOpts = [
     {
       value: "1",

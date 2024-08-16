@@ -37,11 +37,13 @@ const WorkArea = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true); //是否開啟loading page
   const [isSaved, setIsSaved] = useState(true); //紀錄檔案是否還未儲存
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
   const pageRef = useRef(null);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+
   const [currentTheme, setCurrentTheme] = useState(0); // 當前主題索引
   const [currentColorStyle, setCurrentColorStyle] = useState(1); //目前顏色風格索引
   const [colorIndex, setColorIndex] = useState(0); //目前節點顏色索引
@@ -335,7 +337,7 @@ const WorkArea = () => {
     [pathWidth, pathStyle, fontFamily]
   );
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
-  const rootNodeRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
+  const rootRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
   const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
   const [isToolBoxOpen, setIsToolBoxOpen] = useState(false);
@@ -359,71 +361,6 @@ const WorkArea = () => {
     },
     [canvasRef]
   );
-  //滾動至畫布的中心點(根節點)
-  const scrollToCenter = useCallback(
-    (behavior) => {
-      if (canvasRef.current && rootNodeRef.current) {
-        const rootPosition = getNodeCanvasLoc(rootNodeRef);
-        const { clientWidth, clientHeight } = canvasRef.current;
-        const scrollToX =
-          rootPosition.left -
-          clientWidth / 2 +
-          (rootPosition.right - rootPosition.left) / 2;
-        const scrollToY =
-          rootPosition.top -
-          clientHeight / 2 +
-          (rootPosition.bottom - rootPosition.top) / 2;
-        canvasRef.current.scrollTo({
-          left: scrollToX,
-          top: scrollToY,
-          behavior: behavior,
-        });
-      }
-    },
-    [canvasRef, rootNodeRef, getNodeCanvasLoc]
-  );
-
-  const handleFullScreen = () => {
-    if (!isFullScreen) {
-      if (pageRef.current.requestFullscreen) {
-        //最新版瀏覽器幾乎都支援
-        pageRef.current.requestFullscreen();
-      } else if (pageRef.current.mozRequestFullScreen) {
-        //Firefox
-        pageRef.current.mozRequestFullScreen();
-      } else if (pageRef.current.webkitRequestFullscreen) {
-        //Safari、Chrome、Opera
-        pageRef.current.webkitRequestFullscreen();
-      } else if (pageRef.current.msRequestFullscreen) {
-        //Edge
-        pageRef.current.msRequestFullscreen();
-      }
-      setIsFullScreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-      }
-      setIsFullScreen(false);
-    }
-  };
-  useEffect(() => {
-    const handleFullScreenChange = () => {
-      if (!document.fullscreenElement) {
-        setIsFullScreen(false);
-      }
-    };
-    document.addEventListener("fullscreenchange", handleFullScreenChange);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullScreenChange);
-    };
-  }, []);
 
   //儲存心智圖組件並重導向
   const saveMindMap = async (id = null) => {
@@ -855,13 +792,91 @@ const WorkArea = () => {
     setIsSaved(false);
   }, [nodesString, rootNodeString, canvasBgStyle, canvasBgColor]);
 
+  //滾動至畫布的中心點(根節點)
+  const scrollToCenter = useCallback(
+    (behavior) => {
+      if (canvasRef.current && rootRef.current) {
+        const rootPosition = getNodeCanvasLoc(rootRef);
+        const { clientWidth, clientHeight } = canvasRef.current;
+        const scrollToX =
+          rootPosition.left -
+          clientWidth / 2 +
+          (rootPosition.right - rootPosition.left) / 2;
+        const scrollToY =
+          rootPosition.top -
+          clientHeight / 2 +
+          (rootPosition.bottom - rootPosition.top) / 2;
+        canvasRef.current.scrollTo({
+          left: scrollToX,
+          top: scrollToY,
+          behavior: behavior,
+        });
+      }
+    },
+    [canvasRef, rootRef, getNodeCanvasLoc]
+  );
+
+  const handleFullScreen = () => {
+    if (!isFullScreen) {
+      if (pageRef.current.requestFullscreen) {
+        //最新版瀏覽器幾乎都支援
+        pageRef.current.requestFullscreen();
+      } else if (pageRef.current.mozRequestFullScreen) {
+        //Firefox
+        pageRef.current.mozRequestFullScreen();
+      } else if (pageRef.current.webkitRequestFullscreen) {
+        //Safari、Chrome、Opera
+        pageRef.current.webkitRequestFullscreen();
+      } else if (pageRef.current.msRequestFullscreen) {
+        //Edge
+        pageRef.current.msRequestFullscreen();
+      }
+      setIsFullScreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      setIsFullScreen(false);
+    }
+  };
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullScreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullScreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullScreenChange);
+    };
+  }, []);
   // 初始渲染設定
   useLayoutEffect(() => {
-    if (rootNodeRef.current) {
+    if (rootRef.current) {
       scrollToCenter("auto");
     }
-  }, [scrollToCenter, loading, rootNodeRef]);
+  }, [scrollToCenter, loading, rootRef]);
 
+  const handleZoom = (type) => {
+    setZoomLevel((prev) => {
+      if (type === "in") {
+        return Math.min(prev * 1.25, 3); // 放大，最大300% (3)
+      } else if (type === "out") {
+        return Math.max(prev * 0.8, 0.4); // 縮小，最小40% (0.4)
+      } else if (type === "reset") {
+        return 1;
+      } else {
+        return prev;
+      }
+    });
+  };
   return (
     <>
       {loading && <Loading />}
@@ -910,6 +925,7 @@ const WorkArea = () => {
                 <BtnsGroupRow
                   scrollToCenter={scrollToCenter}
                   handleFullScreen={handleFullScreen}
+                  handleZoom={handleZoom}
                 />
               </div>
             </div>
@@ -927,7 +943,11 @@ const WorkArea = () => {
             )}
             <div
               className={`canvas ${canvasBgStyle}`}
-              style={{ backgroundColor: canvasBgColor }}
+              style={{
+                "--zoomLevel": zoomLevel,
+                backgroundColor: canvasBgColor,
+                transform: `scale(${zoomLevel})`,
+              }}
             >
               <MindMap
                 selectBox={selectBox}
@@ -946,10 +966,13 @@ const WorkArea = () => {
                 addSiblingNode={addSiblingNode}
                 addSiblingChildNode={addSiblingChildNode}
                 handleSaveMindMap={handleSaveMindMap}
-                rootNodeRef={rootNodeRef}
+                rootRef={rootRef}
                 getNodeCanvasLoc={getNodeCanvasLoc}
                 scrollToCenter={scrollToCenter}
                 handleFullScreen={handleFullScreen}
+                zoomLevel={zoomLevel}
+                setZoomLevel={setZoomLevel}
+                handleZoom={handleZoom}
               />
             </div>
           </div>

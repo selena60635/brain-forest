@@ -26,27 +26,28 @@ const MindMap = ({
   addSiblingChildNode,
   addChildNode,
   handleSaveMindMap,
-  rootNodeRef,
+  rootRef,
   getNodeCanvasLoc,
   scrollToCenter,
   handleFullScreen,
+  zoomLevel,
+  handleZoom,
 }) => {
-  const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
+  const [isAnyEditing, setIsAnyEditing] = useState(false);
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
 
   //取得根結點svg位置
   const getRootSvgLoc = (outlineWidth) => {
-    if (rootNodeRef.current && svgRef.current) {
-      const rootRect = rootNodeRef.current.getBoundingClientRect(); // 獲取根節點的矩形物件
+    if (rootRef.current && svgRef.current) {
+      const rootRect = rootRef.current.getBoundingClientRect(); // 獲取根節點的矩形物件
       const svgRect = svgRef.current.getBoundingClientRect(); // 獲取 SVG 的矩形物件
       const offset = parseInt(outlineWidth, 10);
-
       return {
         x:
           rootRect.left -
           svgRect.left +
           rootRect.width +
-          (rootNode.outline.style !== "none" ? offset : -2), // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
+          (rootNode.outline.style !== "none" ? offset : -2) * zoomLevel, // 計算path根節點接點的X坐標(相對於g，也就是將g當作視口去計算)
         y: rootRect.top - svgRect.top + rootRect.height / 2, // 計算根節點的中心點相對於g的Y坐標
       };
     }
@@ -65,13 +66,13 @@ const MindMap = ({
           x:
             nodeRect.left -
             svgRect.left -
-            (node.outline.style !== "none" ? offset : 0),
+            (node.outline.style !== "none" ? offset : 0) * zoomLevel,
           y: nodeRect.top - svgRect.top + nodeRect.height / 2,
         };
       }
       return { x: 0, y: 0 };
     },
-    [svgRef]
+    [svgRef, zoomLevel]
   );
 
   //更新節點與根節點的連接線
@@ -85,7 +86,14 @@ const MindMap = ({
 
   useLayoutEffect(() => {
     updateLocs();
-  }, [nodesString, rootNodeString, setNodes, setRootNode, updateLocs]);
+  }, [
+    nodesString,
+    rootNodeString,
+    setNodes,
+    setRootNode,
+    updateLocs,
+    zoomLevel,
+  ]);
 
   //判定是否被選取
   const isNodeSelected = useCallback(
@@ -119,7 +127,7 @@ const MindMap = ({
   useLayoutEffect(() => {
     if (selectBox) {
       const selected = []; //存放被選中的節點ID
-      const rootRect = getNodeCanvasLoc(rootNodeRef); //取得根節點在canvas上的位置
+      const rootRect = getNodeCanvasLoc(rootRef); //取得根節點在canvas上的位置
       //如果根節點被選中，將根節點ID加入到selected中
       if (isNodeSelected(rootRect)) {
         selected.push(rootNode.id);
@@ -175,7 +183,7 @@ const MindMap = ({
     nodeRefs,
     setSelectedNodes,
     getNodeCanvasLoc,
-    rootNodeRef,
+    rootRef,
   ]);
 
   const handleKeyDown = useCallback(
@@ -225,6 +233,18 @@ const MindMap = ({
       if (e.key === "F2") {
         handleFullScreen();
       }
+      if (!isAnyEditing) {
+        if (e.key === "=") {
+          e.stopPropagation();
+          handleZoom("in");
+        } else if (e.key === "-") {
+          e.stopPropagation();
+          handleZoom("out");
+        } else if (e.key === "0") {
+          e.stopPropagation();
+          handleZoom("reset");
+        }
+      }
     },
     [
       selectedNodes,
@@ -239,6 +259,8 @@ const MindMap = ({
       rootNode,
       scrollToCenter,
       handleFullScreen,
+      handleZoom,
+      isAnyEditing,
     ]
   );
 
@@ -252,14 +274,12 @@ const MindMap = ({
   return (
     <div className="mindmap">
       <RootNode
-        isEditRoot={isEditRoot}
-        setIsEditRoot={setIsEditRoot}
-        rootRef={rootNodeRef}
         rootNode={rootNode}
         setRootNode={setRootNode}
-        rootNodeRef={rootNodeRef}
+        rootRef={rootRef}
         isSelected={selectedNodes.includes(rootNode.id)}
-        setSelectedNodes={setSelectedNodes}
+        zoomLevel={zoomLevel}
+        setIsAnyEditing={setIsAnyEditing}
       />
 
       <div className="nodes flex flex-col items-start">
@@ -267,14 +287,17 @@ const MindMap = ({
           <Node
             key={node.id}
             rootNode={rootNode}
-            nodeRef={nodeRefs.current[index]}
             node={nodes[index]}
             setNodes={setNodes}
+            nodeRef={nodeRefs.current[index]}
+            nodeRefs={nodeRefs}
             delNode={delNode}
             isSelected={selectedNodes.includes(node.id)}
             selectedNodes={selectedNodes}
             setSelectedNodes={setSelectedNodes}
-            nodeRefs={nodeRefs}
+            zoomLevel={zoomLevel}
+            isAnyEditing={isAnyEditing}
+            setIsAnyEditing={setIsAnyEditing}
           />
         ))}
       </div>
@@ -282,6 +305,9 @@ const MindMap = ({
         className="lines"
         overflow="visible"
         xmlns="http://www.w3.org/2000/svg"
+        style={{
+          transform: `scale(${1 / zoomLevel})`,
+        }}
         ref={svgRef}
       >
         {nodes.map((node, index) => {
@@ -292,8 +318,8 @@ const MindMap = ({
                 d={`M${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
                 stroke={node.pathColor}
                 fill="none"
-                strokeWidth={node.path.width}
-                strokeDasharray={node.path.style}
+                strokeWidth={node.path.width * zoomLevel}
+                strokeDasharray={node.path.style * zoomLevel}
               />
               {/* <circle cx={nodeLoc.x} cy={nodeLoc.y} r="5" fill="blue" /> */}
             </React.Fragment>
