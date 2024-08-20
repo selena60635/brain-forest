@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { selectText } from "../components/RootNode";
+import Summary from "./Summary";
 
 // 子節點組件
 const ChildNode = ({
   rootNode,
   childNode,
+  nodes,
   setNodes,
   parentNode,
   childRef,
@@ -16,6 +18,8 @@ const ChildNode = ({
   zoomLevel,
   isAnyEditing,
   setIsAnyEditing,
+  sumRefs,
+  isSelectedSum,
 }) => {
   const [isEditing, setIsEditing] = useState(childNode.isNew);
   const inputRef = useRef(null);
@@ -25,8 +29,8 @@ const ChildNode = ({
   useEffect(() => {
     if (isEditing && inputRef.current) {
       selectText(inputRef.current);
-      setNodes((prevNodes) => {
-        return prevNodes.map((node) => {
+      setNodes((prev) => {
+        return prev.map((node) => {
           if (node.id === parentNode.id) {
             return {
               ...node,
@@ -108,7 +112,18 @@ const ChildNode = ({
   const childLoc = getChildSvgLoc(childRef, parentRef, svgRef);
 
   return (
-    <div className="flex items-center">
+    <div
+      className={`flex items-center ml-24 ${
+        isSelectedSum ? "selected-sum" : ""
+      }`}
+      style={{
+        "--outline-width": `${
+          childNode.outline.style !== "none"
+            ? parseInt(childNode.outline.width, 10)
+            : 0
+        }px`,
+      }}
+    >
       <div
         className={`child-node ${isSelected ? "selected" : ""}`}
         style={{
@@ -179,6 +194,7 @@ const ChildNode = ({
                 key={subchildNode.id}
                 rootNode={rootNode}
                 childNode={subchildNode}
+                nodes={nodes}
                 setNodes={setNodes}
                 parentNode={childNode} //父節點id為上一層子節點id
                 isSelected={selectedNodes.includes(subchildNode.id)}
@@ -193,11 +209,23 @@ const ChildNode = ({
                 zoomLevel={zoomLevel}
                 isAnyEditing={isAnyEditing}
                 setIsAnyEditing={setIsAnyEditing}
+                sumRefs={sumRefs}
+                isSelectedSum={selectedNodes.includes(subchildNode.summary?.id)}
               />
             );
           })}
       </div>
-
+      {childNode.summary && (
+        <Summary
+          summary={childNode.summary}
+          nodes={nodes}
+          setNodes={setNodes}
+          zoomLevel={zoomLevel}
+          setIsAnyEditing={setIsAnyEditing}
+          sumRefs={sumRefs}
+          isSelectedSum={isSelectedSum}
+        />
+      )}
       <svg
         className="subLines"
         overflow="visible"
@@ -231,6 +259,9 @@ const Node = ({
   zoomLevel,
   isAnyEditing,
   setIsAnyEditing,
+  sumRefs,
+  isSelectedSum,
+  nodes,
 }) => {
   const [isEditing, setIsEditing] = useState(node.isNew);
   const inputRef = useRef(null);
@@ -272,7 +303,16 @@ const Node = ({
   };
 
   return (
-    <div className="nodes-wrap flex items-center">
+    <div
+      className={`flex items-center ml-40 ${
+        isSelectedSum ? "selected-sum" : ""
+      }`}
+      style={{
+        "--outline-width": `${
+          node.outline.style !== "none" ? parseInt(node.outline.width, 10) : 0
+        }px`,
+      }}
+    >
       <div
         className={`node ${isSelected ? "selected" : ""}`}
         style={{
@@ -330,7 +370,7 @@ const Node = ({
       </div>
 
       {node.children && node.children.length > 0 && (
-        <div className="children flex flex-col items-start">
+        <div className="children flex flex-col items-start ">
           {node.children.map((childNode, childIndex) => {
             if (!nodeRefs.current[node.id][childIndex]) {
               //若nodeRefs中沒有當前子節點的引用，建立一個新的引用
@@ -343,6 +383,7 @@ const Node = ({
                 key={childNode.id}
                 rootNode={rootNode}
                 childNode={childNode}
+                nodes={nodes}
                 setNodes={setNodes}
                 parentNode={node}
                 childRef={childRef}
@@ -354,10 +395,24 @@ const Node = ({
                 zoomLevel={zoomLevel}
                 isAnyEditing={isAnyEditing}
                 setIsAnyEditing={setIsAnyEditing}
+                sumRefs={sumRefs}
+                isSelectedSum={selectedNodes.includes(childNode.summary?.id)}
               />
             );
           })}
         </div>
+      )}
+
+      {node.summary && (
+        <Summary
+          summary={node.summary}
+          nodes={nodes}
+          setNodes={setNodes}
+          zoomLevel={zoomLevel}
+          setIsAnyEditing={setIsAnyEditing}
+          sumRefs={sumRefs}
+          isSelectedSum={isSelectedSum}
+        />
       )}
     </div>
   );

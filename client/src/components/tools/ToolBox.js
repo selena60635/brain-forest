@@ -22,13 +22,23 @@ import ShapeTool from "./ShapeTool";
 
 export const updateNodes = (nodes, updateFn) => {
   return nodes.map((node) => {
-    return {
+    const updatedNode = {
       ...node,
       ...updateFn(node),
       children: node.children ? updateNodes(node.children, updateFn) : [],
     };
+
+    if (node.summary) {
+      updatedNode.summary = {
+        ...node.summary,
+        ...updateFn(node.summary),
+      };
+    }
+
+    return updatedNode;
   });
 };
+
 export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
   return nodes.map((node) => {
     if (selectedNodes.includes(node.id)) {
@@ -40,6 +50,20 @@ export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
           : [],
       };
     }
+
+    if (node.summary && selectedNodes.includes(node.summary.id)) {
+      return {
+        ...node,
+        summary: {
+          ...node.summary,
+          ...updateFn(node.summary),
+        },
+        children: node.children
+          ? updateSelectedNodes(node.children, selectedNodes, updateFn)
+          : [],
+      };
+    }
+
     if (node.children && node.children.length > 0) {
       return {
         ...node,
@@ -49,6 +73,7 @@ export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
     return node;
   });
 };
+
 export const updateNodesColor = (
   nodes,
   colorStyle,

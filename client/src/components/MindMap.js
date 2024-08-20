@@ -33,6 +33,8 @@ const MindMap = ({
   zoomLevel,
   handleZoom,
   togglePanMode,
+  sumRefs,
+  addSummary,
 }) => {
   const [isAnyEditing, setIsAnyEditing] = useState(false);
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
@@ -82,19 +84,12 @@ const MindMap = ({
     setRootNode((prev) => ({ ...prev }));
   }, [setNodes, setRootNode]);
 
-  const nodesString = JSON.stringify(nodes);
-  const rootNodeString = JSON.stringify(rootNode);
+  const nodesStr = JSON.stringify(nodes);
+  const rootNodeStr = JSON.stringify(rootNode);
 
   useLayoutEffect(() => {
     updateLocs();
-  }, [
-    nodesString,
-    rootNodeString,
-    setNodes,
-    setRootNode,
-    updateLocs,
-    zoomLevel,
-  ]);
+  }, [nodesStr, rootNodeStr, setNodes, setRootNode, updateLocs, zoomLevel]);
 
   //判定是否被選取
   const isNodeSelected = useCallback(
@@ -150,10 +145,10 @@ const MindMap = ({
             }
             if (node.children) {
               //若當前節點不在選擇範圍內，檢查是否有children，如果有則繼續檢查
-              if (!nodeRefs.current[node.id]) {
-                //若引用中沒有包含當前節點，代表...，在引用中新增當前節點的..
-                nodeRefs.current[node.id] = [];
-              }
+              // if (!nodeRefs.current[node.id]) {
+              //   //若引用中沒有包含當前節點，代表...，在引用中新增當前節點的..
+              //   nodeRefs.current[node.id] = [];
+              // }
               //將當前節點的children、children中子節點的引用、子節點的父節點引用傳入，遞迴一層層遍歷子節點
               traverseNodes(node.children, nodeRefs, {
                 current: nodeRefs.current[node.id],
@@ -164,6 +159,16 @@ const MindMap = ({
       };
 
       traverseNodes(nodes, nodeRefs); //開始遞迴遍歷所有節點
+
+      //判斷所有的總結節點是否在選取框範圍內
+      for (let id in sumRefs.current) {
+        if (sumRefs.current[id]?.current) {
+          const sumRect = getNodeCanvasLoc(sumRefs.current[id]); // 取得總結節點的位置
+          if (isNodeSelected(sumRect)) {
+            selected.push(id); // 若被選中，將 summary.id 加入到 selected 中
+          }
+        }
+      }
 
       setSelectedNodes((prev) => {
         const newSelectedNodes = prev.filter((id) => selected.includes(id));
@@ -185,6 +190,7 @@ const MindMap = ({
     setSelectedNodes,
     getNodeCanvasLoc,
     rootRef,
+    sumRefs,
   ]);
 
   const handleKeyDown = useCallback(
@@ -253,6 +259,14 @@ const MindMap = ({
       if (e.key === " ") {
         togglePanMode();
       }
+      //add summary
+      if (e.altKey && e.key === "s") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (selectedNodes.length > 0 && !selectedNodes.includes(rootNode.id)) {
+          addSummary();
+        }
+      }
     },
     [
       selectedNodes,
@@ -270,6 +284,7 @@ const MindMap = ({
       handleZoom,
       isAnyEditing,
       togglePanMode,
+      addSummary,
     ]
   );
 
@@ -291,7 +306,7 @@ const MindMap = ({
         setIsAnyEditing={setIsAnyEditing}
       />
 
-      <div className="nodes flex flex-col items-start">
+      <div className="flex flex-col items-start">
         {nodes.map((node, index) => (
           <Node
             key={node.id}
@@ -307,9 +322,13 @@ const MindMap = ({
             zoomLevel={zoomLevel}
             isAnyEditing={isAnyEditing}
             setIsAnyEditing={setIsAnyEditing}
+            nodes={nodes}
+            sumRefs={sumRefs}
+            isSelectedSum={selectedNodes.includes(node.summary?.id)}
           />
         ))}
       </div>
+
       <svg
         className="lines"
         overflow="visible"

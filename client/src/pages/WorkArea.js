@@ -28,6 +28,7 @@ import { Context } from "../context/AuthContext";
 import Loading from "./Loading";
 import SweetAlert from "../components/SweetAlert";
 import { PiToolbox } from "react-icons/pi";
+import { updateSelectedNodes } from "../components/tools/ToolBox";
 
 export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -298,7 +299,7 @@ const WorkArea = () => {
   const newNode = useMemo(
     () => ({
       id: uuidv4(),
-      name: "節點",
+      name: "title",
       isNew: true, //標記為新創建的節點
       children: [],
       bkColor: color,
@@ -340,6 +341,7 @@ const WorkArea = () => {
   const [selectedNodes, setSelectedNodes] = useState([]); //定義選中節點們的狀態，初始為空陣列，用來存儲所有被選中的節點id
   const rootRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的根節點Dom元素
   const nodeRefs = useRef([]); //宣告一個引用，初始為空陣列，用來存儲每個引用的節點Dom元素
+  const sumRefs = useRef([]);
   const btnsRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的按鈕群組
   const [isToolBoxOpen, setIsToolBoxOpen] = useState(false);
 
@@ -617,6 +619,8 @@ const WorkArea = () => {
       const node = stack.pop();
       if (node.id === id) {
         return node;
+      } else if (node.summary && node.summary.id === id) {
+        return node.summary;
       }
       if (node.children && node.children.length > 0) {
         stack.push(...node.children);
@@ -675,6 +679,7 @@ const WorkArea = () => {
       const newChildInstance = {
         ...newChildNode,
         id: uuidv4(),
+        parent: parentId,
         bkColor: childColor,
         pathColor: childColor,
         outline: { ...newChildNode.outline, color: childColor },
@@ -729,6 +734,7 @@ const WorkArea = () => {
       const newChildInstance = {
         ...newChildNode,
         id: uuidv4(),
+        parent: parentNode.id,
         bkColor: childColor,
         pathColor: childColor,
         outline: { ...newChildNode.outline, color: childColor },
@@ -782,15 +788,32 @@ const WorkArea = () => {
     (idArr) => {
       const deleteNodes = (nodes, idsToDelete) => {
         return nodes.filter((node) => {
-          if (idsToDelete.includes(node.id)) {
+          // 檢查節點是否在刪除ID列表中
+          const isNodeToDelete = idsToDelete.includes(node.id);
+
+          // 如果節點有總結節點，檢查是否需要刪除總結節點
+          if (
+            node.summary &&
+            (isNodeToDelete || idsToDelete.includes(node.summary.id))
+          ) {
+            delete sumRefs.current[node.summary.id];
+            delete node.summary; // 刪除節點上的 summary 屬性
+          }
+
+          // 如果節點本身需要刪除，返回 false 過濾掉它
+          if (isNodeToDelete) {
             return false;
           }
+
+          // 遞迴檢查並更新子節點
           if (node.children) {
             node.children = deleteNodes(node.children, idsToDelete);
           }
+
           return true;
         });
       };
+
       setNodes((prev) => {
         const newNodes = deleteNodes(prev, idArr);
         nodeRefs.current = nodeRefs.current.filter(
@@ -801,8 +824,41 @@ const WorkArea = () => {
 
       setSelectedNodes([]);
     },
-    [nodeRefs, setNodes, setSelectedNodes]
+    [nodeRefs, setNodes, setSelectedNodes, sumRefs]
   );
+
+  const addSummary = useCallback(() => {
+    setNodes((prev) =>
+      updateSelectedNodes(prev, selectedNodes, (node) => {
+        if (!node.summary) {
+          const sumId = uuidv4();
+          sumRefs.current[sumId] = React.createRef();
+          setSelectedNodes([sumId]);
+
+          return {
+            summary: {
+              id: sumId,
+              isNew: true,
+              name: "summary",
+              pathColor: "#000",
+              outline: { color: "#000", width: "3px", style: "none" },
+              font: {
+                family: fontFamily,
+                size: "16px",
+                weight: "400",
+                color: "#000",
+              },
+              path: {
+                width: "2",
+                style: "0",
+              },
+            },
+          };
+        }
+        return {};
+      })
+    );
+  }, [selectedNodes, fontFamily]);
 
   //若id改變，重新載入相應的心智圖檔案
   useEffect(() => {
@@ -893,7 +949,7 @@ const WorkArea = () => {
       scrollToCenter("auto");
     }
   }, [scrollToCenter, loading, rootRef]);
-
+  //設定zoom in/out/reset
   const handleZoom = (type) => {
     setZoomLevel((prev) => {
       if (type === "in") {
@@ -907,7 +963,7 @@ const WorkArea = () => {
       }
     });
   };
-
+  //設定PanMode開/關，及滑鼠樣式
   const togglePanMode = () => {
     setIsPanMode((prev) => {
       const newPanMode = !prev;
@@ -954,6 +1010,7 @@ const WorkArea = () => {
                   addChildNode={addChildNode}
                   isSaved={isSaved}
                   handleSaveMindMap={handleSaveMindMap}
+                  addSummary={addSummary}
                 />
               </div>
 
@@ -1005,6 +1062,7 @@ const WorkArea = () => {
                 rootRef={rootRef}
                 canvasRef={canvasRef}
                 nodeRefs={nodeRefs}
+                sumRefs={sumRefs}
                 delNode={delNode}
                 findParentNode={findParentNode}
                 addNode={addNode}
@@ -1018,6 +1076,7 @@ const WorkArea = () => {
                 zoomLevel={zoomLevel}
                 handleZoom={handleZoom}
                 togglePanMode={togglePanMode}
+                addSummary={addSummary}
               />
             </div>
           </div>

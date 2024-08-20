@@ -21,13 +21,19 @@
     @apply relative z-0 flex items-center justify-center;
   }
   .rootnode {
-    @apply flex items-center justify-center py-2 px-4 min-w-28 min-h-14 rounded-2xl outline-offset-2;
+    @apply flex items-center justify-center py-2 px-4 rounded-2xl outline-offset-2;
+    /* min-w-28 min-h-14 */
   }
   .node {
-    @apply flex items-center justify-center py-2 px-4 my-4 ml-40 min-w-20 min-h-12 rounded-2xl outline-offset-2;
+    @apply flex items-center justify-center py-2 px-4 my-4  rounded-2xl outline-offset-2;
+    /* min-w-20 min-h-12 */
   }
   .child-node {
-    @apply flex items-center justify-center p-2 my-4 ml-24 min-w-16 min-h-10 rounded-2xl outline-offset-2;
+    @apply flex items-center justify-center p-2 my-4 rounded-2xl outline-offset-2;
+    /* min-w-16 min-h-10 */
+  }
+  .sum-node {
+    @apply flex items-center justify-center rounded px-2 py-1 ml-4 z-10;
   }
   .btn {
     @apply flex items-center justify-center rounded-md text-gray-700 hover:bg-gray-100;
@@ -35,6 +41,7 @@
   .btns-group {
     @apply flex bg-white/50 shadow-lg backdrop-blur-lg p-1 rounded-lg border;
   }
+
   .bg-dot {
     background-image: radial-gradient(#bbbbbb 5%, transparent 0);
     background-size: 35px 35px;
@@ -109,11 +116,11 @@
 }
 
 .lines,
-.subLines {
+.subLines,
+.summary {
   position: absolute;
   z-index: -1;
-  width: 100%;
-  height: 100%;
+  pointer-events: none;
 }
 .select-box {
   position: absolute;
@@ -137,7 +144,20 @@
   border-radius: 10px;
   border: 2px solid #0099ff;
 }
+.selected-sum {
+  position: relative;
+}
 
+.selected-sum::after {
+  content: "";
+  position: absolute;
+  top: calc(0px);
+  right: calc(-5px);
+  bottom: calc(0px);
+  left: calc(-5px - var(--outline-width));
+  border-radius: 10px;
+  border: 1px dashed #0099ff;
+}
 .fill-icon {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20;
 }
