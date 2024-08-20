@@ -121,7 +121,7 @@ const Folder = () => {
       const newMindMapData = {
         rootNode: {
           id: uuidv4(),
-          name: "根節點",
+          name: "Central Topic",
           bkColor: "#000229",
           pathColor: "#000229",
           outline: { color: "#000229", width: "3px", style: "none" },

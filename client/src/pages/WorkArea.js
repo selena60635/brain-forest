@@ -279,7 +279,7 @@ const WorkArea = () => {
   //定義根節點狀態
   const [rootNode, setRootNode] = useState({
     id: uuidv4(),
-    name: "根節點",
+    name: "Central Topic",
     bkColor: rootColor,
     pathColor: rootColor,
     outline: { color: rootColor, width: "3px", style: "none" },
@@ -299,7 +299,7 @@ const WorkArea = () => {
   const newNode = useMemo(
     () => ({
       id: uuidv4(),
-      name: "title",
+      name: "Main Topic",
       isNew: true, //標記為新創建的節點
       children: [],
       bkColor: color,
@@ -322,7 +322,7 @@ const WorkArea = () => {
   const newChildNode = useMemo(
     () => ({
       id: uuidv4(),
-      name: "子節點",
+      name: "Subtopic",
       isNew: true,
       children: [],
       outline: { width: "3px", style: "none" },
@@ -446,7 +446,7 @@ const WorkArea = () => {
   const resetMindMap = useCallback(async () => {
     setRootNode({
       id: uuidv4(),
-      name: "根節點",
+      name: "Central Topic",
       bkColor: "#000229",
       pathColor: "#000229",
       outline: { color: "#000229", width: "3px", style: "none" },

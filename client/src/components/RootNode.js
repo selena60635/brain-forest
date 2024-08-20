@@ -76,7 +76,7 @@ const RootNode = ({
             className="input-box"
             style={{
               minWidth: `${
-                (rootRef.current?.getBoundingClientRect().width ?? 112) /
+                (rootRef.current?.getBoundingClientRect().width ?? 128) /
                 zoomLevel
               }px`,
               maxWidth: `${500 / zoomLevel}px`,

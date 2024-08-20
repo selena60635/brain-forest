@@ -154,7 +154,7 @@ const ChildNode = ({
               className="input-box"
               style={{
                 minWidth: `${
-                  (childRef.current?.getBoundingClientRect().width ?? 64) /
+                  (childRef.current?.getBoundingClientRect().width ?? 82) /
                   zoomLevel
                 }px`,
                 maxWidth: `${500 / zoomLevel}px`,
@@ -341,7 +341,7 @@ const Node = ({
               className="input-box"
               style={{
                 minWidth: `${
-                  (nodeRef.current?.getBoundingClientRect().width ?? 80) /
+                  (nodeRef.current?.getBoundingClientRect().width ?? 132) /
                   zoomLevel
                 }px`,
                 maxWidth: `${500 / zoomLevel}px`,
