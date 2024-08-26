@@ -21,15 +21,15 @@
     @apply relative z-0 flex items-center justify-center;
   }
   .rootnode {
-    @apply flex items-center justify-center py-2 px-4 rounded-2xl outline-offset-2;
+    @apply flex items-center justify-center py-2 px-4 shadow rounded-2xl outline-offset-2;
     /* min-w-28 min-h-14 */
   }
   .node {
-    @apply flex items-center justify-center py-2 px-4 my-4  rounded-2xl outline-offset-2;
+    @apply flex items-center justify-center py-2 px-4 my-4 shadow rounded-2xl outline-offset-2;
     /* min-w-20 min-h-12 */
   }
   .child-node {
-    @apply flex items-center justify-center p-2 my-4 rounded-2xl outline-offset-2;
+    @apply flex items-center justify-center p-2 my-4 rounded-2xl shadow outline-offset-2;
     /* min-w-16 min-h-10 */
   }
   .sum-node {
@@ -122,6 +122,7 @@
   z-index: -1;
   pointer-events: none;
 }
+
 .select-box {
   position: absolute;
   border: 2px dashed #5bbdff;

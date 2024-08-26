@@ -41,36 +41,34 @@ export const updateNodes = (nodes, updateFn) => {
 
 export const updateSelectedNodes = (nodes, selectedNodes, updateFn) => {
   return nodes.map((node) => {
+    let updatedNode = { ...node };
+
     if (selectedNodes.includes(node.id)) {
-      return {
-        ...node,
-        ...updateFn(node),
-        children: node.children
-          ? updateSelectedNodes(node.children, selectedNodes, updateFn)
-          : [],
+      updatedNode = {
+        ...updatedNode,
+        ...updateFn(updatedNode),
       };
     }
 
     if (node.summary && selectedNodes.includes(node.summary.id)) {
-      return {
-        ...node,
+      updatedNode = {
+        ...updatedNode,
         summary: {
-          ...node.summary,
-          ...updateFn(node.summary),
+          ...updatedNode.summary,
+          ...updateFn(updatedNode.summary),
         },
-        children: node.children
-          ? updateSelectedNodes(node.children, selectedNodes, updateFn)
-          : [],
       };
     }
 
     if (node.children && node.children.length > 0) {
-      return {
-        ...node,
-        children: updateSelectedNodes(node.children, selectedNodes, updateFn),
-      };
+      updatedNode.children = updateSelectedNodes(
+        updatedNode.children,
+        selectedNodes,
+        updateFn
+      );
     }
-    return node;
+
+    return updatedNode;
   });
 };
 
@@ -130,7 +128,11 @@ const ToolBox = ({
   setPathStyle,
   fontFamily,
   setFontFamily,
+  rels,
+  setRels,
+  selectedRelId,
 }) => {
+  const [fontSize, setFontSize] = useState("16");
   const [selectedTabIndex, setSelectedTabIndex] = useState(1);
   const [colorStyleEnabled, setColorStyleEnabled] = useState(true);
   const colorStyleopts = colorStyles.slice(1).map((style) => {
@@ -138,10 +140,10 @@ const ToolBox = ({
   });
 
   useEffect(() => {
-    if (selectedNodes.length === 0) {
+    if (selectedNodes.length === 0 && !selectedRelId) {
       setSelectedTabIndex(1);
     }
-  }, [selectedNodes]);
+  }, [selectedNodes, selectedRelId]);
 
   return (
     <>
@@ -152,9 +154,9 @@ const ToolBox = ({
               "grow p-1",
               {
                 "pointer-events-none opacity-40 bg-white text-gray-700":
-                  selectedNodes.length === 0,
+                  selectedNodes.length === 0 && !selectedRelId,
                 "data-[selected]:bg-secondary data-[selected]:text-white":
-                  selectedNodes.length > 0,
+                  selectedNodes.length > 0 || selectedRelId,
               },
               "data-[hover]:bg-primary data-[hover]:text-white data-[selected]:data-[hover]:bg-secondary data-[selected]:data-[hover]:text-white"
             )}
@@ -199,6 +201,11 @@ const ToolBox = ({
                   findNode={findNode}
                   fontFamily={fontFamily}
                   setFontFamily={setFontFamily}
+                  fontSize={fontSize}
+                  setFontSize={setFontSize}
+                  rels={rels}
+                  setRels={setRels}
+                  selectedRelId={selectedRelId}
                 />
               </DisclosurePanel>
             </Disclosure>
@@ -238,6 +245,9 @@ const ToolBox = ({
                   setColorStyleEnabled={setColorStyleEnabled}
                   colorStyleopts={colorStyleopts}
                   isGlobal={false}
+                  rels={rels}
+                  setRels={setRels}
+                  selectedRelId={selectedRelId}
                 />
               </DisclosurePanel>
             </Disclosure>
@@ -269,6 +279,9 @@ const ToolBox = ({
                 setColorStyleEnabled={setColorStyleEnabled}
                 colorStyleopts={colorStyleopts}
                 isGlobal={true}
+                rels={rels}
+                setRels={setRels}
+                selectedRelId={selectedRelId}
               />
             </div>
             <div className="p-4 border-t">
@@ -290,6 +303,10 @@ const ToolBox = ({
                 setFontFamily={setFontFamily}
                 findNode={findNode}
                 isGlobal={true}
+                fontSize={fontSize}
+                rels={rels}
+                setRels={setRels}
+                selectedRelId={selectedRelId}
               />
             </div>
             <div className="p-4 border-t">
@@ -320,8 +337,6 @@ const ToolBox = ({
               colorStyles={colorStyles}
               setLoading={setLoading}
               nodeRefs={nodeRefs}
-              setColorIndex={setColorIndex}
-              setColorStyleEnabled={setColorStyleEnabled}
               currentTheme={currentTheme}
               setCurrentTheme={setCurrentTheme}
               canvasBgColor={canvasBgColor}
@@ -335,6 +350,7 @@ const ToolBox = ({
               setPathStyle={setPathStyle}
               fontFamily={fontFamily}
               setFontFamily={setFontFamily}
+              setRels={setRels}
             />
           </TabPanel>
         </TabPanels>

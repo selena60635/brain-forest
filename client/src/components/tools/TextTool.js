@@ -27,9 +27,14 @@ const TextTool = ({
   findNode,
   fontFamily,
   setFontFamily,
+  fontSize,
+  setFontSize,
+  rels,
+  setRels,
+  selectedRelId,
 }) => {
   const [sizeQuery, setSizeQuery] = useState("");
-  const [fontSize, setFontSize] = useState("16");
+  // const [fontSize, setFontSize] = useState("16");
   const [fontWeight, setFontWeight] = useState("400");
   const [isItalic, setIsItalic] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
@@ -53,6 +58,17 @@ const TextTool = ({
         updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: { ...node.font, size: size + "px" },
         }))
+      );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: { ...rel.font, size: size + "px" },
+              }
+            : rel
+        )
       );
     }
   };
@@ -131,6 +147,17 @@ const TextTool = ({
           font: { ...node.font, weight: size, isBold: size === "700" },
         }))
       );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: { ...rel.font, weight: size, isBold: size === "700" },
+              }
+            : rel
+        )
+      );
     }
   };
 
@@ -151,6 +178,17 @@ const TextTool = ({
         updateSelectedNodes(prev, selectedNodes, (node) => ({
           font: { ...node.font, color: newColor.hex },
         }))
+      );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: { ...rel.font, color: newColor.hex },
+              }
+            : rel
+        )
       );
     }
   };
@@ -195,6 +233,21 @@ const TextTool = ({
           },
         }))
       );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: {
+                  ...rel.font,
+                  weight: newWeight,
+                  isBold: newWeight === "700",
+                },
+              }
+            : rel
+        )
+      );
     }
   };
 
@@ -218,6 +271,20 @@ const TextTool = ({
             isItalic: !isItalic,
           },
         }))
+      );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: {
+                  ...rel.font,
+                  isItalic: !isItalic,
+                },
+              }
+            : rel
+        )
       );
     }
   };
@@ -243,6 +310,20 @@ const TextTool = ({
           },
         }))
       );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: {
+                  ...rel.font,
+                  isStrikethrough: !isStrikethrough,
+                },
+              }
+            : rel
+        )
+      );
     }
   };
 
@@ -262,10 +343,30 @@ const TextTool = ({
         setIsItalic(selectedNode.font.isItalic || false);
         setIsStrikethrough(selectedNode.font.isStrikethrough || false);
       }
+    } else if (selectedRelId) {
+      const selectedRel = rels.find((rel) => rel.id === selectedRelId);
+      if (selectedRel) {
+        setFontSize(
+          selectedRel.font.size ? selectedRel.font.size.replace("px", "") : "16"
+        );
+        setFontWeight(selectedRel.font.weight || "400");
+        setIsItalic(selectedRel.font.isItalic || false);
+        setIsStrikethrough(selectedRel.font.isStrikethrough || false);
+        setTextColor(selectedRel.font.color || "#000");
+      }
     }
-  }, [selectedNodes, rootNode, nodes, findNode]);
+  }, [
+    selectedNodes,
+    rootNode,
+    nodes,
+    findNode,
+    setFontSize,
+    rels,
+    selectedRelId,
+  ]);
 
   let selectedNode = findNode([rootNode, ...nodes], selectedNodes[0]);
+  const selectedRel = rels.find((rel) => rel.id === selectedRelId);
 
   return (
     <div className="space-y-4">
@@ -281,6 +382,10 @@ const TextTool = ({
             setFontFamily={setFontFamily}
             findNode={findNode}
             isGlobal={false}
+            fontSize={fontSize}
+            rels={rels}
+            setRels={setRels}
+            selectedRelId={selectedRelId}
           />
           <Menu as="div" className="relative block w-full ">
             <MenuButton className="flex items-center justify-between rounded-md border shadow w-full h-6 px-2 py-1 focus:outline-none data-[hover]:bg-gray-100 data-[open]:bg-gray-100 data-[focus]:outline-1 data-[focus]:outline-white">
@@ -367,7 +472,7 @@ const TextTool = ({
       <div className="flex border rounded-md shadow">
         <Button
           className={`btn grow ${
-            selectedNode && selectedNode.font.isBold
+            selectedNode?.font?.isBold || selectedRel?.font?.isBold
               ? "bg-primary text-white hover:bg-primary"
               : ""
           }`}
@@ -377,7 +482,7 @@ const TextTool = ({
         </Button>
         <Button
           className={`btn grow ${
-            selectedNode && selectedNode.font.isItalic
+            selectedNode?.font?.isBold || selectedRel?.font?.isItalic
               ? "bg-primary text-white hover:bg-primary"
               : ""
           }`}
@@ -387,7 +492,7 @@ const TextTool = ({
         </Button>
         <Button
           className={`btn grow py-1.5 ${
-            selectedNode && selectedNode.font.isStrikethrough
+            selectedNode?.font?.isBold || selectedRel?.font?.isStrikethrough
               ? "bg-primary text-white hover:bg-primary"
               : ""
           }`}

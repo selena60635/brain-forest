@@ -16,6 +16,8 @@ function BtnsGroupCol({
   isSaved,
   handleSaveMindMap,
   addSummary,
+  handleLinkMode,
+  selectedRelId,
 }) {
   const handleAddSiblingNode = (e) => {
     e.stopPropagation();
@@ -46,7 +48,7 @@ function BtnsGroupCol({
 
   const handleDelNode = (e) => {
     e.stopPropagation();
-    if (selectedNodes.length > 0) {
+    if (selectedNodes.length > 0 || selectedRelId) {
       delNode(selectedNodes);
     }
   };
@@ -89,7 +91,10 @@ function BtnsGroupCol({
           </svg>
         </Button>
 
-        <Button className="btn aspect-square text-gray-700">
+        <Button
+          className="btn aspect-square text-red-700"
+          onClick={() => handleLinkMode(selectedNodes[0])}
+        >
           <svg
             height="24px"
             viewBox="0 -960 960 960"

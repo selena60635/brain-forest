@@ -20,6 +20,7 @@ const ChildNode = ({
   setIsAnyEditing,
   sumRefs,
   isSelectedSum,
+  handleNodeClick,
 }) => {
   const [isEditing, setIsEditing] = useState(childNode.isNew);
   const inputRef = useRef(null);
@@ -145,6 +146,7 @@ const ChildNode = ({
         }}
         tabIndex="0"
         onDoubleClick={editMode}
+        onClick={(e) => handleNodeClick(childNode.id, e)}
         ref={childRef}
       >
         {isEditing ? (
@@ -211,6 +213,7 @@ const ChildNode = ({
                 setIsAnyEditing={setIsAnyEditing}
                 sumRefs={sumRefs}
                 isSelectedSum={selectedNodes.includes(subchildNode.summary?.id)}
+                handleNodeClick={handleNodeClick}
               />
             );
           })}
@@ -262,6 +265,7 @@ const Node = ({
   sumRefs,
   isSelectedSum,
   nodes,
+  handleNodeClick,
 }) => {
   const [isEditing, setIsEditing] = useState(node.isNew);
   const inputRef = useRef(null);
@@ -333,6 +337,7 @@ const Node = ({
         tabIndex="0"
         ref={nodeRef}
         onDoubleClick={editMode}
+        onClick={(e) => handleNodeClick(node.id, e)}
       >
         {isEditing ? (
           <>
@@ -397,6 +402,7 @@ const Node = ({
                 setIsAnyEditing={setIsAnyEditing}
                 sumRefs={sumRefs}
                 isSelectedSum={selectedNodes.includes(childNode.summary?.id)}
+                handleNodeClick={handleNodeClick}
               />
             );
           })}

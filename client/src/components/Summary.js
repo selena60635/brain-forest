@@ -99,8 +99,6 @@ const Summary = ({
     return { x: 0, y: 0 };
   }, []);
 
-  const nodesStr = JSON.stringify(nodes);
-  const sumStr = JSON.stringify(summary);
   // 當 nodes 狀態改變時，更新svg path，重繪summary連接線
   useLayoutEffect(() => {
     if (sumRef.current && sumSvgRef.current) {
@@ -121,7 +119,7 @@ const Summary = ({
           h ${radius}
         `);
     }
-  }, [sumRef, sumSvgRef, getSumSvgLoc, summary, sumStr, nodesStr, zoomLevel]);
+  }, [sumRef, sumSvgRef, getSumSvgLoc, summary, zoomLevel, nodes]);
 
   return (
     <>

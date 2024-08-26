@@ -13,21 +13,21 @@ import SweetAlert from "../SweetAlert";
 
 const FileTool = ({
   rootNode,
-  nodes,
   setRootNode,
+  nodes,
   setNodes,
-  setCurrentColorStyle,
-  currentColorStyle,
-  colorStyles,
   setSelectedNodes,
+  currentColorStyle,
+  setCurrentColorStyle,
+  colorStyles,
   setLoading,
   nodeRefs,
-  canvasBgStyle,
-  setCanvasBgStyle,
   currentTheme,
   setCurrentTheme,
   canvasBgColor,
   setCanvasBgColor,
+  canvasBgStyle,
+  setCanvasBgStyle,
   themes,
   pathWidth,
   setPathWidth,
@@ -35,6 +35,7 @@ const FileTool = ({
   setPathStyle,
   fontFamily,
   setFontFamily,
+  setRels,
 }) => {
   trio.register();
 
@@ -115,7 +116,8 @@ const FileTool = ({
     theme,
     pathWidth,
     pathStyle,
-    fontFamily
+    fontFamily,
+    parentId
   ) => {
     return listItems.map((listItem) => {
       const style =
@@ -141,6 +143,7 @@ const FileTool = ({
           width: pathWidth,
           style: pathStyle,
         },
+        parent: parentId,
       };
 
       if (listItem.children[1] && listItem.children[1].type === "list") {
@@ -151,7 +154,8 @@ const FileTool = ({
           theme,
           pathWidth,
           pathStyle,
-          fontFamily
+          fontFamily,
+          node.id
         );
       }
       return node;
@@ -202,7 +206,7 @@ const FileTool = ({
     setPathStyle(pathStyle);
     setFontFamily(fontFamily);
     setSelectedNodes([]);
-
+    setRels([]);
     const createNode = (name, colorStyle, index = null) => {
       const style =
         colorStyle !== 0
@@ -230,7 +234,7 @@ const FileTool = ({
       };
     };
 
-    let currentParent = [];
+    let currentParent;
     let colorIndex = 2;
     try {
       tree.children.forEach((item) => {
@@ -250,7 +254,8 @@ const FileTool = ({
             theme,
             pathWidth,
             pathStyle,
-            fontFamily
+            fontFamily,
+            currentParent.id
           );
           if (currentParent) {
             currentParent.children.push(...nodes);

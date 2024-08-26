@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import Node from "./Node";
 import RootNode from "./RootNode";
-
+import Relations from "./Relations";
 // 心智圖組件
 const MindMap = ({
   nodes,
@@ -18,7 +18,6 @@ const MindMap = ({
   setSelectedNodes,
   selectBox,
   rootRef,
-  canvasRef,
   nodeRefs,
   delNode,
   findParentNode,
@@ -35,8 +34,21 @@ const MindMap = ({
   togglePanMode,
   sumRefs,
   addSummary,
+  handleNodeClick,
+  rels,
+  relMode,
+  setRelMode,
+  setRels,
+  selectedRelId,
+  setSelectedRelId,
+  relRefs,
+  btnsRef,
+  isPanMode,
+  canvasBgColor,
+  handleLinkMode,
 }) => {
   const [isAnyEditing, setIsAnyEditing] = useState(false);
+
   const svgRef = useRef(null); //宣告一個引用，初始為null，用來存儲引用的svg Dom元素
 
   //取得根結點svg位置
@@ -89,7 +101,7 @@ const MindMap = ({
 
   useLayoutEffect(() => {
     updateLocs();
-  }, [nodesStr, rootNodeStr, setNodes, setRootNode, updateLocs, zoomLevel]);
+  }, [nodesStr, rootNodeStr, updateLocs, zoomLevel, rels]);
 
   //判定是否被選取
   const isNodeSelected = useCallback(
@@ -144,11 +156,6 @@ const MindMap = ({
               selected.push(node.id);
             }
             if (node.children) {
-              //若當前節點不在選擇範圍內，檢查是否有children，如果有則繼續檢查
-              // if (!nodeRefs.current[node.id]) {
-              //   //若引用中沒有包含當前節點，代表...，在引用中新增當前節點的..
-              //   nodeRefs.current[node.id] = [];
-              // }
               //將當前節點的children、children中子節點的引用、子節點的父節點引用傳入，遞迴一層層遍歷子節點
               traverseNodes(node.children, nodeRefs, {
                 current: nodeRefs.current[node.id],
@@ -185,7 +192,6 @@ const MindMap = ({
     nodes,
     isNodeSelected,
     rootNode.id,
-    canvasRef,
     nodeRefs,
     setSelectedNodes,
     getNodeCanvasLoc,
@@ -195,6 +201,9 @@ const MindMap = ({
 
   const handleKeyDown = useCallback(
     (e) => {
+      if (selectBox) {
+        return;
+      }
       if (
         (["Enter", "Delete", "Tab"].includes(e.key) &&
           selectedNodes.length === 1) ||
@@ -218,7 +227,7 @@ const MindMap = ({
         }
       }
 
-      if (e.key === "Delete" && selectedNodes.length > 0) {
+      if (e.key === "Delete" && (selectedNodes.length > 0 || selectedRelId)) {
         delNode(selectedNodes);
       }
 
@@ -267,6 +276,14 @@ const MindMap = ({
           addSummary();
         }
       }
+      //add rel
+      if (e.altKey && e.key === "r") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (selectedNodes.length === 1) {
+          handleLinkMode(selectedNodes[0]);
+        }
+      }
     },
     [
       selectedNodes,
@@ -285,6 +302,9 @@ const MindMap = ({
       isAnyEditing,
       togglePanMode,
       addSummary,
+      selectBox,
+      handleLinkMode,
+      selectedRelId,
     ]
   );
 
@@ -296,66 +316,89 @@ const MindMap = ({
   const rootSvgLoc = getRootSvgLoc(rootNode.outline.width);
 
   return (
-    <div className="mindmap">
-      <RootNode
-        rootNode={rootNode}
-        setRootNode={setRootNode}
-        rootRef={rootRef}
-        isSelected={selectedNodes.includes(rootNode.id)}
-        zoomLevel={zoomLevel}
-        setIsAnyEditing={setIsAnyEditing}
-      />
+    <>
+      <div className="mindmap">
+        <Relations
+          rootNode={rootNode}
+          rootRef={rootRef}
+          nodes={nodes}
+          nodeRefs={nodeRefs}
+          rels={rels}
+          zoomLevel={zoomLevel}
+          relMode={relMode}
+          setRelMode={setRelMode}
+          setRels={setRels}
+          selectedRelId={selectedRelId}
+          setSelectedRelId={setSelectedRelId}
+          relRefs={relRefs}
+          btnsRef={btnsRef}
+          isPanMode={isPanMode}
+          canvasBgColor={canvasBgColor}
+          setIsAnyEditing={setIsAnyEditing}
+        />
 
-      <div className="flex flex-col items-start">
-        {nodes.map((node, index) => (
-          <Node
-            key={node.id}
-            rootNode={rootNode}
-            node={nodes[index]}
-            setNodes={setNodes}
-            nodeRef={nodeRefs.current[index]}
-            nodeRefs={nodeRefs}
-            delNode={delNode}
-            isSelected={selectedNodes.includes(node.id)}
-            selectedNodes={selectedNodes}
-            setSelectedNodes={setSelectedNodes}
-            zoomLevel={zoomLevel}
-            isAnyEditing={isAnyEditing}
-            setIsAnyEditing={setIsAnyEditing}
-            nodes={nodes}
-            sumRefs={sumRefs}
-            isSelectedSum={selectedNodes.includes(node.summary?.id)}
-          />
-        ))}
+        <RootNode
+          rootNode={rootNode}
+          setRootNode={setRootNode}
+          rootRef={rootRef}
+          isSelected={selectedNodes.includes(rootNode.id)}
+          zoomLevel={zoomLevel}
+          setIsAnyEditing={setIsAnyEditing}
+          handleNodeClick={handleNodeClick}
+        />
+
+        <div className="flex flex-col items-start">
+          {nodes.map((node, index) => (
+            <Node
+              key={node.id}
+              rootNode={rootNode}
+              node={nodes[index]}
+              setNodes={setNodes}
+              nodeRef={nodeRefs.current[index]}
+              nodeRefs={nodeRefs}
+              delNode={delNode}
+              isSelected={selectedNodes.includes(node.id)}
+              selectedNodes={selectedNodes}
+              setSelectedNodes={setSelectedNodes}
+              zoomLevel={zoomLevel}
+              isAnyEditing={isAnyEditing}
+              setIsAnyEditing={setIsAnyEditing}
+              nodes={nodes}
+              sumRefs={sumRefs}
+              isSelectedSum={selectedNodes.includes(node.summary?.id)}
+              handleNodeClick={handleNodeClick}
+            />
+          ))}
+        </div>
+
+        <svg
+          className="lines"
+          overflow="visible"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            transform: `scale(${1 / zoomLevel})`,
+          }}
+          ref={svgRef}
+        >
+          {nodes.map((node, index) => {
+            const nodeLoc = getNodeSvgLoc(nodeRefs.current[index], node);
+            return (
+              <React.Fragment key={node.id}>
+                <path
+                  d={`M${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
+                  stroke={node.pathColor}
+                  fill="none"
+                  strokeWidth={node.path.width * zoomLevel}
+                  strokeDasharray={node.path.style * zoomLevel}
+                />
+                {/* <circle cx={nodeLoc.x} cy={nodeLoc.y} r="5" fill="blue" /> */}
+              </React.Fragment>
+            );
+          })}
+          {/* <circle cx={rootSvgLoc.x} cy={rootSvgLoc.y} r="5" fill="red" /> */}
+        </svg>
       </div>
-
-      <svg
-        className="lines"
-        overflow="visible"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{
-          transform: `scale(${1 / zoomLevel})`,
-        }}
-        ref={svgRef}
-      >
-        {nodes.map((node, index) => {
-          const nodeLoc = getNodeSvgLoc(nodeRefs.current[index], node);
-          return (
-            <React.Fragment key={node.id}>
-              <path
-                d={`M${rootSvgLoc.x} ${rootSvgLoc.y} Q ${rootSvgLoc.x} ${nodeLoc.y}, ${nodeLoc.x} ${nodeLoc.y}`}
-                stroke={node.pathColor}
-                fill="none"
-                strokeWidth={node.path.width * zoomLevel}
-                strokeDasharray={node.path.style * zoomLevel}
-              />
-              {/* <circle cx={nodeLoc.x} cy={nodeLoc.y} r="5" fill="blue" /> */}
-            </React.Fragment>
-          );
-        })}
-        {/* <circle cx={rootSvgLoc.x} cy={rootSvgLoc.y} r="5" fill="red" /> */}
-      </svg>
-    </div>
+    </>
   );
 };
 

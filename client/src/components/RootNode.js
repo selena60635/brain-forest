@@ -21,6 +21,7 @@ const RootNode = ({
   isSelected,
   zoomLevel,
   setIsAnyEditing,
+  handleNodeClick,
 }) => {
   const [isEditRoot, setIsEditRoot] = useState(false); //定義根節點編輯模式狀態，初始為false
   const inputRef = useRef(null);
@@ -51,6 +52,7 @@ const RootNode = ({
       tabIndex="0"
       ref={rootRef}
       onDoubleClick={editMode}
+      onClick={(e) => handleNodeClick(rootNode.id, e)}
       style={{
         "--outline-width": `${
           rootNode.outline.style !== "none"

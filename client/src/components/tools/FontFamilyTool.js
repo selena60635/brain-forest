@@ -1,8 +1,8 @@
 import React, {
   useState,
   useEffect,
-  useCallback,
-  useLayoutEffect,
+  // useCallback,
+  // useLayoutEffect,
 } from "react";
 import {
   Combobox,
@@ -34,8 +34,13 @@ const FontFamilyTool = ({
   selectedNodes,
   fontFamily,
   setFontFamily,
-  isGlobal,
   findNode,
+  isGlobal,
+
+  fontSize,
+  rels,
+  setRels,
+  selectedRelId,
 }) => {
   const [query, setQuery] = useState("");
   const [availableFonts, setAvailableFonts] = useState([]);
@@ -56,8 +61,11 @@ const FontFamilyTool = ({
           font.toLowerCase().includes(query.toLowerCase())
         );
 
-  const fontFamilyChange = (font) => {
+  const fontFamilyChange = async (font) => {
     setFontFamily(font);
+
+    await document.fonts.load(`${fontSize}px ${font}`);
+
     if (isGlobal) {
       setRootNode((prev) => ({
         ...prev,
@@ -67,6 +75,9 @@ const FontFamilyTool = ({
         updateNodes(prev, (node) => ({
           font: { ...node.font, family: font },
         }))
+      );
+      setRels((prev) =>
+        prev.map((rel) => ({ ...rel, font: { ...rel.font, family: font } }))
       );
     } else if (selectedNodes.length > 0) {
       if (selectedNodes.includes(rootNode.id)) {
@@ -80,24 +91,19 @@ const FontFamilyTool = ({
           font: { ...node.font, family: font },
         }))
       );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                font: { ...rel.font, family: font },
+              }
+            : rel
+        )
+      );
     }
   };
-
-  const updateLocs = useCallback(() => {
-    setNodes((prev) => [...prev]);
-    setRootNode((prev) => ({ ...prev }));
-  }, [setNodes, setRootNode]);
-
-  const nodesString = JSON.stringify(nodes);
-  const rootNodeString = JSON.stringify(rootNode);
-
-  useLayoutEffect(() => {
-    document.fonts.ready.then(updateLocs);
-    return () => {
-      document.fonts.ready.then(() => {});
-    };
-  }, [nodesString, rootNodeString, setNodes, setRootNode, updateLocs]);
-
   useEffect(() => {
     if (isGlobal) {
       setFontFamily(rootNode.font.family || "Noto Sans TC");
@@ -107,8 +113,22 @@ const FontFamilyTool = ({
       if (selectedNode) {
         setFontFamily(selectedNode.font.family || "Noto Sans TC");
       }
+    } else if (selectedRelId) {
+      const selectedRel = rels.find((rel) => rel.id === selectedRelId);
+      if (selectedRel) {
+        setFontFamily(selectedRel.font?.family || "Noto Sans TC");
+      }
     }
-  }, [selectedNodes, rootNode, nodes, findNode, isGlobal, setFontFamily]);
+  }, [
+    selectedNodes,
+    rootNode,
+    nodes,
+    findNode,
+    isGlobal,
+    setFontFamily,
+    rels,
+    selectedRelId,
+  ]);
 
   return (
     <>

@@ -41,6 +41,12 @@ const WorkArea = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isPanMode, setIsPanMode] = useState(false);
+
+  const [relMode, setRelMode] = useState(false);
+  const [rels, setRels] = useState([]);
+  const [relFromNode, setRelFromNode] = useState(null);
+  const [selectedRelId, setSelectedRelId] = useState(null);
+
   const [selectBox, setSelectBox] = useState(null); //存儲選擇框位置
   const selectStart = useRef({ x: 0, y: 0 }); //用來引用並存儲鼠標起始位置，始終不變
   const canvasRef = useRef(null); //用來引用並存儲畫布Dom
@@ -374,6 +380,7 @@ const WorkArea = () => {
         canvasBg: { canvasBgStyle, canvasBgColor },
         path: { pathWidth, pathStyle },
         fontFamily,
+        rels,
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -417,6 +424,7 @@ const WorkArea = () => {
         canvasBg: { canvasBgStyle, canvasBgColor },
         path: { pathWidth, pathStyle },
         fontFamily,
+        rels,
         rootNode,
         nodes,
         lastSavedAt: Timestamp.now(),
@@ -478,6 +486,10 @@ const WorkArea = () => {
 
         if (docSnap.exists()) {
           const mindMapData = docSnap.data();
+          // await document.fonts.load(
+          //   `${mindMapData.rootNode.font.size} ${mindMapData.fontFamily}`
+          // );
+
           setRootNode(mindMapData.rootNode);
           setNodes(mindMapData.nodes);
           setCurrentColorStyle((prev) => mindMapData.currentColorStyle || prev);
@@ -490,8 +502,9 @@ const WorkArea = () => {
           );
           setPathWidth((prev) => mindMapData.path?.pathWidth || prev);
           setPathStyle((prev) => mindMapData.path?.pathStyle || prev);
-          setFontFamily((prev) => mindMapData.fontFamily || prev);
 
+          setFontFamily((prev) => mindMapData.fontFamily || prev);
+          setRels((prev) => mindMapData.rels || prev);
           nodeRefs.current = new Array(mindMapData.nodes.length)
             .fill(null)
             .map(() => React.createRef());
@@ -783,6 +796,7 @@ const WorkArea = () => {
       newChildNode,
     ]
   );
+  const relRefs = useRef({});
 
   const delNode = useCallback(
     (idArr) => {
@@ -790,7 +804,6 @@ const WorkArea = () => {
         return nodes.filter((node) => {
           // 檢查節點是否在刪除ID列表中
           const isNodeToDelete = idsToDelete.includes(node.id);
-
           // 如果節點有總結節點，檢查是否需要刪除總結節點
           if (
             node.summary &&
@@ -799,12 +812,10 @@ const WorkArea = () => {
             delete sumRefs.current[node.summary.id];
             delete node.summary; // 刪除節點上的 summary 屬性
           }
-
           // 如果節點本身需要刪除，返回 false 過濾掉它
           if (isNodeToDelete) {
             return false;
           }
-
           // 遞迴檢查並更新子節點
           if (node.children) {
             node.children = deleteNodes(node.children, idsToDelete);
@@ -816,15 +827,56 @@ const WorkArea = () => {
 
       setNodes((prev) => {
         const newNodes = deleteNodes(prev, idArr);
+
         nodeRefs.current = nodeRefs.current.filter(
           (item, index) => !idArr.includes(prev[index]?.id)
         );
+        // 檢查每個 rel，若其 from 或 to 節點在 idsToDelete 中，則刪除該 rel
+        setRels((prevRels) => {
+          return prevRels.filter((rel) => {
+            //遍歷rel，若目前選取的id中是rel的關連節點之一，則需要一併刪除
+            const deleteRel =
+              idArr.includes(rel.from) || idArr.includes(rel.to);
+            if (
+              (idArr.includes(rel.from) || idArr.includes(rel.to)) &&
+              relRefs.current[rel.id]
+            ) {
+              delete relRefs.current[rel.id];
+            }
+
+            //若deleteRel為true，表示該 rel 需要被過濾掉
+            return !deleteRel;
+          });
+        });
+
         return newNodes;
       });
+      //刪除關聯
+      if (selectedRelId) {
+        setRels((prev) => {
+          const newRels = prev.filter((rel) => rel.id !== selectedRelId);
+
+          if (relRefs.current[selectedRelId]) {
+            delete relRefs.current[selectedRelId];
+          }
+
+          return newRels;
+        });
+        setSelectedRelId(null);
+      }
 
       setSelectedNodes([]);
     },
-    [nodeRefs, setNodes, setSelectedNodes, sumRefs]
+    [
+      nodeRefs,
+      setNodes,
+      setSelectedNodes,
+      sumRefs,
+      relRefs,
+      setRels,
+      selectedRelId,
+      setSelectedRelId,
+    ]
   );
 
   const addSummary = useCallback(() => {
@@ -860,6 +912,66 @@ const WorkArea = () => {
     );
   }, [selectedNodes, fontFamily]);
 
+  const isSummaryNode = (nodes, from) => {
+    return nodes.some((node) => {
+      if (node.summary && node.summary.id === from) {
+        return true;
+      }
+
+      if (node.children && node.children.length > 0) {
+        return isSummaryNode(node.children, from);
+      }
+      return false;
+    });
+  };
+
+  const handleLinkMode = (from) => {
+    if (selectedNodes[0] && !isSummaryNode(nodes, from)) {
+      setRelFromNode(from);
+      setRelMode(true);
+    }
+  };
+  const addRel = useCallback(
+    (to) => {
+      if (relMode && relFromNode) {
+        const relId = uuidv4();
+        setRels((prev) => {
+          const newRels = [
+            ...prev,
+            {
+              id: relId,
+              name: "Relationship",
+              pathColor: "#000",
+              font: {
+                family: fontFamily,
+                size: "16px",
+                weight: "400",
+                color: "#000",
+              },
+              from: relFromNode,
+              to: to,
+            },
+          ];
+          return newRels;
+        });
+        setSelectedRelId(relId);
+        setRelMode(false);
+        setRelFromNode(null);
+      }
+    },
+    [relMode, relFromNode, fontFamily]
+  );
+
+  const handleNodeClick = (nodeId, e) => {
+    e.stopPropagation();
+    if (!relMode) return;
+    if (relMode && relFromNode && nodeId !== relFromNode) {
+      addRel(nodeId);
+    } else {
+      console.log("你不能關聯自己");
+    }
+  };
+
   //若id改變，重新載入相應的心智圖檔案
   useEffect(() => {
     setLoading(true);
@@ -871,11 +983,12 @@ const WorkArea = () => {
   }, [id, fetchMindMap, resetMindMap]);
 
   //更新isSaved狀態
-  const nodesString = JSON.stringify(nodes);
-  const rootNodeString = JSON.stringify(rootNode);
+  const nodesStr = JSON.stringify(nodes);
+  const rootNodeStr = JSON.stringify(rootNode);
+  const relsStr = JSON.stringify(rels);
   useEffect(() => {
     setIsSaved(false);
-  }, [nodesString, rootNodeString, canvasBgStyle, canvasBgColor]);
+  }, [nodesStr, rootNodeStr, canvasBgStyle, canvasBgColor, relsStr]);
 
   //滾動至畫布的中心點(根節點)
   const scrollToCenter = useCallback(
@@ -945,10 +1058,19 @@ const WorkArea = () => {
   }, []);
   // 初始渲染設定
   useLayoutEffect(() => {
+    const handleTab = (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("keydown", handleTab);
     if (rootRef.current) {
       scrollToCenter("auto");
     }
-  }, [scrollToCenter, loading, rootRef]);
+    return () => {
+      window.removeEventListener("keydown", handleTab);
+    };
+  }, [scrollToCenter, rootRef, loading]);
   //設定zoom in/out/reset
   const handleZoom = (type) => {
     setZoomLevel((prev) => {
@@ -979,6 +1101,9 @@ const WorkArea = () => {
   return (
     <>
       {loading && <Loading />}
+      {relMode && (
+        <p className="absolute z-10">Please click the target node.</p>
+      )}
 
       <div
         className={`flex w-full ${isFullScreen && "h-screen"}`}
@@ -1011,6 +1136,8 @@ const WorkArea = () => {
                   isSaved={isSaved}
                   handleSaveMindMap={handleSaveMindMap}
                   addSummary={addSummary}
+                  handleLinkMode={handleLinkMode}
+                  selectedRelId={selectedRelId}
                 />
               </div>
 
@@ -1060,9 +1187,7 @@ const WorkArea = () => {
                 setSelectedNodes={setSelectedNodes}
                 selectBox={selectBox}
                 rootRef={rootRef}
-                canvasRef={canvasRef}
                 nodeRefs={nodeRefs}
-                sumRefs={sumRefs}
                 delNode={delNode}
                 findParentNode={findParentNode}
                 addNode={addNode}
@@ -1076,7 +1201,20 @@ const WorkArea = () => {
                 zoomLevel={zoomLevel}
                 handleZoom={handleZoom}
                 togglePanMode={togglePanMode}
+                sumRefs={sumRefs}
                 addSummary={addSummary}
+                handleNodeClick={handleNodeClick}
+                rels={rels}
+                relMode={relMode}
+                setRelMode={setRelMode}
+                setRels={setRels}
+                selectedRelId={selectedRelId}
+                setSelectedRelId={setSelectedRelId}
+                relRefs={relRefs}
+                btnsRef={btnsRef}
+                isPanMode={isPanMode}
+                canvasBgColor={canvasBgColor}
+                handleLinkMode={handleLinkMode}
               />
             </div>
           </div>
@@ -1090,7 +1228,10 @@ const WorkArea = () => {
           <div
             className={`${
               isFullScreen ? "h-screen" : "h-[calc(100vh-65px)]"
-            } border-l shadow-lg`}
+            } border-l shadow-lg tool-box`}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
           >
             <ToolBox
               rootNode={rootNode}
@@ -1121,6 +1262,9 @@ const WorkArea = () => {
               setPathStyle={setPathStyle}
               fontFamily={fontFamily}
               setFontFamily={setFontFamily}
+              rels={rels}
+              setRels={setRels}
+              selectedRelId={selectedRelId}
             />
             <div className="btns-group top-4 -left-[84px] absolute z-20 h-12">
               <Button

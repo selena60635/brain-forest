@@ -21,6 +21,9 @@ const ColorStyleTool = ({
   setColorStyleEnabled,
   colorStyleopts,
   isGlobal,
+  rels,
+  setRels,
+  selectedRelId,
 }) => {
   const [color, setColor] = useState(nodesColor);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -58,6 +61,17 @@ const ColorStyleTool = ({
           pathColor: newColor.hex,
           outline: { ...node.outline, color: newColor.hex },
         }))
+      );
+    } else if (selectedRelId) {
+      setRels((prev) =>
+        prev.map((rel) =>
+          rel.id === selectedRelId
+            ? {
+                ...rel,
+                pathColor: newColor.hex,
+              }
+            : rel
+        )
       );
     }
   };
@@ -123,6 +137,11 @@ const ColorStyleTool = ({
       if (selectedNode) {
         setColor(selectedNode.pathColor || nodesColor);
       }
+    } else if (selectedRelId) {
+      const selectedRel = rels.find((rel) => rel.id === selectedRelId);
+      if (selectedRel) {
+        setColor(selectedRel.pathColor || "#000");
+      }
     }
     setColorStyleEnabled(currentColorStyle !== 0);
   }, [
@@ -133,6 +152,8 @@ const ColorStyleTool = ({
     nodesColor,
     currentColorStyle,
     setColorStyleEnabled,
+    rels,
+    selectedRelId,
   ]);
 
   const stylePickerToggle = () => {
